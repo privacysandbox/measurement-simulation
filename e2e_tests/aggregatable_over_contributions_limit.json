@@ -1,0 +1,166 @@
+{
+  "description": "Given one source and two matching triggers, the first trigger does not generate an aggregate report because the sum of its values would exceed the per-source limit.",
+  "input": {
+    "sources": [{
+      "source_event_id": 1,
+      "destination": "android-app://example.2d1.com",
+      "source_type": "NAVIGATION",
+      "priority": 100,
+      "publisher": "https://example.1s1.com",
+      "registrant": "https://example.1s1.com",
+      "enrollment_id": "https://www.ad-tech1.com",
+      "expiry": 172801,
+      "filter_data": {
+        "conversion_subdomain": [
+          "electronics.megastore"
+        ],
+        "product": [
+          "1234",
+          "234"
+        ],
+        "ctid": [
+          "id"
+        ]
+      },
+      "aggregation_keys": [
+        {
+          "id": "campaignCounts",
+          "key_piece": "0x159"
+        },
+        {
+          "id": "geoValue",
+          "key_piece": "0x5"
+        }
+      ],
+      "event_time": 800000000001
+    }],
+    "triggers": [
+      {
+        "event_trigger_data": [
+          {
+            "trigger_data": 2,
+            "priority": 101
+          }
+        ],
+        "attribution_destination": "android-app://example.2d1.com",
+        "registrant": "example.2d1.com",
+        "enrollment_id": "https://www.ad-tech1.com",
+        "aggregatable_trigger_data": [
+          {
+            "key_piece": "0x400",
+            "source_keys": [
+              "campaignCounts"
+            ],
+            "filters": {
+              "product": [
+                "1234"
+              ],
+              "ctid": [
+                "id"
+              ]
+            },
+            "not_filters": {
+              "product": [
+                "100"
+              ]
+            }
+          },
+          {
+            "key_piece": "0xA80",
+            "source_keys": [
+              "geoValue",
+              "nonMatch"
+            ]
+          }
+        ],
+        "aggregatable_values": {
+          "campaignCounts": 32769,
+          "geoValue": 32769
+        },
+        "trigger_time": 800000600001
+      },
+      {
+        "event_trigger_data": [
+          {
+            "trigger_data": 3,
+            "priority": 101
+          }
+        ],
+        "registrant": "example.2d1.com",
+        "attribution_destination": "android-app://example.2d1.com",
+        "enrollment_id": "https://www.ad-tech1.com",
+        "aggregatable_trigger_data": [
+          {
+            "key_piece": "0x400",
+            "source_keys": [
+              "campaignCounts"
+            ],
+            "filters": {
+              "product": [
+                "1234"
+              ],
+              "ctid": [
+                "id"
+              ]
+            },
+            "not_filters": {
+              "product": [
+                "100"
+              ]
+            }
+          },
+          {
+            "key_piece": "0xA80",
+            "source_keys": [
+              "geoValue",
+              "nonMatch"
+            ]
+          }
+        ],
+        "aggregatable_values": {
+          "campaignCounts": 32768,
+          "geoValue": 1664
+        },
+        "trigger_time": 800001200001
+      }
+    ]
+  },
+  "output": {
+    "event_level_results": [
+      {
+        "report_time": "800176400001",
+        "report_url": "https://www.ad-tech1.com",
+        "payload": {
+          "attribution_destination": "android-app://example.2d1.com",
+          "source_event_id": "1",
+          "trigger_data": "2",
+          "source_type": "NAVIGATION",
+          "randomized_trigger_rate": 0.0024263
+        }
+      },
+      {
+        "report_time": "800176400001",
+        "report_url": "https://www.ad-tech1.com",
+        "payload": {
+          "attribution_destination": "android-app://example.2d1.com",
+          "source_event_id": "1",
+          "trigger_data": "3",
+          "source_type": "NAVIGATION",
+          "randomized_trigger_rate": 0.0024263
+        }
+      }
+    ],
+    "aggregatable_results": [{
+      "report_time": 800001200001,
+      "report_url": "https://www.ad-tech1.com",
+      "payload": {
+        "attribution_destination": "android-app://example.2d1.com",
+        "source_site": "android-app://example.1s1.com",
+        "histograms": [
+          {"key": "1369", "value": 32768},
+          {"key": "2693", "value": 1664}
+        ]
+      }
+    }]
+  }
+}
