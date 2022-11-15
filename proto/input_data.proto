@@ -1,0 +1,87 @@
+// Copyright 2022 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package com.google.rubidium;
+option java_package = "com.google.rubidium";
+import public "google/protobuf/struct.proto";
+
+// Types of sources: Supported values are EVENT and NAVIGATION
+enum SourceType {
+  EVENT = 0;
+  NAVIGATION = 1;
+}
+
+message BigInteger {
+  bytes value = 1;
+}
+
+message AggregationKey {
+  map<string, string> aggregationKeyMap = 1;
+}
+
+// Attribution source data format
+message AttributionSource {
+  // User/Device id where the click/view was registered.
+  string user_id = 1;
+  int64 source_event_id = 2;
+  int64 priority = 3;
+  string enrollment_id = 4;
+  string publisher = 5;
+  string destination = 6;
+  string web_destination = 7;
+  string registrant = 8;
+  SourceType source_type = 9;
+  int64 event_time = 10;
+  int64 expiry = 11;
+  repeated int64 dedup_keys = 12;
+  int64 install_attribution_window = 13;
+  int64 post_install_exclusivity_window = 14;
+  map<string, .google.protobuf.ListValue> filter_data = 15;
+  repeated AggregationKey aggregation_keys = 16;
+}
+
+message AggregatableTriggerData {
+  string key_piece = 1;
+  repeated string source_keys = 2;
+  map<string, .google.protobuf.ListValue> filters = 3;
+  map<string, .google.protobuf.ListValue> not_filters = 4;
+}
+
+message TriggerData {
+  int64 trigger_data = 1;
+  int64 priority = 2;
+  int64 deduplication_key = 3;
+}
+
+// Types of destination: Supported values are APP and WEB
+enum DestinationType {
+  APP = 0;
+  WEB = 1;
+}
+
+// Trigger data format
+message Trigger {
+  string user_id = 1;
+  string attribution_destination = 2;
+  DestinationType destination_type = 3;
+  string enrollment_id = 4;
+  repeated TriggerData event_trigger_data = 5;
+  int64 trigger_time = 6;
+  string registrant = 7;
+  repeated AggregatableTriggerData aggregatable_trigger_data = 8;
+  map<string, int64> aggregate_values = 9;
+  string filters = 10;
+}

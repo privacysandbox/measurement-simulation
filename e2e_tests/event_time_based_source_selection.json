@@ -1,0 +1,55 @@
+{
+  "description": "Two sources with differing event-time and equal priority, and one trigger that matches both sources. Event report task within the expiry window sends the data corresponding to the source with later event-time.",
+  "input": {
+    "sources": [
+      {
+        "source_event_id": 1,
+        "destination": "android-app://example.2d1.com",
+        "source_type": "NAVIGATION",
+        "publisher": "https://example.1s1.com",
+        "registrant": "https://example.1s1.com",
+        "enrollment_id": "https://www.ad-tech1.com",
+        "priority": 100,
+        "expiry": 172801,
+        "event_time": 800000000001
+      },
+      {
+              "source_event_id": 2,
+              "destination": "android-app://example.2d1.com",
+              "source_type": "NAVIGATION",
+        "publisher": "https://example.1s1.com",
+              "registrant": "https://example.1s1.com",
+        "enrollment_id": "https://www.ad-tech1.com",
+              "priority": 100,
+              "expiry": 172801,
+        "event_time": 800000600001
+      }
+    ],
+    "triggers": [{
+              "event_trigger_data": [
+                {
+                  "trigger_data": 2,
+                  "priority": 101
+                }
+              ],
+              "registrant": "example.2d1.com",
+      "attribution_destination": "android-app://example.2d1.com",
+      "enrollment_id": "https://www.ad-tech1.com",
+      "trigger_time": 800001200001
+    }]
+  },
+  "output": {
+    "event_level_results": [{
+      "report_time": "800177000001",
+      "report_url": "https://www.ad-tech1.com",
+      "payload": {
+        "attribution_destination": "android-app://example.2d1.com",
+        "source_event_id": "2",
+        "trigger_data": "2",
+        "source_type": "NAVIGATION",
+        "randomized_trigger_rate": 0.0024263
+      }
+    }],
+    "aggregatable_results": []
+  }
+}

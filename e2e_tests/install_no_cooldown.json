@@ -1,0 +1,116 @@
+{
+  "description": "Two sources followed by an install, a source and three triggers. The triggers are all attributed to the most recent source, whose priority matches the first and is higher than the second source's.",
+  "input": {
+    "sources": [
+      {
+              "source_event_id": 1,
+              "destination": "android-app://example.2d1.com",
+              "priority": 1,
+              "source_type": "NAVIGATION",
+        "publisher": "https://example.1s1.com",
+              "registrant": "https://example.1s1.com",
+        "enrollment_id": "https://www.ad-tech1.com",
+              "install_attribution_window": 172800,
+              "expiry": 1728000,
+        "event_time": 800000000001
+      },
+      {
+              "source_event_id": 2,
+              "destination": "android-app://example.2d1.com",
+              "source_type": "EVENT",
+        "publisher": "https://example.1s1.com",
+              "registrant": "https://example.1s1.com",
+        "enrollment_id": "https://www.ad-tech1.com",
+              "priority": 0,
+              "install_attribution_window": 172800,
+              "expiry": 1728000,
+        "event_time": 800086400001
+      },
+      {
+              "source_event_id": 3,
+              "destination": "android-app://example.2d1.com",
+              "source_type": "NAVIGATION",
+        "publisher": "https://example.1s1.com",
+              "registrant": "https://example.1s1.com",
+        "enrollment_id": "https://www.ad-tech1.com",
+              "priority": 1,
+              "install_attribution_window": 172800,
+              "expiry": 1728000,
+        "event_time": 800259200001
+      }
+    ],
+    "triggers": [
+      {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": 1
+                  }
+                ],
+                "registrant": "example.2d1.com",
+        "attribution_destination": "android-app://example.2d1.com",
+        "enrollment_id": "https://www.ad-tech1.com",
+        "trigger_time": 800345600001
+      },
+      {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": 2
+                  }
+                ],
+                "registrant": "example.2d1.com",
+        "attribution_destination": "android-app://example.2d1.com",
+        "enrollment_id": "https://www.ad-tech1.com",
+        "trigger_time": 800518400001
+      },
+      {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": 3
+                  }
+                ],
+                "registrant": "example.2d1.com",
+        "attribution_destination": "android-app://example.2d1.com",
+        "enrollment_id": "https://www.ad-tech1.com",
+        "trigger_time": 800950400001
+      }
+    ]
+  },
+  "output": {
+    "event_level_results": [
+      {
+        "report_time": "800435600001",
+        "report_url": "https://www.ad-tech1.com",
+        "payload": {
+          "attribution_destination": "android-app://example.2d1.com",
+          "source_event_id": "3",
+          "trigger_data": "1",
+          "source_type": "NAVIGATION",
+          "randomized_trigger_rate": 0.0024263
+        }
+      },
+      {
+        "report_time": "800867600001",
+        "report_url": "https://www.ad-tech1.com",
+        "payload": {
+          "attribution_destination": "android-app://example.2d1.com",
+          "source_event_id": "3",
+          "trigger_data": "2",
+          "source_type": "NAVIGATION",
+          "randomized_trigger_rate": 0.0024263
+        }
+      },
+      {
+        "report_time": "801990800001",
+        "report_url": "https://www.ad-tech1.com",
+        "payload": {
+          "attribution_destination": "android-app://example.2d1.com",
+          "source_event_id": "3",
+          "trigger_data": "3",
+          "source_type": "NAVIGATION",
+          "randomized_trigger_rate": 0.0024263
+        }
+      }
+    ],
+    "aggregatable_results": []
+  }
+}
