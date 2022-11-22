@@ -21,7 +21,11 @@ py_library(
 py_library(
     name = "simulation_runner_wrapper",
     srcs = ["simulation_runner_wrapper.py"],
-    data = ["//:SimulationRunner_deploy.jar"],
+    data = [
+        "//:SimulationRunner_deploy.jar",
+        "//:config",
+        "//:reports",
+    ],
     imports = ["."],
     deps = [
         ":constants",

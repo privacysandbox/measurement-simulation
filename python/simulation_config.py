@@ -228,6 +228,7 @@ class SimulationConfig:
         f"--triggerStartDate={self.trigger_start_date.strftime(isoformat)}",
         f"--triggerEndDate={self.trigger_end_date.strftime(isoformat)}",
         f"--inputDirectory={self.input_directory}",
+        f"--domainAvroFile={self.domain_avro_file}",
         f"--outputDirectory={self.output_directory}",
         f"--attributionSourceFileName={self.attribution_source_file_name}",
         f"--triggerFileName={self.trigger_file_name}"

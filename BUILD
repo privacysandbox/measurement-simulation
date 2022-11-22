@@ -301,7 +301,7 @@ java_library(
         "java/com/google/rubidium/adtech/LocalAggregationRunner.java",
         "java/com/google/rubidium/adtech/ProcessBatch.java",
     ],
-    data = ["reports.avsc"],
+    data = [":reports"],
     deps = [
         ":AggregationArgs",
         ":AggregationWorker",
@@ -458,5 +458,11 @@ filegroup(
 filegroup(
     name = "config",
     srcs = glob(["config/*"]),
+    visibility = ["//python:__pkg__"],
+)
+
+filegroup(
+    name = "reports",
+    srcs = glob(["reports.avsc"]),
     visibility = ["//python:__pkg__"],
 )
