@@ -1,0 +1,63 @@
+{
+  "input": {
+    "sources": [
+      {
+        "timestamp": 1643235573000,
+        "enrollment_id": "https://reporter.test/",
+        "source_type": "NAVIGATION",
+        "publisher": "https://source.test",
+        "publisher_type": "WEB",
+        "registrant": "https://source.test",
+        "source_event_id": 123,
+        "web_destination": "https://destination.com"
+      }
+    ],
+    "triggers": [
+      {
+        "destination_type": "WEB",
+        "timestamp": 1643235574000,
+        "enrollment_id": "https://reporter.test/",
+        "registrant": "https://reporter.test/",
+        "attribution_destination": "https://destination.com",
+        "event_trigger_data": [
+          {
+            "trigger_data": 7
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "event_level_results": [
+      {
+        "payload": {
+          "attribution_destination": "https://destination.com",
+          "randomized_trigger_rate": 0.0024263,
+          "scheduled_report_time": "1643411973",
+          "source_event_id": "123",
+          "source_type": "navigation",
+          "trigger_data": "7"
+        },
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-event-attribution",
+        "report_time": "1643411973000"
+      }
+    ],
+    "verbose_debug_reports": [
+      {
+        "payload": [
+          {
+            "body": {
+              "attribution_destination": "https://destination.com",
+              "source_event_id": "123",
+              "source_site": "https://source.test"
+            },
+            "type": "source-success"
+          }
+        ],
+        "report_time": "1643235573000",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/verbose"
+      }
+    ],
+    "aggregatable_results": []
+  }
+}

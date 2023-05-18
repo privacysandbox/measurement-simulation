@@ -34,18 +34,42 @@ class TestEndToEnd(unittest.TestCase):
     runner = SimulationRunnerWrapper(py4j_jar_path=py4j_jar_bin,
                                      classpath=classpath)
     input_dir = f"{test_src}/testdata"
-    domain_avro_file = f"{test_src}/testdata/domain.avro"
+    output_dir = f"{test_src}/output"
+    os.mkdir(output_dir)
+
     simulation_config = SimulationConfig(
         input_directory=input_dir,
-        domain_avro_file=domain_avro_file,
+        output_directory=output_dir,
         source_start_date=datetime.strptime("2022-01-15", isoformat).date(),
-        source_end_date=datetime.strptime("2022-01-15", isoformat).date(),
+        source_end_date=datetime.strptime("2022-01-16", isoformat).date(),
         trigger_start_date=datetime.strptime("2022-01-15", isoformat).date(),
-        trigger_end_date=datetime.strptime("2022-01-15", isoformat).date(),
+        trigger_end_date=datetime.strptime("2022-01-16", isoformat).date(),
     )
 
+    # Verify simulation made it to the end without errors
     success = runner.run(simulation_config)
     self.assertEqual(success, True)
+
+    # Verify output of simulation:
+    #  As of Q2 2023, The sample input in the testdata directory should produce
+    #  5 directories of output:
+    #  - 1 for aggregatable reports, named "input_batches"
+    #  - 2 for OS and Web API event reports
+    #  - 2 aggregation reports (1 for each aggregatable report in input_batches)
+    num_output_directories = 5
+    input_batches_dir = f"{output_dir}/input_batches"
+    num_input_batches = 2
+    os_u1_directory = f"{output_dir}/OS/U1"
+    os_u2_directory = f"{output_dir}/OS/U2"
+    web_u1_directory = f"{output_dir}/WEB/U1"
+    web_u2_directory = f"{output_dir}/WEB/U2"
+
+    self.assertEqual(len(os.listdir(output_dir)), num_output_directories)
+    self.assertEqual(len(os.listdir(input_batches_dir)), num_input_batches)
+    self.assertEqual(os.listdir(os_u1_directory)[0], "event_reports.json")
+    self.assertEqual(os.listdir(os_u2_directory)[0], "event_reports.json")
+    self.assertEqual(os.listdir(web_u1_directory)[0], "event_reports.json")
+    self.assertEqual(os.listdir(web_u2_directory)[0], "event_reports.json")
 
 
 if __name__ == '__main__':

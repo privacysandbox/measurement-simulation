@@ -41,8 +41,6 @@ def main():
                       dest="trigger_end_date")
   parser.add_argument("--input_directory",
                       dest="input_directory")
-  parser.add_argument("--domain_avro_file",
-                      dest="domain_avro_file")
   parser.add_argument("--output_directory",
                       dest="output_directory")
   parser.add_argument("--attribution_source_file_name",
@@ -55,8 +53,6 @@ def main():
   args = vars(parser.parse_args())
   simulation_config = SimulationConfig(input_directory=
                                        args['input_directory'],
-                                       domain_avro_file=
-                                       args['domain_avro_file'],
                                        output_directory=
                                        args['output_directory'],
                                        source_start_date=

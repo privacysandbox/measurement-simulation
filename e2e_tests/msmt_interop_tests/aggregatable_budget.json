@@ -1,0 +1,230 @@
+{
+  "input": {
+    "sources": [
+      {
+        "timestamp": 1643235573000,
+        "enrollment_id": "https://reporter.test/",
+        "source_type": "NAVIGATION",
+        "publisher": "https://source.test",
+        "publisher_type": "WEB",
+        "registrant": "https://source.test",
+        "source_event_id": 123,
+        "web_destination": "https://destination.com",
+        "aggregation_keys": {
+          "a": "0x159",
+          "b": "0x5"
+        }
+      },
+      {
+        "timestamp": 1643235583000,
+        "enrollment_id": "https://reporter.test/",
+        "source_type": "NAVIGATION",
+        "publisher": "https://source.test",
+        "publisher_type": "WEB",
+        "registrant": "https://source.test",
+        "source_event_id": 456,
+        "web_destination": "https://destination.com",
+        "aggregation_keys": {
+          "a": "0x159",
+          "b": "0x5"
+        },
+        "debug_key": "54321"
+      }
+    ],
+    "triggers": [
+      {
+        "destination_type": "WEB",
+        "timestamp": 1643235574000,
+        "enrollment_id": "https://reporter.test/",
+        "registrant": "https://reporter.test/",
+        "attribution_destination": "https://destination.com",
+        "aggregatable_trigger_data": [
+          {
+            "source_keys": [
+              "a"
+            ],
+            "key_piece": "0x400"
+          },
+          {
+            "source_keys": [
+              "b"
+            ],
+            "key_piece": "0xA80"
+          }
+        ],
+        "aggregatable_values": {
+          "a": 65530,
+          "b": 7
+        }
+      },
+      {
+        "destination_type": "WEB",
+        "timestamp": 1643235575000,
+        "enrollment_id": "https://reporter.test/",
+        "registrant": "https://reporter.test/",
+        "attribution_destination": "https://destination.com",
+        "aggregatable_trigger_data": [
+          {
+            "source_keys": [
+              "a"
+            ],
+            "key_piece": "0x400"
+          }
+        ],
+        "aggregatable_values": {
+          "a": 65535
+        }
+      },
+      {
+        "destination_type": "WEB",
+        "timestamp": 1643235576000,
+        "enrollment_id": "https://reporter.test/",
+        "registrant": "https://reporter.test/",
+        "attribution_destination": "https://destination.com",
+        "aggregatable_trigger_data": [
+          {
+            "source_keys": [
+              "b"
+            ],
+            "key_piece": "0xa80"
+          }
+        ],
+        "aggregatable_values": {
+          "a": 2
+        }
+      },
+      {
+        "destination_type": "WEB",
+        "timestamp": 1643235577000,
+        "enrollment_id": "https://reporter.test/",
+        "registrant": "https://reporter.test/",
+        "attribution_destination": "https://destination.com",
+        "aggregatable_trigger_data": [
+          {
+            "source_keys": [
+              "b"
+            ],
+            "key_piece": "0xa80"
+          }
+        ],
+        "aggregatable_values": {
+          "b": 1
+        }
+      },
+      {
+        "destination_type": "WEB",
+        "timestamp": 1643235584000,
+        "enrollment_id": "https://reporter.test/",
+        "registrant": "https://reporter.test/",
+        "attribution_destination": "https://destination.com",
+        "aggregatable_trigger_data": [
+          {
+            "source_keys": [
+              "b"
+            ],
+            "key_piece": "0xa80"
+          }
+        ],
+        "aggregatable_values": {
+          "b": 65536
+        }
+      },
+      {
+        "destination_type": "WEB",
+        "timestamp": 1643235585000,
+        "enrollment_id": "https://reporter.test/",
+        "registrant": "https://reporter.test/",
+        "attribution_destination": "https://destination.com",
+        "aggregatable_trigger_data": [
+          {
+            "source_keys": [
+              "b"
+            ],
+            "key_piece": "0xa81"
+          }
+        ],
+        "aggregatable_values": {
+          "b": 1
+        }
+      }
+    ]
+  },
+  "output": {
+    "aggregatable_results": [
+      {
+        "payload": {
+          "attribution_destination": "https://destination.com",
+          "histograms": [
+            {
+              "key": "1369",
+              "value": 65535
+            }
+          ]
+        },
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "report_time": "1643239175000"
+      },
+      {
+        "payload": {
+          "attribution_destination": "https://destination.com",
+          "histograms": [
+            {
+              "key": "2693",
+              "value": 1
+            }
+          ]
+        },
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "report_time": "1643239177000"
+      },
+      {
+        "payload": {
+          "attribution_destination": "https://destination.com",
+          "histograms": [
+            {
+              "key": "2693",
+              "value": 65536
+            }
+          ],
+          "source_debug_key": "54321"
+        },
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "report_time": "1643239184000"
+      }
+    ],
+    "verbose_debug_reports": [
+      {
+        "payload": [
+          {
+            "body": {
+              "attribution_destination": "https://destination.com",
+              "limit": "65536",
+              "source_event_id": "123",
+              "source_site": "https://source.test",
+              "trigger_debug_key": "6789"
+            },
+            "type": "trigger-aggregate-insufficient-budget"
+          }
+        ],
+        "report_time": "1643235574000",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/verbose"
+      },
+      {
+        "payload": [
+          {
+            "body": {
+              "attribution_destination": "https://destination.com",
+              "limit": "65536",
+              "source_debug_key": "54321",
+              "source_event_id": "456",
+              "source_site": "https://source.test"
+            },
+            "type": "trigger-aggregate-insufficient-budget"
+          }
+        ],
+        "report_time": "1643235585000",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/verbose"
+      }
+    ]
+  }
+}

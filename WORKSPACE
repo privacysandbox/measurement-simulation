@@ -29,26 +29,6 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
 )
 
-RULES_PROTO_TAG = "4.0.0"
-
-RULES_PROTO_SHA = "66bfdf8782796239d3875d37e7de19b1d94301e8972b3cbd2446b332429b4df1"
-
-http_archive(
-    name = "rules_proto",
-    sha256 = RULES_PROTO_SHA,
-    strip_prefix = "rules_proto-%s" % RULES_PROTO_TAG,
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_proto/archive/refs/tags/%s.tar.gz" % RULES_PROTO_TAG,
-        "https://github.com/bazelbuild/rules_proto/archive/refs/tags/%s.tar.gz" % RULES_PROTO_TAG,
-    ],
-)
-
-load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
-
-rules_proto_dependencies()
-
-rules_proto_toolchains()
-
 APACHE_AVRO_VERSION = "1.4.1"
 
 APACHE_BEAM_VERSION = "2.36.0"
@@ -71,8 +51,6 @@ COMMONS_IO_VERSION = "2.11.0"
 
 JUNIT_VERSION = "4.13.2"
 
-PROTOBUF_JAVA_VERSION = "3.21.1"
-
 CBOR_VERSION = "0.7"
 
 load("@rules_jvm_external//:repositories.bzl", "rules_jvm_external_deps")
@@ -93,7 +71,7 @@ maven_install(
         "org.apache.beam:beam-runners-direct-java:" + APACHE_BEAM_VERSION,
         "commons-io:commons-io:" + COMMONS_IO_VERSION,
         "org.mockito:mockito-core:" + MOCKITO_VERSION,
-        "com.google.protobuf:protobuf-java:" + PROTOBUF_JAVA_VERSION,
+        "org.mockito:mockito-inline:" + MOCKITO_VERSION,
         "com.googlecode.json-simple:json-simple:" + SIMPLE_JSON_VERSION,
         "junit:junit:" + JUNIT_VERSION,
         "org.apache.beam:beam-vendor-guava-26_0-jre:" + APACHE_BEAM_VENDOR_GUAVA_VERSION,

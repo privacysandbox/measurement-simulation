@@ -49,8 +49,6 @@ class SimulationConfig:
     SimulationRunner will get its inputs (Triggers and Sources). Starting from
     this directory the structure should follow year/month/day,
     i.e. 2022/01/15. Must be an absolute path.
-    domain_avro_file: The file path for the input domain file that would be
-    used for Aggregation.
     source_start_date: The first date of attribution source events.
     source_end_date: The last date of attribution source events, should come on
     or after source_start_date.
@@ -69,7 +67,6 @@ class SimulationConfig:
 
   def __init__(self,
       input_directory: str,
-      domain_avro_file: str,
       source_start_date: date,
       source_end_date: date,
       trigger_start_date: date,
@@ -86,12 +83,6 @@ class SimulationConfig:
     else:
       self.input_directory = self.validate_directory(input_directory,
                                                      "input_directory")
-    if domain_avro_file is None:
-      self.errors.append("Please provide a valid value for Argument "
-                         "domain_avro_file")
-    else:
-      self.domain_avro_file = self.validate_filepath(domain_avro_file,
-                                                     "domain_avro_file")
     if output_directory is not None:
       self.output_directory = self.validate_directory(output_directory,
                                                       "output_directory")
@@ -217,7 +208,7 @@ class SimulationConfig:
     """ Convert class attributes to command line flags
 
     Command line flags are defined in
-    java/com/google/rubidium/SimulationConfig.java.
+    java/com/google/measurement/SimulationConfig.java.
 
     Returns:
       List of strings, each element is a flag with its value appended.
@@ -228,7 +219,6 @@ class SimulationConfig:
         f"--triggerStartDate={self.trigger_start_date.strftime(isoformat)}",
         f"--triggerEndDate={self.trigger_end_date.strftime(isoformat)}",
         f"--inputDirectory={self.input_directory}",
-        f"--domainAvroFile={self.domain_avro_file}",
         f"--outputDirectory={self.output_directory}",
         f"--attributionSourceFileName={self.attribution_source_file_name}",
         f"--triggerFileName={self.trigger_file_name}"

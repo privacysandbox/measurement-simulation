@@ -1,0 +1,231 @@
+{
+  "input": {
+    "sources": [
+      {
+        "timestamp": 1643235573000,
+        "enrollment_id": "https://reporter.test/",
+        "source_type": "NAVIGATION",
+        "publisher": "https://source.test",
+        "source_event_id": 123,
+        "publisher_type": "WEB",
+        "registrant": "https://source.test",
+        "web_destination": "https://destination.com",
+        "aggregation_keys": {
+          "a": "0x1"
+        },
+        "debug_key": "111"
+      },
+      {
+        "timestamp": 1643235573001,
+        "enrollment_id": "https://another-reporter.test/",
+        "source_type": "NAVIGATION",
+        "source_event_id": 456,
+        "publisher": "https://source.test",
+        "publisher_type": "WEB",
+        "registrant": "https://source.test",
+        "web_destination": "https://destination.com",
+        "aggregation_keys": {
+          "a": "0x2"
+        }
+      },
+      {
+        "timestamp": 1643235573002,
+        "enrollment_id": "https://reporter.test/",
+        "source_type": "NAVIGATION",
+        "source_event_id": 789,
+        "publisher": "https://source.test",
+        "publisher_type": "WEB",
+        "registrant": "https://source.test",
+        "web_destination": "https://another-destination.com",
+        "aggregation_keys": {
+          "a": "0x3"
+        },
+        "debug_key": "222"
+      }
+    ],
+    "triggers": [
+      {
+        "destination_type": "WEB",
+        "timestamp": 1643235574000,
+        "enrollment_id": "https://reporter.test/",
+        "registrant": "https://reporter.test/",
+        "attribution_destination": "https://destination.com",
+        "aggregatable_trigger_data": [
+          {
+            "source_keys": [
+              "a"
+            ],
+            "key_piece": "0x10"
+          }
+        ],
+        "aggregatable_values": {
+          "a": 111
+        }
+      },
+      {
+        "destination_type": "WEB",
+        "timestamp": 1643235575000,
+        "enrollment_id": "https://reporter.test/",
+        "registrant": "https://reporter.test/",
+        "attribution_destination": "https://destination.com",
+        "aggregatable_trigger_data": [
+          {
+            "source_keys": [
+              "a"
+            ],
+            "key_piece": "0x10"
+          }
+        ],
+        "aggregatable_values": {
+          "a": 222
+        }
+      },
+      {
+        "destination_type": "WEB",
+        "timestamp": 1643235576000,
+        "enrollment_id": "https://reporter.test/",
+        "registrant": "https://reporter.test/",
+        "attribution_destination": "https://destination.com",
+        "aggregatable_trigger_data": [
+          {
+            "source_keys": [
+              "a"
+            ],
+            "key_piece": "0x10"
+          }
+        ],
+        "aggregatable_values": {
+          "a": 333
+        }
+      },
+      {
+        "destination_type": "WEB",
+        "timestamp": 1643235577000,
+        "enrollment_id": "https://another-reporter.test/",
+        "registrant": "https://another-reporter.test/",
+        "attribution_destination": "https://destination.com",
+        "aggregatable_trigger_data": [
+          {
+            "source_keys": [
+              "a"
+            ],
+            "key_piece": "0x10"
+          }
+        ],
+        "aggregatable_values": {
+          "a": 444
+        }
+      },
+      {
+        "destination_type": "WEB",
+        "timestamp": 1643235578000,
+        "enrollment_id": "https://reporter.test/",
+        "registrant": "https://reporter.test/",
+        "attribution_destination": "https://another-destination.com",
+        "aggregatable_trigger_data": [
+          {
+            "source_keys": [
+              "a"
+            ],
+            "key_piece": "0x10"
+          }
+        ],
+        "aggregatable_values": {
+          "a": 555
+        }
+      }
+    ]
+  },
+  "output": {
+    "aggregatable_results": [
+      {
+        "payload": {
+          "attribution_destination": "https://destination.com",
+          "histograms": [
+            {
+              "key": "17",
+              "value": 111
+            }
+          ],
+          "source_debug_key": "111",
+          "trigger_debug_key": "333"
+        },
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "report_time": "1643239174000"
+      },
+      {
+        "payload": {
+          "attribution_destination": "https://destination.com",
+          "histograms": [
+            {
+              "key": "17",
+              "value": 222
+            }
+          ],
+          "source_debug_key": "111"
+        },
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "report_time": "1643239175000"
+      },
+      {
+        "payload": {
+          "attribution_destination": "https://destination.com",
+          "histograms": [
+            {
+              "key": "17",
+              "value": 333
+            }
+          ],
+          "source_debug_key": "111"
+        },
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "report_time": "1643239176000"
+      },
+      {
+        "payload": {
+          "attribution_destination": "https://destination.com",
+          "histograms": [
+            {
+              "key": "18",
+              "value": 444
+            }
+          ],
+          "trigger_debug_key": "555"
+        },
+        "report_url": "https://another-reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "report_time": "1643239177000"
+      },
+      {
+        "payload": {
+          "attribution_destination": "https://another-destination.com",
+          "histograms": [
+            {
+              "key": "19",
+              "value": 555
+            }
+          ],
+          "trigger_debug_key": "666"
+        },
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "report_time": "1643239178000"
+      }
+    ],
+    "debug_aggregatable_results": [
+      {
+        "payload": {
+          "attribution_destination": "https://destination.com",
+          "histograms": [
+            {
+              "key": "17",
+              "value": 111
+            }
+          ],
+          "source_debug_key": "111",
+          "trigger_debug_key": "333"
+        },
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
+        "report_time": "1643235574000"
+      }
+    ]
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "input": {
+    "sources": [
+      {
+        "timestamp": 1643235573000,
+        "enrollment_id": "https://reporter.test/",
+        "source_type": "EVENT",
+        "publisher": "https://source.test",
+        "publisher_type": "WEB",
+        "registrant": "https://source.test",
+        "source_event_id": 123,
+        "web_destination": "https://destination.com"
+      }
+    ],
+    "triggers": [
+      {
+        "destination_type": "WEB",
+        "timestamp": 1643235574000,
+        "enrollment_id": "https://reporter.test/",
+        "registrant": "https://reporter.test/",
+        "attribution_destination": "https://destination.com",
+        "event_trigger_data": [
+          {
+            "trigger_data": 0,
+            "priority": -1
+          }
+        ]
+      },
+      {
+        "destination_type": "WEB",
+        "timestamp": 1643235575000,
+        "enrollment_id": "https://reporter.test/",
+        "registrant": "https://reporter.test/",
+        "attribution_destination": "https://destination.com",
+        "event_trigger_data": [
+          {
+            "trigger_data": 1
+          }
+        ]
+      },
+      {
+        "destination_type": "WEB",
+        "timestamp": 1643235576000,
+        "enrollment_id": "https://reporter.test/",
+        "registrant": "https://reporter.test/",
+        "attribution_destination": "https://destination.com",
+        "event_trigger_data": [
+          {
+            "trigger_data": 0
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "event_level_results": [
+      {
+        "payload": {
+          "attribution_destination": "https://destination.com",
+          "randomized_trigger_rate": 2.5e-06,
+          "scheduled_report_time": "1645831173",
+          "source_event_id": "123",
+          "source_type": "event",
+          "trigger_data": "1"
+        },
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-event-attribution",
+        "report_time": "1645831173000"
+      }
+    ],
+    "verbose_debug_reports": [
+      {
+        "payload": [
+          {
+            "body": {
+              "attribution_destination": "https://destination.com",
+              "randomized_trigger_rate": 2.5e-06,
+              "scheduled_report_time": "1645831173",
+              "source_event_id": "123",
+              "source_type": "event",
+              "trigger_data": "0"
+            },
+            "type": "trigger-event-low-priority"
+          }
+        ],
+        "report_time": "1643235576000",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/verbose"
+      }
+    ]
+  }
+}

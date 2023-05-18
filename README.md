@@ -1,13 +1,12 @@
 # Attribution Reporting Simulation Library
 
-
 The Attribution Reporting Simulation Library allows you to examine the impact of the Attribution Reporting API by taking historical data and presenting it as if it were collected by the API in real-time. This allows you to compare historical conversion numbers with Attribution Reporting Simulation Library results to see how reporting accuracy would change. You can also use the Simulation Library to experiment with different aggregation key structures and batching strategies, and train optimization models on Simulation Library reports to compare projected performance with models based on current data.
 
 The Attribution Reporting Simulation Library provides a simplified mock environment, allowing you to test parameters and evaluate how the API can satisfy ad tech measurement use cases while making minimal investments in local infrastructure and resources.
 
 # Build & Run
 
-This repository depends on Bazel 4.2.2 with JDK 11 and Python 3.8.  The following environment variables should be set in your local environment (the exact location will depend on your environment):
+This repository depends on Bazel 4.2.2 with JDK 11 and Python 3.8. The following environment variables should be set in your local environment (the exact location will depend on your environment):
 
 ```
 JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
@@ -21,7 +20,6 @@ The library uses general simulation related arguments which can be passed in the
 | Running Python wrapper       | Running java code         | Description                                                                                                                         |
 |------------------------------|---------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
 | input_directory              | inputDirectory            | The top level directory of where the library will get its inputs                                                                    |
-| domain_avro_file             | domainAvroFile            | The file path for the input domain file that would be used for Aggregtion                                                           |
 | output_directory             | outputDirectory           | The directory that will hold results from the simulation                                                                            |
 | source_start_date            | sourceStartDate           | The first date of attribution source events                                                                                         |
 | source_end_date              | sourceEndDate             | The last date of attribution source events, should come on or after source_start_date                                               |
@@ -50,10 +48,10 @@ You can run the simulation library as a standalone Python library, imported as a
 1. Copy your script that contains the existing pipeline to the Python directory.
 2. Import the Attribution Reporting Simulation Library and instantiate the simulation runner:
 
-   ```
+    ```
     from simulation_runner_wrapper import SimulationRunnerWrapper
     simulation_runner = SimulationRunnerWrapper()
-   ```
+    ```
 3. Instantiate the `SimulationConfig` class to provide command-line arguments:
 
     ```
@@ -62,7 +60,9 @@ You can run the simulation library as a standalone Python library, imported as a
     ```
 
 4. Finally, execute the simulation by calling
-   `simulation_runner.run(simulation_config=config)`.
+    ```
+    simulation_runner.run(simulation_config=config)
+    ```
 
 ### Run the JAR directly
 Execute the simulation by running `bazel run -- //:SimulationRunner` followed by desired arguments, e.g. `--inputDirectory=<path_to_testdata>`.
@@ -70,32 +70,32 @@ Execute the simulation by running `bazel run -- //:SimulationRunner` followed by
 
 ### Sample run
 ```
-$ bazel run -- //:SimulationRunner --sourceStartDate=2022-01-15 --sourceEndDate=2022-01-16 --triggerStartDate=2022-01-15 --triggerEndDate=2022-02-06 --inputDirectory=<path_to_simulation_library>/testdata/ --domainAvroFile=<path_to_simulation_library>/testdata/domain.avro --outputDirectory=<path_to_output_directory>
+$ bazel run -- //:SimulationRunner --sourceStartDate=2022-01-15 --sourceEndDate=2022-01-16 --triggerStartDate=2022-01-15 --triggerEndDate=2022-02-06 --inputDirectory=<path_to_simulation_library>/testdata/ --outputDirectory=<path_to_output_directory>
 ```
 
 After the successful run, you should see the following files and directories in the output directory:
 - input_batches
   - Several .avro files - These are aggregatable batches that are sent to the aggregation service as input.
 
-- For each .avro file, the following will also be generated: 
+- For each .avro file, the following will also be generated:
   - <input_avro_file_name>/output.avro - Output aggregate report
   - <input_avro_file_name>/result_info.json
 
-- U1/event_reports.json - Event reports for the user “U1”
-- U2/event_reports.json - Event reports for the user “U2”
-
-If you want the output aggregate reports in json instead of avro files, set `jsonOutput = true` in `config/AggregationArgs.properties` file.
+- OS/U1/event_reports.json - Event reports for the user “U1” using logs for the OS platform
+- OS/U2/event_reports.json - Event reports for the user “U2” using logs for the OS platform
+- WEB/U1/event_reports.json - Event reports for the user “U1” using logs for the WEB platform
+- WEB/U2/event_reports.json - Event reports for the user “U2” using logs for the WEB platform
 
 ### Reading from the output avro files
-You can download the Avro tools jar 1.11.1 [here](https://downloads.apache.org/avro/stable/java/avro-1.11.1.jar). To read the avro file in human-readable json format, run:
+You can download the Avro tools jar 1.11.1 [here](https://downloads.apache.org/avro/stable/java/avro-tools-1.11.1.jar). To read the avro file in human-readable json format, run:
 ```
-java -jar avro-tools-1.11.`.jar tojson <output_avro_file> 
+java -jar avro-tools-1.11.1.jar tojson <output_avro_file>
 ```
 
 You can see the output as:
 ```
 {"bucket": "key1", "metric": <value1>}
-{"bucket": "key2", "metric": <value2>}.
+{"bucket": "key2", "metric": <value2>}
 ```
 
 

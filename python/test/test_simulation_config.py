@@ -18,12 +18,11 @@ from pyfakefs.fake_filesystem_unittest import TestCase
 from python.simulation_config import SimulationConfig
 
 input_dir = "/input"
-domain_avro_file = "/input/domain.avro"
 output_dir = "/output"
 isoformat = "%Y-%m-%d"
 
 
-def build_config(input_directory=input_dir, domain_avro_file=domain_avro_file,
+def build_config(input_directory=input_dir,
     output_directory=output_dir,
     source_start_date=datetime.strptime("2022-01-15", isoformat).date(),
     source_end_date=datetime.strptime("2022-01-15", isoformat).date(),
@@ -34,7 +33,6 @@ def build_config(input_directory=input_dir, domain_avro_file=domain_avro_file,
 ):
   simulation_config = SimulationConfig(
       input_directory=input_directory,
-      domain_avro_file=domain_avro_file,
       output_directory=output_directory,
       source_start_date=source_start_date,
       source_end_date=source_end_date,

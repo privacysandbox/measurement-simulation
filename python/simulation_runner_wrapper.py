@@ -89,7 +89,7 @@ class SimulationRunnerWrapper:
                                               classpath=classpath,
                                               port=PY4J_GATEWAY_PORT,
                                               die_on_exit=True)
-    self.runner = self.gateway.jvm.com.google.rubidium.SimulationRunner()
+    self.runner = self.gateway.jvm.com.google.measurement.SimulationRunner()
 
   def run(self, simulation_config: SimulationConfig = None) -> bool:
     """Forwards arguments to the SimulationRunner
