@@ -17,6 +17,7 @@
 package com.google.measurement;
 
 import com.google.measurement.util.UnsignedLong;
+import com.google.measurement.util.Util;
 import java.util.Objects;
 import java.util.Optional;
 import org.json.simple.JSONObject;
@@ -71,8 +72,9 @@ public class XNetworkData {
 
     public Builder(JSONObject jsonObject) {
       if (jsonObject.containsKey(XNetworkDataContract.KEY_OFFSET)) {
-        long keyOffset = (long) jsonObject.get(XNetworkDataContract.KEY_OFFSET);
-        mKeyOffset = Optional.of(new UnsignedLong(keyOffset));
+        UnsignedLong keyOffset =
+            Util.parseJsonUnsignedLong(jsonObject, XNetworkDataContract.KEY_OFFSET);
+        mKeyOffset = Optional.of(keyOffset);
       }
     }
 

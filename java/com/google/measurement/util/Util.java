@@ -36,9 +36,73 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import org.json.simple.JSONObject;
 
 public class Util {
 
+  public static int parseJsonInt(JSONObject jsonObject, String key) {
+    if (!jsonObject.containsKey(key)) {
+      throw new IllegalArgumentException("Key: " + key + ", not found in jsonObject");
+    }
+
+    Object value = jsonObject.get(key);
+    int integer;
+    if (value instanceof String) {
+      integer = Integer.parseInt((String) value);
+    } else if (value instanceof Integer) {
+      integer = (int) value;
+    } else if (value instanceof Long) {
+      integer = Math.toIntExact((long) value);
+    } else {
+      throw new IllegalArgumentException(
+          "Value of: " + value + ", for key: " + key + ", is not a String, int, or long.");
+    }
+
+    return integer;
+  }
+
+  public static long parseJsonLong(JSONObject jsonObject, String key) {
+    if (!jsonObject.containsKey(key)) {
+      throw new IllegalArgumentException("Key: " + key + ", not found in jsonObject");
+    }
+
+    Object value = jsonObject.get(key);
+    long l;
+    if (value instanceof String) {
+      l = Long.parseLong((String) value);
+    } else if (value instanceof Integer) {
+      l = (long) (int) value;
+    } else if (value instanceof Long) {
+      l = (long) value;
+    } else {
+      throw new IllegalArgumentException(
+          "Value of: " + value + ", for key: " + key + ", is not a String, int, or long.");
+    }
+
+    return l;
+  }
+
+  public static UnsignedLong parseJsonUnsignedLong(JSONObject jsonObject, String key) {
+    if (!jsonObject.containsKey(key)) {
+      throw new IllegalArgumentException("Key: " + key + ", not found in jsonObject");
+    }
+
+    Object value = jsonObject.get(key);
+    UnsignedLong unsignedLong;
+
+    if (value instanceof String) {
+      unsignedLong = new UnsignedLong((String) value);
+    } else if (value instanceof Integer) {
+      unsignedLong = new UnsignedLong(Long.valueOf((int) value));
+    } else if (value instanceof Long) {
+      unsignedLong = new UnsignedLong((long) value);
+    } else {
+      throw new IllegalArgumentException(
+          "Value of: " + value + ", for key: " + key + ", is not a String, int, or long.");
+    }
+
+    return unsignedLong;
+  }
   /**
    * Given a string that is to be used within a Unix filepath, sanitize that string so that illegal
    * characters don't prevent creation of the filepath.

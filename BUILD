@@ -52,7 +52,6 @@ java_library(
         "java/com/google/measurement/util/BaseUriExtractor.java",
         "java/com/google/measurement/util/Filter.java",
         "java/com/google/measurement/util/MathUtils.java",
-        "java/com/google/measurement/util/UnsignedLong.java",
         "java/com/google/measurement/util/Web.java",
     ],
     deps = [
@@ -90,6 +89,7 @@ java_library(
     srcs = ["javatests/com/google/measurement/SourceFixture.java"],
     deps = [
         ":ClientDevice",
+        ":Util",
         "@maven//:com_googlecode_json_simple_json_simple",
     ],
 )
@@ -110,6 +110,7 @@ java_test(
     deps = [
         ":ClientDevice",
         ":SourceFixture",
+        ":Util",
         "@maven//:com_googlecode_json_simple_json_simple",
         "@maven//:org_mockito_mockito_core",
     ],
@@ -136,6 +137,7 @@ java_test(
     deps = [
         ":ClientDevice",
         ":TriggerFixture",
+        ":Util",
         "@maven//:com_googlecode_json_simple_json_simple",
     ],
 )
@@ -148,6 +150,7 @@ java_test(
         ":ClientDevice",
         ":SourceFixture",
         ":TriggerFixture",
+        ":Util",
         "@maven//:com_googlecode_json_simple_json_simple",
         "@maven//:org_mockito_mockito_core",
     ],
@@ -169,6 +172,7 @@ java_test(
     data = [":config"],
     deps = [
         ":ClientDevice",
+        ":Util",
     ],
 )
 
@@ -180,6 +184,7 @@ java_test(
         ":ClientDevice",
         ":SourceFixture",
         ":TriggerFixture",
+        ":Util",
         "@maven//:com_googlecode_json_simple_json_simple",
         "@maven//:org_mockito_mockito_core",
     ],
@@ -252,7 +257,10 @@ java_test(
     srcs = [
         "javatests/com/google/measurement/aggregation/AggregateDeduplicationKeyTest.java",
     ],
-    deps = [":ClientDevice"],
+    deps = [
+        ":ClientDevice",
+        ":Util",
+    ],
 )
 
 java_test(
@@ -272,6 +280,7 @@ java_test(
         ":ClientDevice",
         ":SourceFixture",
         ":TriggerFixture",
+        ":Util",
         "@maven//:com_googlecode_json_simple_json_simple",
     ],
 )
@@ -305,10 +314,12 @@ java_test(
 java_library(
     name = "Util",
     srcs = [
+        "java/com/google/measurement/util/UnsignedLong.java",
         "java/com/google/measurement/util/Util.java",
     ],
     deps = [
         "@maven//:com_google_guava_guava",
+        "@maven//:com_googlecode_json_simple_json_simple",
     ],
 )
 
@@ -439,6 +450,7 @@ java_test(
     data = ["testdata"],
     deps = [
         ":Util",
+        "@maven//:com_googlecode_json_simple_json_simple",
     ],
 )
 
@@ -455,6 +467,7 @@ java_test(
     srcs = ["javatests/com/google/measurement/util/UnsignedLongTest.java"],
     deps = [
         ":ClientDevice",
+        ":Util",
     ],
 )
 
@@ -463,6 +476,7 @@ java_test(
     srcs = ["javatests/com/google/measurement/UserSimulationTest.java"],
     deps = [
         ":ClientDevice",
+        ":Util",
         "@maven//:com_googlecode_json_simple_json_simple",
         "@maven//:org_mockito_mockito_core",
     ],

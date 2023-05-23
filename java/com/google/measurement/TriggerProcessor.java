@@ -18,6 +18,7 @@ package com.google.measurement;
 
 import com.google.measurement.Trigger.Status;
 import com.google.measurement.util.Filter;
+import com.google.measurement.util.Util;
 import java.net.URI;
 import java.util.Iterator;
 import java.util.Optional;
@@ -57,7 +58,7 @@ public class TriggerProcessor {
         URI.create((String) jsonObject.get("attribution_destination")));
     builder.setRegistrant(URI.create((String) jsonObject.get("registrant")));
     builder.setDestinationType(destinationType);
-    builder.setTriggerTime((Long) jsonObject.get("timestamp"));
+    builder.setTriggerTime(Util.parseJsonLong(jsonObject, "timestamp"));
 
     builder.setEnrollmentId((String) jsonObject.get("enrollment_id"));
     builder.setStatus(Status.PENDING);
@@ -78,12 +79,12 @@ public class TriggerProcessor {
 
     if (jsonObject.containsKey("aggregatable_trigger_data")) {
       JSONArray aggregatableTriggerData = (JSONArray) jsonObject.get("aggregatable_trigger_data");
-      Optional<String> validAggregatableTrigerData =
+      Optional<String> validAggregatableTriggerData =
           getValidAggregatableTriggerData(aggregatableTriggerData);
-      if (!validAggregatableTrigerData.isPresent()) {
+      if (!validAggregatableTriggerData.isPresent()) {
         return false;
       }
-      builder.setAggregateTriggerData(validAggregatableTrigerData.get());
+      builder.setAggregateTriggerData(validAggregatableTriggerData.get());
     }
 
     if (jsonObject.containsKey("aggregatable_values")) {
@@ -146,7 +147,8 @@ public class TriggerProcessor {
       // set.
       if (eventTriggerDatum.containsKey("trigger_data")) {
         try {
-          validEventTriggerDatum.put("trigger_data", (long) eventTriggerDatum.get("trigger_data"));
+          validEventTriggerDatum.put(
+              "trigger_data", Util.parseJsonLong(eventTriggerDatum, "trigger_data"));
         } catch (NumberFormatException e) {
           logger.info(
               String.format(
@@ -156,7 +158,7 @@ public class TriggerProcessor {
       }
       if (eventTriggerDatum.containsKey("priority")) {
         try {
-          validEventTriggerDatum.put("priority", (long) eventTriggerDatum.get("priority"));
+          validEventTriggerDatum.put("priority", Util.parseJsonLong(eventTriggerDatum, "priority"));
         } catch (NumberFormatException e) {
           logger.info(
               String.format(
@@ -167,7 +169,7 @@ public class TriggerProcessor {
       if (eventTriggerDatum.containsKey("deduplication_key")) {
         try {
           validEventTriggerDatum.put(
-              "deduplication_key", (long) eventTriggerDatum.get("deduplication_key"));
+              "deduplication_key", Util.parseJsonLong(eventTriggerDatum, "deduplication_key"));
         } catch (NumberFormatException e) {
           logger.info(
               String.format(

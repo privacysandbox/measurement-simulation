@@ -25,6 +25,7 @@ import static com.google.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE
 
 import com.google.measurement.util.Filter;
 import com.google.measurement.util.MathUtils;
+import com.google.measurement.util.Util;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -228,7 +229,8 @@ public class AttributionConfig {
                 attributionConfigsJson.get(AttributionConfigContract.SOURCE_PRIORITY_RANGE);
         mSourcePriorityRange = new HashMap<>();
         mSourcePriorityRange.put(
-            (Long) sourcePriorityRangeJson.get(START), (Long) sourcePriorityRangeJson.get(END));
+            Util.parseJsonLong(sourcePriorityRangeJson, START),
+            Util.parseJsonLong(sourcePriorityRangeJson, END));
       }
       if (attributionConfigsJson.containsKey(SOURCE_FILTERS)) {
         JSONArray filterSet = Filter.maybeWrapFilters(attributionConfigsJson, SOURCE_FILTERS);
@@ -242,7 +244,8 @@ public class AttributionConfig {
       }
       if (attributionConfigsJson.containsKey(AttributionConfigContract.SOURCE_EXPIRY_OVERRIDE)) {
         long override =
-            (long) attributionConfigsJson.get(AttributionConfigContract.SOURCE_EXPIRY_OVERRIDE);
+            Util.parseJsonLong(
+                attributionConfigsJson, AttributionConfigContract.SOURCE_EXPIRY_OVERRIDE);
         mSourceExpiryOverride =
             MathUtils.extractValidNumberInRange(
                 override,
@@ -250,10 +253,10 @@ public class AttributionConfig {
                 MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
       }
       if (attributionConfigsJson.containsKey(PRIORITY)) {
-        mPriority = (Long) attributionConfigsJson.get(PRIORITY);
+        mPriority = Util.parseJsonLong(attributionConfigsJson, PRIORITY);
       }
       if (attributionConfigsJson.containsKey(AttributionConfigContract.EXPIRY)) {
-        long expiry = (long) attributionConfigsJson.get(AttributionConfigContract.EXPIRY);
+        long expiry = Util.parseJsonLong(attributionConfigsJson, AttributionConfigContract.EXPIRY);
         mExpiry =
             MathUtils.extractValidNumberInRange(
                 expiry,
@@ -268,9 +271,8 @@ public class AttributionConfig {
       if (attributionConfigsJson.containsKey(
           AttributionConfigContract.POST_INSTALL_EXCLUSIVITY_WINDOW)) {
         mPostInstallExclusivityWindow =
-            (long)
-                attributionConfigsJson.get(
-                    AttributionConfigContract.POST_INSTALL_EXCLUSIVITY_WINDOW);
+            Util.parseJsonLong(
+                attributionConfigsJson, AttributionConfigContract.POST_INSTALL_EXCLUSIVITY_WINDOW);
       }
     }
 

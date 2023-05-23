@@ -23,7 +23,7 @@ import static com.google.measurement.util.Web.topPrivateDomainAndScheme;
 import com.google.measurement.Source.AttributionMode;
 import com.google.measurement.Source.SourceType;
 import com.google.measurement.Source.Status;
-import com.google.measurement.util.UnsignedLong;
+import com.google.measurement.util.Util;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -57,7 +57,7 @@ public class SourceProcessor {
     builder.setRegistrant(URI.create((String) jsonObject.get("registrant")));
     builder.setSourceType(Enum.valueOf(SourceType.class, (String) jsonObject.get("source_type")));
     builder.setAttributionMode(AttributionMode.TRUTHFULLY);
-    builder.setEventTime((long) jsonObject.get("timestamp"));
+    builder.setEventTime(Util.parseJsonLong(jsonObject, "timestamp"));
     if (jsonObject.containsKey("has_ad_id_permission")) {
       builder.setAdIdPermission((boolean) jsonObject.get("has_ad_id_permission"));
     }
@@ -103,14 +103,15 @@ public class SourceProcessor {
     if (!jsonObject.containsKey("source_event_id")) {
       throw new Exception("Provide source_event_id.");
     }
-    builder.setId(UUID.randomUUID().toString());
-    builder.setEventId(new UnsignedLong((long) jsonObject.get("source_event_id")));
 
-    long timestamp = (long) jsonObject.get("timestamp");
+    builder.setId(UUID.randomUUID().toString());
+    builder.setEventId(Util.parseJsonUnsignedLong(jsonObject, "source_event_id"));
+
+    long timestamp = Util.parseJsonLong(jsonObject, "timestamp");
 
     long expiry = PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
     if (jsonObject.containsKey("expiry")) {
-      expiry = (long) jsonObject.get("expiry");
+      expiry = Util.parseJsonLong(jsonObject, "expiry");
       expiry =
           extractValidNumberInRange(
               expiry,
@@ -131,7 +132,7 @@ public class SourceProcessor {
           Math.min(
               expiry,
               extractValidNumberInRange(
-                  (long) jsonObject.get("event_report_window"),
+                  Util.parseJsonLong(jsonObject, "event_report_window"),
                   PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
                   PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
     } else {
@@ -145,7 +146,7 @@ public class SourceProcessor {
           Math.min(
               expiry,
               extractValidNumberInRange(
-                  (long) jsonObject.get("aggregatable_report_window"),
+                  Util.parseJsonLong(jsonObject, "aggregatable_report_window"),
                   PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
                   PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS));
     } else {
@@ -155,12 +156,12 @@ public class SourceProcessor {
         timestamp + TimeUnit.SECONDS.toMillis(aggregatableReportWindow));
 
     if (jsonObject.containsKey("priority")) {
-      builder.setPriority((Long) jsonObject.get("priority"));
+      builder.setPriority(Util.parseJsonLong(jsonObject, "priority"));
     }
 
     long inputInstallAttributionWindow = PrivacyParams.MAX_INSTALL_ATTRIBUTION_WINDOW;
     if (jsonObject.containsKey("install_attribution_window")) {
-      inputInstallAttributionWindow = (Long) jsonObject.get("install_attribution_window");
+      inputInstallAttributionWindow = Util.parseJsonLong(jsonObject, "install_attribution_window");
     }
     long installAttributionWindow =
         extractValidNumberInRange(
@@ -171,7 +172,8 @@ public class SourceProcessor {
 
     long inputPostInstallExclusivityWindow = PrivacyParams.MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
     if (jsonObject.containsKey("post_install_exclusivity_window")) {
-      inputPostInstallExclusivityWindow = (long) jsonObject.get("post_install_exclusivity_window");
+      inputPostInstallExclusivityWindow =
+          Util.parseJsonLong(jsonObject, "post_install_exclusivity_window");
     }
     long installCooldownWindow =
         extractValidNumberInRange(

@@ -2,13 +2,13 @@
   "input": {
     "sources": [
       {
-        "timestamp": 1643235573000,
+        "timestamp": "1643235573000",
         "enrollment_id": "https://reporter.test/",
         "source_type": "NAVIGATION",
         "publisher": "https://source.test",
         "publisher_type": "WEB",
         "registrant": "https://source.test",
-        "source_event_id": 123,
+        "source_event_id": "123",
         "web_destination": "https://destination.com",
         "filter_data": {
           "product": [
@@ -19,26 +19,26 @@
         }
       },
       {
-        "timestamp": 1643235573001,
+        "timestamp": "1643235573001",
         "enrollment_id": "https://reporter.test/",
         "source_type": "EVENT",
         "publisher": "https://source.test",
         "publisher_type": "WEB",
         "registrant": "https://source.test",
-        "source_event_id": 456,
+        "source_event_id": "456",
         "web_destination": "https://another-destination.com"
       }
     ],
     "triggers": [
       {
         "destination_type": "WEB",
-        "timestamp": 1643235574000,
+        "timestamp": "1643235574000",
         "enrollment_id": "https://reporter.test/",
         "registrant": "https://reporter.test/",
         "attribution_destination": "https://destination.com",
         "event_trigger_data": [
           {
-            "trigger_data": 1,
+            "trigger_data": "1",
             "filters": {
               "product": [],
               "source_type": [
@@ -47,7 +47,7 @@
             }
           },
           {
-            "trigger_data": 2,
+            "trigger_data": "2",
             "filters": {
               "geo": [],
               "source_type": [
@@ -56,7 +56,7 @@
             }
           },
           {
-            "trigger_data": 3,
+            "trigger_data": "3",
             "filters": {
               "product": [
                 "123"
@@ -71,7 +71,7 @@
             }
           },
           {
-            "trigger_data": 4,
+            "trigger_data": "4",
             "filters": {
               "product": [
                 "123"
@@ -89,13 +89,13 @@
       },
       {
         "destination_type": "WEB",
-        "timestamp": 1643235575000,
+        "timestamp": "1643235575000",
         "enrollment_id": "https://reporter.test/",
         "registrant": "https://reporter.test/",
         "attribution_destination": "https://destination.com",
         "event_trigger_data": [
           {
-            "trigger_data": 1,
+            "trigger_data": "1",
             "not_filters": {
               "geo": [],
               "source_type": [
@@ -104,7 +104,7 @@
             }
           },
           {
-            "trigger_data": 2,
+            "trigger_data": "2",
             "not_filters": {
               "product": [],
               "source_type": [
@@ -113,7 +113,7 @@
             }
           },
           {
-            "trigger_data": 5,
+            "trigger_data": "5",
             "not_filters": {
               "product": [],
               "geo": [
@@ -126,7 +126,7 @@
             }
           },
           {
-            "trigger_data": 4,
+            "trigger_data": "4",
             "not_filters": {
               "product": [],
               "geo": [
@@ -142,13 +142,13 @@
       },
       {
         "destination_type": "WEB",
-        "timestamp": 1643235576000,
+        "timestamp": "1643235576000",
         "enrollment_id": "https://reporter.test/",
         "registrant": "https://reporter.test/",
         "attribution_destination": "https://destination.com",
         "event_trigger_data": [
           {
-            "trigger_data": 1,
+            "trigger_data": "1",
             "filters": {
               "source_type": [
                 "navigation"
@@ -161,7 +161,7 @@
             }
           },
           {
-            "trigger_data": 2,
+            "trigger_data": "2",
             "filters": {
               "source_type": [
                 "event"
@@ -174,7 +174,7 @@
             }
           },
           {
-            "trigger_data": 6,
+            "trigger_data": "6",
             "filters": {
               "source_type": [
                 "navigation"
@@ -187,7 +187,7 @@
             }
           },
           {
-            "trigger_data": 7,
+            "trigger_data": "7",
             "filters": {
               "source_type": [
                 "navigation"
@@ -203,7 +203,7 @@
       },
       {
         "destination_type": "WEB",
-        "timestamp": 1643235577000,
+        "timestamp": "1643235577000",
         "enrollment_id": "https://reporter.test/",
         "registrant": "https://reporter.test/",
         "attribution_destination": "https://another-destination.com",
@@ -220,7 +220,7 @@
       },
       {
         "destination_type": "WEB",
-        "timestamp": 1643235578000,
+        "timestamp": "1643235578000",
         "enrollment_id": "https://reporter.test/",
         "registrant": "https://reporter.test/",
         "attribution_destination": "https://another-destination.com",
@@ -234,7 +234,7 @@
             }
           },
           {
-            "trigger_data": 1,
+            "trigger_data": "1",
             "filters": {
               "source_type": [
                 "event"

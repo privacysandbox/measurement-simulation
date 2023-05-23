@@ -2,30 +2,30 @@
   "input": {
     "sources": [
       {
-        "timestamp": 1643235573000,
+        "timestamp": "1643235573000",
         "enrollment_id": "https://reporter.test/",
         "source_type": "NAVIGATION",
         "publisher": "http://source.test",
         "publisher_type": "APP",
         "registrant": "http://source.test",
-        "source_event_id": 123,
+        "source_event_id": "123",
         "destination": "android-app://destination.test",
         "aggregation_keys": {
           "a": "0x159"
         },
-        "aggregatable_report_window": 86400
+        "aggregatable_report_window": "86400"
       }
     ],
     "triggers": [
       {
         "destination_type": "APP",
-        "timestamp": 1643235574000,
+        "timestamp": "1643235574000",
         "registrant": "http://destination.test",
         "attribution_destination": "android-app://destination.test",
         "enrollment_id": "https://reporter.test/",
         "event_trigger_data": [
           {
-            "trigger_data": 1
+            "trigger_data": "1"
           }
         ],
         "aggregatable_trigger_data": [
@@ -37,18 +37,18 @@
           }
         ],
         "aggregatable_values": {
-          "a": 123
+          "a": "123"
         }
       },
       {
         "destination_type": "APP",
-        "timestamp": 1643321973000,
+        "timestamp": "1643321973000",
         "registrant": "http://destination.test",
         "attribution_destination": "android-app://destination.test",
         "enrollment_id": "https://reporter.test/",
         "event_trigger_data": [
           {
-            "trigger_data": 2
+            "trigger_data": "2"
           }
         ],
         "aggregatable_trigger_data": [
@@ -60,18 +60,18 @@
           }
         ],
         "aggregatable_values": {
-          "a": 456
+          "a": "456"
         }
       },
       {
         "destination_type": "APP",
-        "timestamp": 1643321974000,
+        "timestamp": "1643321974000",
         "registrant": "http://destination.test",
         "attribution_destination": "android-app://destination.test",
         "enrollment_id": "https://reporter.test/",
         "event_trigger_data": [
           {
-            "trigger_data": 3
+            "trigger_data": "3"
           }
         ],
         "aggregatable_trigger_data": [
@@ -83,7 +83,7 @@
           }
         ],
         "aggregatable_values": {
-          "a": 789
+          "a": "789"
         }
       }
     ]

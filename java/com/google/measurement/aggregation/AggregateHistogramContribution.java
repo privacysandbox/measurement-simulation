@@ -16,6 +16,7 @@
 
 package com.google.measurement.aggregation;
 
+import com.google.measurement.util.Util;
 import java.math.BigInteger;
 import java.util.Objects;
 import org.json.simple.JSONObject;
@@ -95,7 +96,7 @@ public class AggregateHistogramContribution {
       AggregateHistogramContribution aggregateHistogramContribution =
           new AggregateHistogramContribution();
       aggregateHistogramContribution.mKey = new BigInteger((String) jsonObject.get(BUCKET));
-      aggregateHistogramContribution.mValue = (int) jsonObject.get(VALUE);
+      aggregateHistogramContribution.mValue = Util.parseJsonInt(jsonObject, VALUE);
       return aggregateHistogramContribution;
     }
 

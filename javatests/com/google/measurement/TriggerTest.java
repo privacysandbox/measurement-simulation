@@ -466,6 +466,175 @@ public class TriggerTest {
   }
 
   @Test
+  public void testParseAggregateTrigger_withNumericStrings() throws ParseException {
+    JSONArray triggerDatas = new JSONArray();
+    JSONObject jsonObject1 = new JSONObject();
+    JSONArray sourceKeys1 = new JSONArray();
+    sourceKeys1.add("campaignCounts");
+
+    jsonObject1.put("key_piece", "0x400");
+    jsonObject1.put("source_keys", sourceKeys1);
+    jsonObject1.put("filters", createFilterJSONArray());
+    jsonObject1.put("not_filters", createFilterJSONArray());
+    jsonObject1.put("x_network_data", createXNetworkDataJSONObject());
+    JSONObject jsonObject2 = new JSONObject();
+    JSONArray sourceKeys2 = new JSONArray();
+    sourceKeys2.add("geoValue");
+    sourceKeys2.add("noMatch");
+    jsonObject2.put("key_piece", "0xA80");
+    jsonObject2.put("source_keys", sourceKeys2);
+    jsonObject1.put("x_network_data", createXNetworkDataJSONObject());
+    triggerDatas.add(jsonObject1);
+    triggerDatas.add(jsonObject2);
+    JSONObject values = new JSONObject();
+    values.put("campaignCounts", "32768");
+    values.put("geoValue", "1664");
+    JSONArray aggregateDedupKeys = new JSONArray();
+    JSONObject dedupKeyJsonObject1 = new JSONObject();
+    dedupKeyJsonObject1.put("deduplication_key", "10");
+    dedupKeyJsonObject1.put("filters", createFilterJSONArray());
+    dedupKeyJsonObject1.put("not_filters", createFilterJSONArray());
+    JSONObject dedupKeyJsonObject2 = new JSONObject();
+    dedupKeyJsonObject2.put("deduplication_key", "11");
+    dedupKeyJsonObject2.put("filters", createFilterJSONArray());
+    dedupKeyJsonObject2.put("not_filters", createFilterJSONArray());
+    aggregateDedupKeys.add(dedupKeyJsonObject1);
+    aggregateDedupKeys.add(dedupKeyJsonObject2);
+    Trigger trigger =
+        TriggerFixture.getValidTriggerBuilder()
+            .setAggregateTriggerData(triggerDatas.toString())
+            .setAggregateValues(values.toString())
+            .setAggregateDeduplicationKeys(aggregateDedupKeys.toString())
+            .build();
+    Optional<AggregatableAttributionTrigger> aggregatableAttributionTrigger =
+        trigger.getAggregatableAttributionTrigger();
+    assertTrue(aggregatableAttributionTrigger.isPresent());
+    AggregatableAttributionTrigger aggregateTrigger = aggregatableAttributionTrigger.get();
+    assertEquals(2, aggregateTrigger.getTriggerData().size());
+    assertEquals(1, aggregateTrigger.getTriggerData().get(0).getSourceKeys().size());
+    assertEquals(1024, aggregateTrigger.getTriggerData().get(0).getKey().intValue());
+    assertTrue(aggregateTrigger.getTriggerData().get(0).getSourceKeys().contains("campaignCounts"));
+    assertTrue(aggregateTrigger.getTriggerData().get(0).getFilterSet().isPresent());
+    assertEquals(
+        2,
+        aggregateTrigger
+            .getTriggerData()
+            .get(0)
+            .getFilterSet()
+            .get()
+            .get(0)
+            .getAttributionFilterMap()
+            .size());
+    assertTrue(aggregateTrigger.getTriggerData().get(0).getNotFilterSet().isPresent());
+    assertEquals(
+        2,
+        aggregateTrigger
+            .getTriggerData()
+            .get(0)
+            .getNotFilterSet()
+            .get()
+            .get(0)
+            .getAttributionFilterMap()
+            .size());
+    assertEquals(
+        10L,
+        aggregateTrigger
+            .getTriggerData()
+            .get(0)
+            .getXNetworkData()
+            .orElse(null)
+            .getKeyOffset()
+            .orElse(null)
+            .getValue()
+            .longValue());
+    assertEquals(2688, aggregateTrigger.getTriggerData().get(1).getKey().intValue());
+    assertEquals(2, aggregateTrigger.getTriggerData().get(1).getSourceKeys().size());
+    assertTrue(aggregateTrigger.getTriggerData().get(1).getSourceKeys().contains("geoValue"));
+    assertTrue(aggregateTrigger.getTriggerData().get(1).getSourceKeys().contains("noMatch"));
+    assertEquals(2, aggregateTrigger.getValues().size());
+    assertEquals(32768, aggregateTrigger.getValues().get("campaignCounts").intValue());
+    assertEquals(1664, aggregateTrigger.getValues().get("geoValue").intValue());
+    assertEquals(
+        10L,
+        aggregateTrigger
+            .getTriggerData()
+            .get(0)
+            .getXNetworkData()
+            .orElse(null)
+            .getKeyOffset()
+            .orElse(null)
+            .getValue()
+            .longValue());
+    assertTrue(aggregateTrigger.getAggregateDeduplicationKeys().isPresent());
+    assertEquals(2, aggregateTrigger.getAggregateDeduplicationKeys().get().size());
+    assertEquals(
+        new UnsignedLong(10L),
+        aggregateTrigger.getAggregateDeduplicationKeys().get().get(0).getDeduplicationKey());
+    assertTrue(
+        aggregateTrigger.getAggregateDeduplicationKeys().get().get(0).getFilterSet().isPresent());
+    assertEquals(
+        2,
+        aggregateTrigger
+            .getAggregateDeduplicationKeys()
+            .get()
+            .get(0)
+            .getFilterSet()
+            .get()
+            .get(0)
+            .getAttributionFilterMap()
+            .size());
+    assertTrue(
+        aggregateTrigger
+            .getAggregateDeduplicationKeys()
+            .get()
+            .get(0)
+            .getNotFilterSet()
+            .isPresent());
+    assertEquals(
+        2,
+        aggregateTrigger
+            .getAggregateDeduplicationKeys()
+            .get()
+            .get(0)
+            .getNotFilterSet()
+            .get()
+            .get(0)
+            .getAttributionFilterMap()
+            .size());
+    assertTrue(
+        aggregateTrigger.getAggregateDeduplicationKeys().get().get(1).getFilterSet().isPresent());
+    assertEquals(
+        2,
+        aggregateTrigger
+            .getAggregateDeduplicationKeys()
+            .get()
+            .get(1)
+            .getFilterSet()
+            .get()
+            .get(0)
+            .getAttributionFilterMap()
+            .size());
+    assertTrue(
+        aggregateTrigger
+            .getAggregateDeduplicationKeys()
+            .get()
+            .get(1)
+            .getNotFilterSet()
+            .isPresent());
+    assertEquals(
+        2,
+        aggregateTrigger
+            .getAggregateDeduplicationKeys()
+            .get()
+            .get(1)
+            .getNotFilterSet()
+            .get()
+            .get(0)
+            .getAttributionFilterMap()
+            .size());
+  }
+
+  @Test
   public void testGetAttributionDestinationBaseUri_appDestination() {
     Trigger trigger =
         TriggerFixture.getValidTriggerBuilder()

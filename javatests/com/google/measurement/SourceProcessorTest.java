@@ -47,6 +47,27 @@ public class SourceProcessorTest {
     assertSource(source);
   }
 
+  @Test
+  public void testBuildingFromJson_withNumericStrings() throws Exception {
+    String json =
+        "{\"user_id\": \"U1\", \"source_event_id\": \"1\", \"source_type\": \"EVENT\","
+            + " \"publisher\": \"https://www.example1.com/s1\", \"web_destination\":"
+            + " \"https://www.example2.com/d1\", \"enrollment_id\":"
+            + " \"https://www.example3.com/r1\", \"timestamp\": \"1642218050000\", \"expiry\":"
+            + " \"1647645724\", \"priority\": \"100\", \"registrant\":"
+            + " \"https://www.example3.com/e1\", \"dedup_keys\": [], \"attributionMode\":"
+            + " \"TRUTHFULLY\", \"install_attribution_window\": \"1728000\","
+            + " \"post_install_exclusivity_window\": \"101\", \"filter_data\": {\"type\":  [\"1\"],"
+            + " \"ctid\":  [\"id\"]}, \"aggregation_keys\": {\"myId\": \"0x1\"}, \"api_choice\":"
+            + " \"WEB\"}\n";
+
+    JSONParser parser = new JSONParser();
+    Object obj = parser.parse(json);
+    JSONObject jsonObject = (JSONObject) obj;
+    Source source = SourceProcessor.buildSourceFromJson(jsonObject);
+    assertSource(source);
+  }
+
   private void assertSource(Source source) {
     assertEquals((Long) 1L, source.getEventId().getValue());
     assertEquals(SourceType.EVENT, source.getSourceType());

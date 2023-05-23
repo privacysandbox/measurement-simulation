@@ -17,18 +17,176 @@
 package com.google.measurement.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import org.json.simple.JSONObject;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class UtilTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
+
+  @Test
+  public void parseJsonLongTest() {
+    JSONObject jsonObject = new JSONObject();
+    jsonObject.put("intNumber", 1);
+    long expected = 1L;
+    long actual = Util.parseJsonLong(jsonObject, "intNumber");
+    assertEquals(expected, actual);
+
+    jsonObject.put("longNumber", 2L);
+    expected = 2L;
+    actual = Util.parseJsonLong(jsonObject, "longNumber");
+    assertEquals(expected, actual);
+
+    jsonObject.put("longerNumber", 2147483648L);
+    expected = 2147483648L;
+    actual = Util.parseJsonLong(jsonObject, "longerNumber");
+    assertEquals(expected, actual);
+
+    jsonObject.put("stringNumber", "2");
+    expected = 2L;
+    actual = Util.parseJsonLong(jsonObject, "stringNumber");
+    assertEquals(expected, actual);
+
+    jsonObject.put("stringLargeNumber", "2147483648");
+    expected = 2147483648L;
+    actual = Util.parseJsonLong(jsonObject, "stringLargeNumber");
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void parseJsonLongTest_illegalArguments() {
+    JSONObject jsonObject = new JSONObject();
+    IllegalArgumentException e =
+        assertThrows(
+            IllegalArgumentException.class, () -> Util.parseJsonLong(jsonObject, "not_present"));
+
+    assertEquals("Key: not_present, not found in jsonObject", e.getMessage());
+
+    jsonObject.put("present", null);
+    e =
+        assertThrows(
+            IllegalArgumentException.class, () -> Util.parseJsonLong(jsonObject, "present"));
+
+    assertEquals(
+        "Value of: null, for key: present, is not a String, int, or long.", e.getMessage());
+
+    double d = 0.1;
+    jsonObject.put("double", d);
+    e =
+        assertThrows(
+            IllegalArgumentException.class, () -> Util.parseJsonLong(jsonObject, "double"));
+
+    assertEquals("Value of: 0.1, for key: double, is not a String, int, or long.", e.getMessage());
+  }
+
+  @Test
+  public void parseJsonIntTest() {
+    JSONObject jsonObject = new JSONObject();
+    jsonObject.put("intNumber", 1);
+    int expected = 1;
+    int actual = Util.parseJsonInt(jsonObject, "intNumber");
+    assertEquals(expected, actual);
+
+    jsonObject.put("stringNumber", "2");
+    expected = 2;
+    actual = Util.parseJsonInt(jsonObject, "stringNumber");
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void parseJsonIntTest_illegalArguments() {
+    JSONObject jsonObject = new JSONObject();
+    IllegalArgumentException e =
+        assertThrows(
+            IllegalArgumentException.class, () -> Util.parseJsonInt(jsonObject, "not_present"));
+
+    assertEquals("Key: not_present, not found in jsonObject", e.getMessage());
+
+    jsonObject.put("present", null);
+    e =
+        assertThrows(
+            IllegalArgumentException.class, () -> Util.parseJsonInt(jsonObject, "present"));
+
+    assertEquals(
+        "Value of: null, for key: present, is not a String, int, or long.", e.getMessage());
+
+    double d = 0.1;
+    jsonObject.put("double", d);
+    e = assertThrows(IllegalArgumentException.class, () -> Util.parseJsonInt(jsonObject, "double"));
+
+    assertEquals("Value of: 0.1, for key: double, is not a String, int, or long.", e.getMessage());
+  }
+
+  @Test
+  public void parseJsonUnsignedLongTest() {
+    JSONObject jsonObject = new JSONObject();
+    jsonObject.put("intNumber", 1);
+    UnsignedLong expected = new UnsignedLong(1L);
+    UnsignedLong actual = Util.parseJsonUnsignedLong(jsonObject, "intNumber");
+    assertEquals(expected, actual);
+
+    jsonObject.put("intNumberZero", 0);
+    expected = new UnsignedLong(0L);
+    actual = Util.parseJsonUnsignedLong(jsonObject, "intNumberZero");
+    assertEquals(expected, actual);
+
+    jsonObject.put("longNumber", 4294967296L);
+    expected = new UnsignedLong(4294967296L);
+    actual = Util.parseJsonUnsignedLong(jsonObject, "longNumber");
+    assertEquals(expected, actual);
+
+    jsonObject.put("negNumber", -1);
+    expected = new UnsignedLong("18446744073709551615");
+    actual = Util.parseJsonUnsignedLong(jsonObject, "negNumber");
+    assertEquals(expected, actual);
+
+    jsonObject.put("stringNumber", "2");
+    expected = new UnsignedLong(2L);
+    actual = Util.parseJsonUnsignedLong(jsonObject, "stringNumber");
+    assertEquals(expected, actual);
+
+    // 18446744073709551615 = (2^64) - 1
+    jsonObject.put("stringLargeNumber", "18446744073709551615");
+    expected = new UnsignedLong("18446744073709551615");
+    actual = Util.parseJsonUnsignedLong(jsonObject, "stringLargeNumber");
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void parseJsonUnsignedLongTest_illegalArguments() {
+    JSONObject jsonObject = new JSONObject();
+    IllegalArgumentException e =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> Util.parseJsonUnsignedLong(jsonObject, "not_present"));
+
+    assertEquals("Key: not_present, not found in jsonObject", e.getMessage());
+
+    jsonObject.put("present", null);
+    e =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> Util.parseJsonUnsignedLong(jsonObject, "present"));
+
+    assertEquals(
+        "Value of: null, for key: present, is not a String, int, or long.", e.getMessage());
+
+    double d = 0.1;
+    jsonObject.put("double", d);
+    e =
+        assertThrows(
+            IllegalArgumentException.class, () -> Util.parseJsonUnsignedLong(jsonObject, "double"));
+
+    assertEquals("Value of: 0.1, for key: double, is not a String, int, or long.", e.getMessage());
+  }
 
   @Test
   public void sanitizeFilenameTest() {

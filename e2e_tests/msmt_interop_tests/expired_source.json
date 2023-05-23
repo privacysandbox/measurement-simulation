@@ -2,57 +2,57 @@
   "input": {
     "sources": [
       {
-        "timestamp": 1643235573000,
+        "timestamp": "1643235573000",
         "enrollment_id": "https://reporter.test/",
         "source_type": "NAVIGATION",
         "publisher": "https://source.test",
         "publisher_type": "WEB",
         "registrant": "https://source.test",
-        "source_event_id": 123,
+        "source_event_id": "123",
         "web_destination": "https://destination.com",
-        "expiry": 86390
+        "expiry": "86390"
       },
       {
-        "timestamp": 1643321974000,
+        "timestamp": "1643321974000",
         "enrollment_id": "https://reporter.test/",
         "source_type": "EVENT",
         "publisher": "https://source.test",
         "publisher_type": "WEB",
         "registrant": "https://source.test",
-        "source_event_id": 456,
+        "source_event_id": "456",
         "web_destination": "https://destination.com",
         "aggregation_keys": {
           "a": "0x1"
         },
-        "expiry": 88400
+        "expiry": "88400"
       },
       {
-        "timestamp": 1643321974001,
+        "timestamp": "1643321974001",
         "enrollment_id": "https://reporter.test/",
         "source_type": "EVENT",
         "publisher": "https://source.test",
         "publisher_type": "WEB",
         "registrant": "https://source.test",
-        "source_event_id": 654,
+        "source_event_id": "654",
         "web_destination": "https://another-destination.com",
-        "expiry": 172600
+        "expiry": "172600"
       },
       {
-        "timestamp": 1643321975000,
+        "timestamp": "1643321975000",
         "enrollment_id": "https://another-reporter.test/",
         "source_type": "NAVIGATION",
         "publisher": "https://source.test",
         "publisher_type": "WEB",
         "registrant": "https://source.test",
-        "source_event_id": 789,
+        "source_event_id": "789",
         "web_destination": "https://destination.com",
-        "expiry": 88400
+        "expiry": "88400"
       }
     ],
     "triggers": [
       {
         "destination_type": "WEB",
-        "timestamp": 1643321963000,
+        "timestamp": "1643321963000",
         "enrollment_id": "https://reporter.test/",
         "registrant": "https://reporter.test/",
         "attribution_destination": "https://destination.com",
@@ -64,19 +64,19 @@
       },
       {
         "destination_type": "WEB",
-        "timestamp": 1643321973000,
+        "timestamp": "1643321973000",
         "enrollment_id": "https://reporter.test/",
         "registrant": "https://reporter.test/",
         "attribution_destination": "https://destination.com",
         "event_trigger_data": [
           {
-            "trigger_data": 7
+            "trigger_data": "7"
           }
         ]
       },
       {
         "destination_type": "WEB",
-        "timestamp": 1643408374000,
+        "timestamp": "1643408374000",
         "enrollment_id": "https://reporter.test/",
         "registrant": "https://reporter.test/",
         "attribution_destination": "https://destination.com",
@@ -89,30 +89,30 @@
           }
         ],
         "aggregatable_values": {
-          "a": 123
+          "a": "123"
         }
       },
       {
         "destination_type": "WEB",
-        "timestamp": 1643410374999,
+        "timestamp": "1643410374999",
         "enrollment_id": "https://another-reporter.test/",
         "registrant": "https://another-reporter.test/",
         "attribution_destination": "https://destination.com",
         "event_trigger_data": [
           {
-            "trigger_data": 5
+            "trigger_data": "5"
           }
         ]
       },
       {
         "destination_type": "WEB",
-        "timestamp": 1643494774000,
+        "timestamp": "1643494774000",
         "enrollment_id": "https://reporter.test/",
         "registrant": "https://reporter.test/",
         "attribution_destination": "https://another-destination.com",
         "event_trigger_data": [
           {
-            "trigger_data": 1
+            "trigger_data": "1"
           }
         ]
       }

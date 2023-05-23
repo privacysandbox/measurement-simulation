@@ -2,13 +2,13 @@
   "input": {
     "sources": [
       {
-        "timestamp": 1643235573000,
+        "timestamp": "1643235573000",
         "enrollment_id": "https://reporter.test/",
         "source_type": "NAVIGATION",
         "publisher": "https://source.test",
         "publisher_type": "WEB",
         "registrant": "https://source.test",
-        "source_event_id": 123,
+        "source_event_id": "123",
         "web_destination": "https://destination.com",
         "aggregation_keys": {
           "a": "0x159",
@@ -16,13 +16,13 @@
         }
       },
       {
-        "timestamp": 1643235583000,
+        "timestamp": "1643235583000",
         "enrollment_id": "https://reporter.test/",
         "source_type": "NAVIGATION",
         "publisher": "https://source.test",
         "publisher_type": "WEB",
         "registrant": "https://source.test",
-        "source_event_id": 456,
+        "source_event_id": "456",
         "web_destination": "https://destination.com",
         "aggregation_keys": {
           "a": "0x159",
@@ -34,7 +34,7 @@
     "triggers": [
       {
         "destination_type": "WEB",
-        "timestamp": 1643235574000,
+        "timestamp": "1643235574000",
         "enrollment_id": "https://reporter.test/",
         "registrant": "https://reporter.test/",
         "attribution_destination": "https://destination.com",
@@ -53,13 +53,13 @@
           }
         ],
         "aggregatable_values": {
-          "a": 65530,
-          "b": 7
+          "a": "65530",
+          "b": "7"
         }
       },
       {
         "destination_type": "WEB",
-        "timestamp": 1643235575000,
+        "timestamp": "1643235575000",
         "enrollment_id": "https://reporter.test/",
         "registrant": "https://reporter.test/",
         "attribution_destination": "https://destination.com",
@@ -72,12 +72,12 @@
           }
         ],
         "aggregatable_values": {
-          "a": 65535
+          "a": "65535"
         }
       },
       {
         "destination_type": "WEB",
-        "timestamp": 1643235576000,
+        "timestamp": "1643235576000",
         "enrollment_id": "https://reporter.test/",
         "registrant": "https://reporter.test/",
         "attribution_destination": "https://destination.com",
@@ -90,12 +90,12 @@
           }
         ],
         "aggregatable_values": {
-          "a": 2
+          "a": "2"
         }
       },
       {
         "destination_type": "WEB",
-        "timestamp": 1643235577000,
+        "timestamp": "1643235577000",
         "enrollment_id": "https://reporter.test/",
         "registrant": "https://reporter.test/",
         "attribution_destination": "https://destination.com",
@@ -108,12 +108,12 @@
           }
         ],
         "aggregatable_values": {
-          "b": 1
+          "b": "1"
         }
       },
       {
         "destination_type": "WEB",
-        "timestamp": 1643235584000,
+        "timestamp": "1643235584000",
         "enrollment_id": "https://reporter.test/",
         "registrant": "https://reporter.test/",
         "attribution_destination": "https://destination.com",
@@ -126,12 +126,12 @@
           }
         ],
         "aggregatable_values": {
-          "b": 65536
+          "b": "65536"
         }
       },
       {
         "destination_type": "WEB",
-        "timestamp": 1643235585000,
+        "timestamp": "1643235585000",
         "enrollment_id": "https://reporter.test/",
         "registrant": "https://reporter.test/",
         "attribution_destination": "https://destination.com",
@@ -144,7 +144,7 @@
           }
         ],
         "aggregatable_values": {
-          "b": 1
+          "b": "1"
         }
       }
     ]

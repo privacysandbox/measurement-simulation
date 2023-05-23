@@ -2,13 +2,13 @@
   "input": {
     "sources": [
       {
-        "timestamp": 1643235573000,
+        "timestamp": "1643235573000",
         "enrollment_id": "https://reporter.test/",
         "source_type": "NAVIGATION",
         "publisher": "http://source.test",
         "publisher_type": "APP",
         "registrant": "http://source.test",
-        "source_event_id": 123,
+        "source_event_id": "123",
         "destination": "android-app://destination.test",
         "aggregation_keys": {
           "a": "0x159"
@@ -19,13 +19,13 @@
             "filter_2"
           ]
         },
-        "event_report_window": 86400
+        "event_report_window": "86400"
       }
     ],
     "triggers": [
       {
         "destination_type": "APP",
-        "timestamp": 1643235574000,
+        "timestamp": "1643235574000",
         "registrant": "http://destination.test",
         "attribution_destination": "android-app://destination.test",
         "enrollment_id": "https://reporter.test/",
@@ -38,7 +38,7 @@
           }
         ],
         "aggregatable_values": {
-          "a": 123
+          "a": "123"
         },
         "aggregatable_deduplication_keys": [
           {
@@ -63,7 +63,7 @@
       },
       {
         "destination_type": "APP",
-        "timestamp": 1643321973000,
+        "timestamp": "1643321973000",
         "registrant": "http://destination.test",
         "attribution_destination": "android-app://destination.test",
         "enrollment_id": "https://reporter.test/",
@@ -76,7 +76,7 @@
           }
         ],
         "aggregatable_values": {
-          "a": 456
+          "a": "456"
         },
         "aggregatable_deduplication_keys": [
           {

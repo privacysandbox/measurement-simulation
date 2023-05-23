@@ -21,6 +21,7 @@ import com.google.measurement.aggregation.AggregateDeduplicationKey;
 import com.google.measurement.aggregation.AggregateTriggerData;
 import com.google.measurement.util.Filter;
 import com.google.measurement.util.UnsignedLong;
+import com.google.measurement.util.Util;
 import com.google.measurement.util.Web;
 import java.io.Serializable;
 import java.math.BigInteger;
@@ -327,14 +328,14 @@ public class Trigger implements Serializable {
     JSONObject values = (JSONObject) parser.parse(this.mAggregateValues);
     Map<String, Integer> valueMap = new HashMap<>();
     for (Object key : values.keySet()) {
-      valueMap.put((String) key, Math.toIntExact((Long) (values.get(key))));
+      valueMap.put((String) key, Util.parseJsonInt(values, (String) key));
     }
     List<AggregateDeduplicationKey> dedupKeyList = new ArrayList<>();
     if (this.getAggregateDeduplicationKeys() != null) {
       JSONArray dedupKeyObjects = (JSONArray) parser.parse(this.getAggregateDeduplicationKeys());
       for (int i = 0; i < dedupKeyObjects.size(); i++) {
         JSONObject dedupKeyObject = (JSONObject) dedupKeyObjects.get(i);
-        UnsignedLong dedupKey = new UnsignedLong((String) dedupKeyObject.get("deduplication_key"));
+        UnsignedLong dedupKey = Util.parseJsonUnsignedLong(dedupKeyObject, "deduplication_key");
         AggregateDeduplicationKey.Builder builder = new AggregateDeduplicationKey.Builder(dedupKey);
         if (dedupKeyObject.containsKey("filters")) {
           List<FilterMap> filterSet =
@@ -371,14 +372,14 @@ public class Trigger implements Serializable {
       JSONObject eventTrigger = (JSONObject) jsonArray.get(i);
       EventTrigger.Builder eventTriggerBuilder =
           new EventTrigger.Builder(
-              new UnsignedLong((long) eventTrigger.get(EventTriggerContract.TRIGGER_DATA)));
+              Util.parseJsonUnsignedLong(eventTrigger, EventTriggerContract.TRIGGER_DATA));
       if (eventTrigger.containsKey(EventTriggerContract.PRIORITY)) {
         eventTriggerBuilder.setTriggerPriority(
-            (long) eventTrigger.get(EventTriggerContract.PRIORITY));
+            Util.parseJsonLong(eventTrigger, EventTriggerContract.PRIORITY));
       }
       if (eventTrigger.containsKey(EventTriggerContract.DEDUPLICATION_KEY)) {
         eventTriggerBuilder.setDedupKey(
-            (new UnsignedLong((long) eventTrigger.get(EventTriggerContract.DEDUPLICATION_KEY))));
+            Util.parseJsonUnsignedLong(eventTrigger, EventTriggerContract.DEDUPLICATION_KEY));
       }
       if (eventTrigger.containsKey(EventTriggerContract.FILTERS)) {
         List<FilterMap> filterSet =
