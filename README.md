@@ -4,6 +4,8 @@ The Attribution Reporting Simulation Library allows you to examine the impact of
 
 The Attribution Reporting Simulation Library provides a simplified mock environment, allowing you to test parameters and evaluate how the API can satisfy ad tech measurement use cases while making minimal investments in local infrastructure and resources.
 
+This document shows you how to get up and running with the Attribution Reporting Simulation Library. For more details, see [OVERVIEW.md](OVERVIEW.md)
+
 # Build & Run
 
 This repository depends on Bazel 4.2.2 with JDK 11 and Python 3.8. The following environment variables should be set in your local environment (the exact location will depend on your environment):
@@ -81,10 +83,10 @@ After the successful run, you should see the following files and directories in 
   - <input_avro_file_name>/output.avro - Output aggregate report
   - <input_avro_file_name>/result_info.json
 
-- OS/U1/event_reports.json - Event reports for the user “U1” using logs for the OS platform
-- OS/U2/event_reports.json - Event reports for the user “U2” using logs for the OS platform
-- WEB/U1/event_reports.json - Event reports for the user “U1” using logs for the WEB platform
-- WEB/U2/event_reports.json - Event reports for the user “U2” using logs for the WEB platform
+- OS/U1/event_reports.json - Event reports for the user "U1" using logs for the OS platform
+- OS/U2/event_reports.json - Event reports for the user "U2" using logs for the OS platform
+- WEB/U1/event_reports.json - Event reports for the user "U1" using logs for the WEB platform
+- WEB/U2/event_reports.json - Event reports for the user "U2" using logs for the WEB platform
 
 ### Reading from the output avro files
 You can download the Avro tools jar 1.11.1 [here](https://downloads.apache.org/avro/stable/java/avro-tools-1.11.1.jar). To read the avro file in human-readable json format, run:
@@ -98,7 +100,6 @@ You can see the output as:
 {"bucket": "key2", "metric": <value2>}
 ```
 
-
 # Contribution
 
-Please see CONTRIBUTING.md for details.
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
