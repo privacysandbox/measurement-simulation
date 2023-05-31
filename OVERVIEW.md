@@ -482,5 +482,5 @@ If you have any feedback while using the Measurement Simulation Library, please
 [6]: /design-for-safety/privacy-sandbox/attribution
 [7]: https://github.com/privacysandbox/aggregation-service/blob/main/docs/COLLECTING.md#process-avro-batch-files
 [8]: https://docs.google.com/document/d/1bU0a_njpDcRd9vDR0AJjwJjrf3Or8vAzyfuK8JZDEfo/edit#heading=h.yftw2hlnfyr4
-[9]: https://github.com/privacysandbox/measurement-simulation/blob/main/java/com/google/rubidium/adtech/BatchAggregatableReports.java
+[9]: https://github.com/privacysandbox/measurement-simulation/blob/main/java/com/google/measurement/adtech/BatchAggregatableReports.java
 [10]: https://issuetracker.google.com/issues/new?component=1116743&template=1629474

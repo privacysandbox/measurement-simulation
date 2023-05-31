@@ -100,6 +100,7 @@ You can see the output as:
 {"bucket": "key2", "metric": <value2>}
 ```
 
+
 # Contribution
 
 Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
