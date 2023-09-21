@@ -33,6 +33,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** Data Access Object for Measurement PPAPI module */
 public class MeasurementDAO implements IMeasurementDAO {
@@ -230,15 +231,15 @@ public class MeasurementDAO implements IMeasurementDAO {
                   (t.getAttributionDestination().equals(destinationBaseURI)
                       || t.getAttributionDestination()
                           .toString()
-                          .matches(destinationBaseURI + "/%")))
+                          .matches(destinationBaseURI.toString() + "/.*")))
           .count();
     } else {
       String schemeSubDomainMatcher =
-          destination.getScheme() + "://%." + destinationBaseURI.getAuthority();
+          destination.getScheme() + "://.*." + destinationBaseURI.getAuthority();
       String schemeDomainMatcher =
           destination.getScheme() + "://" + destinationBaseURI.getAuthority();
-      String domainAndPathMatcher = schemeDomainMatcher + "/%";
-      String subDomainAndPathMatcher = schemeSubDomainMatcher + "/%";
+      String domainAndPathMatcher = schemeDomainMatcher + "/.*";
+      String subDomainAndPathMatcher = schemeSubDomainMatcher + "/.*";
 
       return mDatastoreManager.getTriggers().stream()
           .filter(
@@ -267,6 +268,7 @@ public class MeasurementDAO implements IMeasurementDAO {
             .filter(a -> !a.getEnrollmentId().equals(excludedEnrollmentId))
             .filter(a -> a.getTriggerTime() <= windowEndTime)
             .filter(a -> a.getTriggerTime() > windowStartTime)
+            .map(Attribution::getEnrollmentId)
             .distinct()
             .count();
   }
@@ -280,7 +282,7 @@ public class MeasurementDAO implements IMeasurementDAO {
       EventSurfaceType destinationType,
       long windowStartTime,
       long windowEndTime) {
-    return (int)
+    Stream<Source> sources =
         mDatastoreManager.getSources().stream()
             .filter(
                 s ->
@@ -290,7 +292,7 @@ public class MeasurementDAO implements IMeasurementDAO {
                             || s.getPublisher()
                                 .toString()
                                 .matches(
-                                    publisher.getScheme() + "://%." + publisher.getAuthority()))))
+                                    publisher.getScheme() + "://.*." + publisher.getAuthority()))))
             .filter(s -> s.getEnrollmentId().equals(enrollmentId))
             .filter(s -> s.getStatus() == Source.Status.ACTIVE)
             .filter(
@@ -300,20 +302,34 @@ public class MeasurementDAO implements IMeasurementDAO {
                         : !dataUriExists(s.getWebDestinations(), excludedDestinations)))
             .filter(s -> s.getEventTime() > windowStartTime)
             .filter(s -> s.getEventTime() <= windowEndTime)
-            .filter(s -> s.getExpiryTime() > windowEndTime)
-            .map(Source::getEnrollmentId)
-            .distinct()
-            .count();
+            .filter(s -> s.getExpiryTime() > windowEndTime);
+
+    Stream<URI> destinations;
+    if (destinationType == EventSurfaceType.APP) {
+      destinations =
+          sources
+              .filter(s -> s.getAppDestinations() != null)
+              .map(Source::getAppDestinations)
+              .flatMap(dest -> dest.stream());
+    } else {
+      destinations =
+          sources
+              .filter(s -> s.getWebDestinations() != null)
+              .map(Source::getWebDestinations)
+              .flatMap(dest -> dest.stream());
+    }
+
+    return (int) destinations.distinct().count();
   }
 
-  private boolean dataUriExists(List<URI> dataURIs, List<URI> excludedURIs) {
-    if (dataURIs.isEmpty()) {
+  private boolean dataUriExists(List<URI> dataURIs, List<URI> domainURIs) {
+    if (dataURIs == null || dataURIs.isEmpty()) {
       return false;
     }
-    HashSet<String> excludedURIsStr =
-        new HashSet(excludedURIs.stream().map(URI::toString).collect(Collectors.toSet()));
+    HashSet<String> domainURIsStr =
+        new HashSet(domainURIs.stream().map(URI::toString).collect(Collectors.toSet()));
     for (URI dataURI : dataURIs) {
-      if (excludedURIsStr.contains(dataURI.toString())) {
+      if (domainURIsStr.contains(dataURI.toString())) {
         return true;
       }
     }
@@ -324,7 +340,7 @@ public class MeasurementDAO implements IMeasurementDAO {
   public Integer countDistinctEnrollmentsPerPublisherXDestinationInSource(
       URI publisher,
       EventSurfaceType publisherType,
-      URI destination,
+      List<URI> destinations,
       String excludedEnrollmentId,
       long windowStartTime,
       long windowEndTime) {
@@ -342,8 +358,8 @@ public class MeasurementDAO implements IMeasurementDAO {
                                     publisher.getScheme() + "://%." + publisher.getAuthority()))))
             .filter(
                 s ->
-                    (s.getAppDestinations().get(0).toString().equals(destination.toString())
-                        || s.getWebDestinations().get(0).toString().equals(destination.toString())))
+                    (dataUriExists(s.getAppDestinations(), destinations)
+                        || dataUriExists(s.getWebDestinations(), destinations)))
             .filter(s -> (!s.getEnrollmentId().equals(excludedEnrollmentId)))
             .filter(s -> s.getEventTime() > windowStartTime)
             .filter(s -> s.getEventTime() <= windowEndTime)
@@ -351,6 +367,23 @@ public class MeasurementDAO implements IMeasurementDAO {
             .map(Source::getEnrollmentId)
             .distinct()
             .count();
+  }
+
+  @Override
+  public long countDistinctDebugAdIdsUsedByEnrollment(String enrollmentId) {
+    return Stream.concat(
+            mDatastoreManager.getSources().stream()
+                .filter(s -> s.getDebugAdId() != null)
+                .filter(s -> s.getEnrollmentId().equals(enrollmentId))
+                .filter(s -> s.getPublisherType() == EventSurfaceType.WEB)
+                .map(Source::getDebugAdId),
+            mDatastoreManager.getTriggers().stream()
+                .filter(t -> t.getDebugAdId() != null)
+                .filter(t -> t.getEnrollmentId().equals(enrollmentId))
+                .filter(t -> t.getDestinationType() == EventSurfaceType.WEB)
+                .map(Trigger::getDebugAdId))
+        .distinct()
+        .count();
   }
 
   @Override
@@ -407,13 +440,16 @@ public class MeasurementDAO implements IMeasurementDAO {
 
     // Example: https://subdomain.destination.com/path
     String subdomainAndPostfixMatch =
-        destinationBaseURI.get().getScheme() + "://%." + destinationBaseURI.get().getHost() + "/%";
+        destinationBaseURI.get().getScheme()
+            + "://.*."
+            + destinationBaseURI.get().getHost()
+            + "/.*";
     // Example: https://subdomain.destination.com
     String subdomainMatch =
-        destinationBaseURI.get().getScheme() + "://%." + destinationBaseURI.get().getHost();
+        destinationBaseURI.get().getScheme() + "://.*." + destinationBaseURI.get().getHost();
     // Example: https://destination.com/path
     String postfixMatch =
-        destinationBaseURI.get().getScheme() + "://" + destinationBaseURI.get().getHost() + "/%";
+        destinationBaseURI.get().getScheme() + "://" + destinationBaseURI.get().getHost() + "/.*";
     if (destinationType == EventSurfaceType.WEB) {
       return (int)
           mDatastoreManager.getAggregateReports().stream()
@@ -449,13 +485,16 @@ public class MeasurementDAO implements IMeasurementDAO {
 
     // Example: https://subdomain.destination.com/path
     String subdomainAndPostfixMatch =
-        destinationBaseURI.get().getScheme() + "://%." + destinationBaseURI.get().getHost() + "/%";
+        destinationBaseURI.get().getScheme()
+            + "://.*."
+            + destinationBaseURI.get().getHost()
+            + "/.*";
     // Example: https://subdomain.destination.com
     String subdomainMatch =
-        destinationBaseURI.get().getScheme() + "://%." + destinationBaseURI.get().getHost();
+        destinationBaseURI.get().getScheme() + "://.*." + destinationBaseURI.get().getHost();
     // Example: https://destination.com/path
     String postfixMatch =
-        destinationBaseURI.get().getScheme() + "://" + destinationBaseURI.get().getHost() + "/%";
+        destinationBaseURI.get().getScheme() + "://" + destinationBaseURI.get().getHost() + "/.*";
     if (destinationType == EventSurfaceType.WEB) {
       return (int)
           mDatastoreManager.getEventReports().stream()
@@ -731,6 +770,11 @@ public class MeasurementDAO implements IMeasurementDAO {
   }
 
   @Override
+  public void updateSourceAttributedTriggers(Source source) {
+    mDatastoreManager.updateSourceEventReportDedupKeys(source);
+  }
+
+  @Override
   public void updateSourceAggregateReportDedupKeys(Source source) {
     mDatastoreManager.updateSourceAggregateReportDedupKeys(source);
   }
@@ -738,6 +782,11 @@ public class MeasurementDAO implements IMeasurementDAO {
   @Override
   public void updateSourceAggregateContributions(Source source) {
     mDatastoreManager.updateSourceAggregateContributions(source);
+  }
+
+  @Override
+  public void updateEventReportSummaryBucket(String eventReportId, Pair<Long, Long> summaryBucket) {
+    mDatastoreManager.updateEventReportSummaryBucket(eventReportId, summaryBucket);
   }
 
   @Override
@@ -751,8 +800,18 @@ public class MeasurementDAO implements IMeasurementDAO {
   }
 
   @Override
+  public List<DebugReport> getAllDebugReports() {
+    return mDatastoreManager.getDebugReports();
+  }
+
+  @Override
   public void insertAggregateReport(AggregateReport aggregateReport) {
     mDatastoreManager.getAggregateReports().add(aggregateReport);
+  }
+
+  @Override
+  public void insertDebugReport(DebugReport debugReport) {
+    mDatastoreManager.getDebugReports().add(debugReport);
   }
 
   @Override
@@ -762,7 +821,6 @@ public class MeasurementDAO implements IMeasurementDAO {
 
   @Override
   public boolean canStoreSource(Source source) {
-    long windowStartTime = source.getEventTime() - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS;
     Optional<URI> publisher =
         this.getTopLevelPublisher(source.getPublisher(), source.getPublisherType());
     if (publisher.isEmpty()) {
@@ -783,17 +841,6 @@ public class MeasurementDAO implements IMeasurementDAO {
       return false;
     }
 
-    if (source.getAppDestinations() != null
-        && !this.isDestinationWithinBounds(
-            source, source.getAppDestinations(), EventSurfaceType.APP, windowStartTime)) {
-      return false;
-    }
-
-    if (source.getWebDestinations() != null
-        && !this.isDestinationWithinBounds(
-            source, source.getWebDestinations(), EventSurfaceType.WEB, windowStartTime)) {
-      return false;
-    }
     return true;
   }
 
@@ -809,24 +856,5 @@ public class MeasurementDAO implements IMeasurementDAO {
     return publisherType == EventSurfaceType.APP
         ? Optional.of(topOrigin)
         : Web.topPrivateDomainAndScheme(topOrigin);
-  }
-
-  private boolean isDestinationWithinBounds(
-      Source source,
-      List<URI> destinations,
-      EventSurfaceType destinationType,
-      long windowStartTime) {
-    long destinationCount =
-        this.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
-            source.getPublisher(),
-            source.getPublisherType(),
-            source.getEnrollmentId(),
-            destinations,
-            destinationType,
-            windowStartTime,
-            source.getEventTime());
-
-    return destinationCount + destinations.size()
-        <= PrivacyParams.MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_X_ENROLLMENT_IN_ACTIVE_SOURCE;
   }
 }

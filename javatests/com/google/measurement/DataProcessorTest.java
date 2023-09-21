@@ -43,10 +43,12 @@ public class DataProcessorTest {
   private final String inputDate = String.join("-", inputDataYear, inputDataMonth, inputDataDay);
   private File sourceFile;
   private File triggerFile;
+  private File extensionFile;
 
   @Before
   public void setUp() throws Exception {
     File testdata = tempFolder.newFolder(inputDataYear, inputDataMonth, inputDataDay);
+    extensionFile = new File(testdata, "extension.json");
     sourceFile = new File(testdata, "attribution_source.json");
     triggerFile = new File(testdata, "trigger.json");
   }
@@ -54,7 +56,8 @@ public class DataProcessorTest {
   @Test
   public void buildSourceMapWithMultipleUsersTest() throws IOException {
     String user2SourceData = getSourceData().replace("U1", "U2");
-    String sourceData = String.join("\n", getSourceData(), getSourceData(), user2SourceData);
+    String sourceData =
+        String.join("\n", getSourceData(), getSourceDataWithFlexEventAPI(), user2SourceData);
     Files.write(sourceFile.toPath(), sourceData.getBytes());
 
     String[] cmdArgs = getSourceCmdArgs();
@@ -67,7 +70,8 @@ public class DataProcessorTest {
       Source source1 =
           SourceProcessor.buildSourceFromJson((JSONObject) parser.parse(getSourceData()));
       Source source2 =
-          SourceProcessor.buildSourceFromJson((JSONObject) parser.parse(getSourceData()));
+          SourceProcessor.buildSourceFromJson(
+              (JSONObject) parser.parse(getSourceDataWithFlexEventAPI()));
       Source source3 =
           SourceProcessor.buildSourceFromJson((JSONObject) parser.parse(user2SourceData));
       PCollection<KV<String, Source>> userToAdtechSourceData =
@@ -273,6 +277,33 @@ public class DataProcessorTest {
     p.run().waitUntilFinish();
   }
 
+  @Test
+  public void buildUserToExtensionEventMapTest() throws IOException {
+    String extensionEventData =
+        "{\"user_id\": \"U1\", \"uri\": \"android-app://example2.d1.test\","
+            + " \"timestamp\": \"1642218050000\", \"action\": \"install\"}";
+    Files.write(extensionFile.toPath(), extensionEventData.getBytes());
+
+    String[] cmdArgs = getExtensionCmdArgs();
+    SimulationConfig options =
+        PipelineOptionsFactory.fromArgs(cmdArgs).withValidation().as(SimulationConfig.class);
+    p.getOptions().setStableUniqueNames(CheckEnabled.OFF);
+
+    JSONParser parser = new JSONParser();
+    try {
+      ExtensionEvent extensionEvent =
+          ExtensionEvent.buildExtensionEventFromJson((JSONObject) parser.parse(extensionEventData));
+      PCollection<KV<String, ExtensionEvent>> userToExtensionEventMap =
+          DataProcessor.buildUserToExtensionEventMap(p, options);
+
+      PAssert.that(userToExtensionEventMap)
+          .containsInAnyOrder(List.of(KV.of("U1", extensionEvent)));
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    p.run().waitUntilFinish();
+  }
+
   private String getSourceData() {
     return "{\"user_id\": \"U1\", \"source_event_id\": 1, \"source_type\": \"EVENT\","
         + " \"publisher\": \"https://www.example1.com/s1\", \"web_destination\":"
@@ -283,6 +314,24 @@ public class DataProcessorTest {
         + " \"post_install_exclusivity_window\": 101, \"filter_data\": {\"type\": [\"1\","
         + " \"2\", \"3\", \"4\"], \"ctid\":  [\"id\"]}, \"aggregation_keys\": {\"myId\":"
         + " \"0xFFFFFFFFFFFFFF\"}, \"api_choice\": \"OS\"}";
+  }
+
+  private String getSourceDataWithFlexEventAPI() {
+    return "{\"user_id\": \"U1\", \"source_event_id\": \"1\", \"source_type\": \"NAVIGATION\","
+        + " \"publisher\": \"https://www.example1.com/s1\", \"web_destination\":"
+        + " \"https://www.example2.com/d1\", \"enrollment_id\":"
+        + " \"https://www.example3.com/r1\", \"timestamp\": \"1642218050000\", \"expiry\":"
+        + " \"1647645724\", \"priority\": \"100\", \"trigger_specs\": [{ "
+        + "\"trigger_data\": [3,4,5,6, 7], \"event_report_windows\": {"
+        + "\"start_time\": 0,\"end_times\": [172300]}, \"summary_window_operator\": "
+        + "\"count\",\"summary_buckets\": [1,2,3]}],"
+        + " \"max_event_level_reports\": 2 "
+        + " \"registrant\":"
+        + " \"https://www.example3.com/e1\", \"dedup_keys\": [], \"attributionMode\":"
+        + " \"TRUTHFULLY\", \"install_attribution_window\": \"1728000\","
+        + " \"post_install_exclusivity_window\": \"101\", \"filter_data\": {\"type\":  [\"1\"],"
+        + " \"ctid\":  [\"id\"]}, \"aggregation_keys\": {\"myId\": \"0x1\"}, \"api_choice\":"
+        + " \"OS\"}";
   }
 
   private String getTriggerData() {
@@ -312,6 +361,15 @@ public class DataProcessorTest {
       "--triggerStartDate=" + inputDate,
       "--triggerEndDate=" + inputDate,
       "--triggerFileName=trigger.json",
+      "--inputDirectory=" + tempFolder.getRoot().getAbsolutePath(),
+    };
+  }
+
+  private String[] getExtensionCmdArgs() {
+    return new String[] {
+      "--extensionEventStartDate=" + inputDate,
+      "--extensionEventEndDate=" + inputDate,
+      "--extensionEventFileName=extension.json",
       "--inputDirectory=" + tempFolder.getRoot().getAbsolutePath(),
     };
   }

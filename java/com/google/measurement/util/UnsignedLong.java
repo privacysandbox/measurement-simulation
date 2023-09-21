@@ -16,10 +16,11 @@
 
 package com.google.measurement.util;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Objects;
 
-public final class UnsignedLong implements Comparable<UnsignedLong> {
+public final class UnsignedLong implements Comparable<UnsignedLong>, Serializable {
   private final Long mValue;
 
   public UnsignedLong(Long value) {

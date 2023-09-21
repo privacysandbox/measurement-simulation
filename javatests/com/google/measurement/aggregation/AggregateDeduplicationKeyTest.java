@@ -38,11 +38,14 @@ public class AggregateDeduplicationKeyTest {
     filterValues.add("xyz");
     filter.put("filter1", filterValues);
     sFilterSet.add(new FilterMap.Builder().setAttributionFilterMap(filter).build());
-    return new AggregateDeduplicationKey.Builder(DEDUP_KEY).setFilterSet(sFilterSet).build();
+    return new AggregateDeduplicationKey.Builder()
+        .setDeduplicationKey(DEDUP_KEY)
+        .setFilterSet(sFilterSet)
+        .build();
   }
 
   void verifyExample(AggregateDeduplicationKey aggregateDeduplicationKey) {
-    assertEquals(DEDUP_KEY, aggregateDeduplicationKey.getDeduplicationKey());
+    assertEquals(DEDUP_KEY, aggregateDeduplicationKey.getDeduplicationKey().get());
     assertEquals(sFilterSet, aggregateDeduplicationKey.getFilterSet().get());
   }
 

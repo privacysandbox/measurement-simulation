@@ -17,6 +17,7 @@
 package com.google.measurement;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
@@ -29,12 +30,17 @@ public class RunSimulationPerUser extends DoFn<KV<String, CoGbkResult>, List<JSO
     implements Serializable {
   private TupleTag<Source> sourceTag;
   private TupleTag<Trigger> triggerTag;
+  private TupleTag<ExtensionEvent> extensionEventTag;
   private String outputDirectory;
 
   public RunSimulationPerUser(
-      TupleTag<Source> sourceTag, TupleTag<Trigger> triggerTag, String outputDirectory) {
+      TupleTag<Source> sourceTag,
+      TupleTag<Trigger> triggerTag,
+      TupleTag<ExtensionEvent> extensionEventTag,
+      String outputDirectory) {
     this.sourceTag = sourceTag;
     this.triggerTag = triggerTag;
+    this.extensionEventTag = extensionEventTag;
     this.outputDirectory = outputDirectory;
   }
 
@@ -46,8 +52,17 @@ public class RunSimulationPerUser extends DoFn<KV<String, CoGbkResult>, List<JSO
     List<Source> userSourceData = (List<Source>) userData.getAll(this.sourceTag);
     List<Trigger> userTriggerData = (List<Trigger>) userData.getAll(this.triggerTag);
 
+    List<ExtensionEvent> userExtensionEventData = new ArrayList<>();
+    try {
+      userExtensionEventData = (List<ExtensionEvent>) userData.getAll(this.extensionEventTag);
+    } catch (IllegalArgumentException e) {
+      // Ignore as this means there were no Extension events in the input data and/or
+      // extensionEventTupleTag was not found
+    }
+
     List<JSONObject> aggregatePayloads =
-        new UserSimulation(userId, outputDirectory).runSimulation(userSourceData, userTriggerData);
+        new UserSimulation(userId, outputDirectory)
+            .runSimulation(userSourceData, userTriggerData, userExtensionEventData);
     c.output(aggregatePayloads);
   }
 }

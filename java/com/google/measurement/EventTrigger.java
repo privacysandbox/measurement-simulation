@@ -25,6 +25,7 @@ import java.util.Optional;
 public class EventTrigger {
   private UnsignedLong mTriggerData;
   private long mTriggerPriority;
+  private long mTriggerValue;
   private UnsignedLong mDedupKey;
   private Optional<List<FilterMap>> mFilterSet;
   private Optional<List<FilterMap>> mNotFilterSet;
@@ -42,6 +43,7 @@ public class EventTrigger {
     EventTrigger eventTrigger = (EventTrigger) obj;
     return Objects.equals(mTriggerData, eventTrigger.mTriggerData)
         && mTriggerPriority == eventTrigger.mTriggerPriority
+        && mTriggerValue == eventTrigger.mTriggerValue
         && Objects.equals(mDedupKey, eventTrigger.mDedupKey)
         && Objects.equals(mFilterSet, eventTrigger.mFilterSet)
         && Objects.equals(mNotFilterSet, eventTrigger.mNotFilterSet);
@@ -49,7 +51,8 @@ public class EventTrigger {
 
   @Override
   public int hashCode() {
-    return Objects.hash(mTriggerData, mTriggerPriority, mDedupKey, mFilterSet, mNotFilterSet);
+    return Objects.hash(
+        mTriggerData, mTriggerPriority, mTriggerValue, mDedupKey, mFilterSet, mNotFilterSet);
   }
 
   /** Returns trigger_data for the event. */
@@ -60,6 +63,11 @@ public class EventTrigger {
   /** Trigger priority. */
   public long getTriggerPriority() {
     return mTriggerPriority;
+  }
+
+  /** Trigger value. */
+  public long getTriggerValue() {
+    return mTriggerValue;
   }
 
   /** De-deuplication key.. */
@@ -88,6 +96,12 @@ public class EventTrigger {
     /** See {@link EventTrigger#getTriggerPriority()}. */
     public EventTrigger.Builder setTriggerPriority(Long triggerPriority) {
       mBuilding.mTriggerPriority = triggerPriority;
+      return this;
+    }
+
+    /** See {@link EventTrigger#getTriggerValue()}. */
+    public EventTrigger.Builder setTriggerValue(Long value) {
+      mBuilding.mTriggerValue = value;
       return this;
     }
 

@@ -17,7 +17,9 @@
 package com.google.measurement.noising;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.measurement.ReportSpec;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -147,5 +149,35 @@ public final class ImpressionNoiseUtil {
     int reportingWindowIndex = remainingData % noiseParams.getReportingWindowCount();
     int destinationTypeIndex = remainingData / noiseParams.getReportingWindowCount();
     return new int[] {triggerData, reportingWindowIndex, destinationTypeIndex};
+  }
+
+  /**
+   * Randomly generate report configs based on noise params
+   *
+   * @param reportSpec Report spec to use for state generation
+   * @param destinationMultiplier destination multiplier
+   * @param rand random number generator
+   * @return list of reporting configs
+   */
+  public static List<int[]> selectFlexEventReportRandomStateAndGenerateReportConfigs(
+      ReportSpec reportSpec, int destinationMultiplier, Random rand) {
+    int[][] params = reportSpec.getPrivacyParamsForComputation();
+    for (int i = 0; i < params[1].length; i++) {
+      params[1][i] *= destinationMultiplier;
+    }
+    int numStates = Combinatorics.getNumStatesFlexAPI(params[0][0], params[1], params[2]);
+    int sequenceIndex = rand.nextInt(numStates);
+    List<Combinatorics.AtomReportState> rawFakeReports =
+        Combinatorics.getReportSetBasedOnRank(
+            params[0][0], params[1], params[2], sequenceIndex, new HashMap<>());
+    List<int[]> fakeReportConfigs = new ArrayList<>();
+    for (Combinatorics.AtomReportState rawFakeReport : rawFakeReports) {
+      int[] fakeReportConfig = new int[3];
+      fakeReportConfig[0] = rawFakeReport.getTriggerDataType();
+      fakeReportConfig[1] = (rawFakeReport.getWindowIndex()) / destinationMultiplier;
+      fakeReportConfig[2] = (rawFakeReport.getWindowIndex()) % destinationMultiplier;
+      fakeReportConfigs.add(fakeReportConfig);
+    }
+    return fakeReportConfigs;
   }
 }

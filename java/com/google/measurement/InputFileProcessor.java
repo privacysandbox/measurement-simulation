@@ -67,4 +67,28 @@ public class InputFileProcessor {
       }
     }
   }
+
+  /**
+   * Transform to create a KV pair of userIds and ExtensionEvent objects. Creates the ExtensionEvent
+   * object from a JSON row.
+   */
+  public static class ExtensionEventJsonMapperDoFn
+      extends DoFn<String, KV<String, ExtensionEvent>> {
+    @ProcessElement
+    public void processElement(
+        @Element String input, OutputReceiver<KV<String, ExtensionEvent>> out) {
+      JSONParser parser = new JSONParser();
+      try {
+        Object obj = parser.parse(input);
+        JSONObject jsonObject = (JSONObject) obj;
+        ExtensionEvent event = ExtensionEvent.buildExtensionEventFromJson(jsonObject);
+        String userId = (String) jsonObject.get("user_id");
+        out.output(KV.of(userId, event));
+      } catch (Exception e) {
+        e.printStackTrace();
+        throw new IllegalArgumentException(
+            String.format("Failed to parse the extension event input: %s", input));
+      }
+    }
+  }
 }

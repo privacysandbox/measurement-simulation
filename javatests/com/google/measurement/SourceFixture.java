@@ -22,10 +22,12 @@ import com.google.measurement.aggregation.AggregatableAttributionSource;
 import com.google.measurement.util.UnsignedLong;
 import java.math.BigInteger;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -40,7 +42,19 @@ public final class SourceFixture {
         .setPublisher(ValidSourceParams.PUBLISHER)
         .setAppDestinations(ValidSourceParams.ATTRIBUTION_DESTINATIONS)
         .setEnrollmentId(ValidSourceParams.ENROLLMENT_ID)
-        .setRegistrant(ValidSourceParams.REGISTRANT);
+        .setRegistrant(ValidSourceParams.REGISTRANT)
+        .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN);
+  }
+
+  // Assume the field values in this Source.Builder have no relation to the field values in
+  // {@link ValidSourceParams}
+  public static Source.Builder getMinimalValidSourceBuilder() {
+    return new Source.Builder()
+        .setPublisher(ValidSourceParams.PUBLISHER)
+        .setAppDestinations(ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+        .setEnrollmentId(ValidSourceParams.ENROLLMENT_ID)
+        .setRegistrant(ValidSourceParams.REGISTRANT)
+        .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN);
   }
 
   // Assume the field values in this Source have no relation to the field values in
@@ -69,6 +83,9 @@ public final class SourceFixture {
         .setRegistrationId(ValidSourceParams.REGISTRATION_ID)
         .setSharedAggregationKeys(ValidSourceParams.SHARED_AGGREGATE_KEYS)
         .setInstallTime(ValidSourceParams.INSTALL_TIME)
+        .setPlatformAdId(ValidSourceParams.PLATFORM_AD_ID)
+        .setDebugAdId(ValidSourceParams.DEBUG_AD_ID)
+        .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN)
         .build();
   }
 
@@ -86,12 +103,16 @@ public final class SourceFixture {
     public static final SourceType SOURCE_TYPE = Source.SourceType.EVENT;
     public static final Long INSTALL_ATTRIBUTION_WINDOW = 841839879274L;
     public static final Long INSTALL_COOLDOWN_WINDOW = 8418398274L;
-    public static final Long DEBUG_KEY = new Long(7834690L);
+    public static final UnsignedLong DEBUG_KEY = new UnsignedLong(7834690L);
     public static final AttributionMode ATTRIBUTION_MODE = Source.AttributionMode.TRUTHFULLY;
     public static final int AGGREGATE_CONTRIBUTIONS = 0;
     public static final String REGISTRATION_ID = "R1";
     public static final String SHARED_AGGREGATE_KEYS = "[\"key1\"]";
     public static final Long INSTALL_TIME = 100L;
+    public static final String PLATFORM_AD_ID = "test-platform-ad-id";
+    public static final String DEBUG_AD_ID = "test-debug-ad-id";
+    public static final URI REGISTRATION_ORIGIN =
+        WebUtil.validUri("https://subdomain.example.test");
 
     public static final String buildAggregateSource() {
       JSONObject jsonObject = new JSONObject();
@@ -127,5 +148,112 @@ public final class SourceFixture {
                   .build())
           .build();
     }
+  }
+
+  public static ReportSpec getValidReportSpecCountBased() {
+    String triggerSpecsString =
+        "[{\"trigger_data\": [1, 2],"
+            + "\"event_report_windows\": { "
+            + "\"start_time\": \"0\", "
+            + String.format(
+                "\"end_times\": [%s, %s]}, ", TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
+            + "\"summary_window_operator\": \"count\", "
+            + "\"summary_buckets\": [1, 2]}]";
+    return new ReportSpec(triggerSpecsString, 3, getValidSource());
+  }
+
+  public static ReportSpec getValidReportSpecCountBasedWithFewerState() {
+    String triggerSpecsString =
+        "[{\"trigger_data\": [1],"
+            + "\"event_report_windows\": { "
+            + "\"start_time\": \"0\", "
+            + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(2))
+            + "\"summary_window_operator\": \"count\", "
+            + "\"summary_buckets\": [1]}]";
+    return new ReportSpec(triggerSpecsString, 1, getValidSource());
+  }
+
+  public static ReportSpec getValidReportSpecValueSum() {
+    return new ReportSpec(getTriggerSpecValueSumEncodedJSONValidBaseline(), 3, getValidSource());
+  }
+
+  public static Source getValidSourceWithFlexEventReport() {
+
+    return getValidSourceBuilder()
+        .setAttributedTriggers(new ArrayList<>())
+        .setFlexEventReportSpec(getValidReportSpecCountBased())
+        .setMaxEventLevelReports(getValidReportSpecCountBased().getMaxReports())
+        .build();
+  }
+
+  public static Source getValidSourceWithFlexEventReportWithFewerState() {
+    return getValidSourceBuilder()
+        .setAttributedTriggers(new ArrayList<>())
+        .setFlexEventReportSpec(getValidReportSpecCountBasedWithFewerState())
+        .setMaxEventLevelReports(getValidReportSpecCountBasedWithFewerState().getMaxReports())
+        .build();
+  }
+
+  public static Source.Builder getValidFullSourceBuilderWithFlexEventReportValueSum() {
+    return getValidSourceBuilder()
+        .setAttributedTriggers(new ArrayList<>())
+        .setFlexEventReportSpec(getValidReportSpecValueSum());
+  }
+
+  public static Source.Builder getValidSourceBuilderWithFlexEventReportValueSum() {
+    ReportSpec reportSpec = getValidReportSpecValueSum();
+    return getMinimalValidSourceBuilder()
+        .setId(UUID.randomUUID().toString())
+        .setFlexEventReportSpec(reportSpec)
+        .setMaxEventLevelReports(reportSpec.getMaxReports())
+        .setAttributedTriggers(null);
+  }
+
+  public static Source.Builder getValidSourceBuilderWithFlexEventReport() {
+    ReportSpec reportSpec = getValidReportSpecCountBased();
+    return getMinimalValidSourceBuilder()
+        .setId(UUID.randomUUID().toString())
+        .setFlexEventReportSpec(reportSpec)
+        .setMaxEventLevelReports(reportSpec.getMaxReports())
+        .setAttributedTriggers(null);
+  }
+
+  public static String getTriggerSpecCountEncodedJSONValidBaseline() {
+    return "[{\"trigger_data\": [1, 2, 3],"
+        + "\"event_report_windows\": { "
+        + "\"start_time\": \"0\", "
+        + String.format(
+            "\"end_times\": [%s, %s, %s]}, ",
+            TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7), TimeUnit.DAYS.toMillis(30))
+        + "\"summary_window_operator\": \"count\", "
+        + "\"summary_buckets\": [1, 2, 3, 4]}]";
+  }
+
+  public static String getTriggerSpecValueSumEncodedJSONValidBaseline() {
+    return "[{\"trigger_data\": [1, 2],"
+        + "\"event_report_windows\": { "
+        + "\"start_time\": \"0\", "
+        + String.format(
+            "\"end_times\": [%s, %s]}, ", TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
+        + "\"summary_window_operator\": \"value_sum\", "
+        + "\"summary_buckets\": [10, 100]}]";
+  }
+
+  public static String getTriggerSpecValueCountJSONTwoTriggerSpecs() {
+    return "[{\"trigger_data\": [1, 2, 3],"
+        + "\"event_report_windows\": { "
+        + "\"start_time\": \"0\", "
+        + String.format(
+            "\"end_times\": [%s, %s, %s]}, ",
+            TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7), TimeUnit.DAYS.toMillis(30))
+        + "\"summary_window_operator\": \"count\", "
+        + "\"summary_buckets\": [1, 2, 3, 4]}, "
+        + "{\"trigger_data\": [4, 5, 6, 7],"
+        + "\"event_report_windows\": { "
+        + "\"start_time\": \"0\", "
+        + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(3))
+        + "\"summary_window_operator\": \"count\", "
+        + "\"summary_buckets\": [1,5,7]} "
+        + "]";
   }
 }

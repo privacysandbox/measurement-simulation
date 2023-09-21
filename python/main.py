@@ -39,6 +39,12 @@ def main():
   parser.add_argument("--trigger_end_date",
                       type=datetime.date.fromisoformat,
                       dest="trigger_end_date")
+  parser.add_argument("--extension_event_start_date",
+                      type=datetime.date.fromisoformat,
+                      dest="extension_event_start_date")
+  parser.add_argument("--extension_event_end_date",
+                      type=datetime.date.fromisoformat,
+                      dest="extension_event_end_date")
   parser.add_argument("--input_directory",
                       dest="input_directory")
   parser.add_argument("--output_directory",
@@ -49,6 +55,9 @@ def main():
   parser.add_argument("--trigger_file_name",
                       default="trigger.json",
                       dest="trigger_file_name")
+  parser.add_argument("--extension_event_file_name",
+                      default="extension.json",
+                      dest="extension_event_file_name")
 
   args = vars(parser.parse_args())
   simulation_config = SimulationConfig(input_directory=
@@ -63,10 +72,16 @@ def main():
                                        args['trigger_start_date'],
                                        trigger_end_date=
                                        args['trigger_end_date'],
+                                       extension_event_start_date=
+                                       args['extension_event_start_date'],
+                                       extension_event_end_date=
+                                       args['extension_event_end_date'],
                                        attribution_source_file_name=
                                        args['attribution_source_file_name'],
                                        trigger_file_name=
                                        args['trigger_file_name'],
+                                       extension_event_file_name=
+                                       args['extension_event_file_name'],
                                        )
   runner = SimulationRunnerWrapper()
   runner.run(simulation_config=simulation_config)

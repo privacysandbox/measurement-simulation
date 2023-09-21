@@ -39,12 +39,6 @@ public final class PrivacyParams {
   public static final int INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS = 2;
 
   /**
-   * Maximum attributions per rate limit window. Rate limit unit: (Source Site, Destination Site,
-   * Reporting Site, Window).
-   */
-  public static final int MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
-
-  /**
    * Rate limit window for (Source Site, Destination Site, Reporting Site, Window) privacy unit. 30
    * days.
    */
@@ -53,6 +47,9 @@ public final class PrivacyParams {
   /** Early reporting window for 'Navigation' {@link Source}. 2 days and 7 days. */
   public static final long[] NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS =
       new long[] {TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7)};
+
+  /** Expire time of the source */
+  public static final long EXPIRY = TimeUnit.DAYS.toMillis(30);
 
   /** Early reporting window for 'Event' {@link Source}. No windows. */
   public static final long[] EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS = new long[] {};
@@ -132,6 +129,9 @@ public final class PrivacyParams {
   /** Maximum acceptable install cooldown period. */
   public static final long MAX_POST_INSTALL_EXCLUSIVITY_WINDOW = TimeUnit.DAYS.toSeconds(30);
 
+  /** Minimum time window after which reporting origin can be migrated */
+  public static final long MIN_REPORTING_ORIGIN_UPDATE_WINDOW = TimeUnit.DAYS.toMillis(1);
+
   /**
    * L1, the maximum sum of the contributions (values) across all buckets for a given source event.
    */
@@ -149,22 +149,38 @@ public final class PrivacyParams {
   /** Maximum time an aggregate report is delayed after trigger */
   public static final long AGGREGATE_MAX_REPORT_DELAY = TimeUnit.MINUTES.toMillis(60L);
 
+  /** Time an event report is delayed after report window */
+  public static final long EVENT_REPORT_DELAY = TimeUnit.MINUTES.toMillis(60L);
+
   /** Max distinct web destinations in source registration. */
   public static final int MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION = 3;
 
   /** Max distinct enrollments for attribution per { Publisher X Advertiser X TimePeriod }. */
-  public static final int MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION = 10;
-
-  /**
-   * Max distinct advertisers with pending impressions per { Publisher X Enrollment X TimePeriod }.
-   */
-  public static final int MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_X_ENROLLMENT_IN_ACTIVE_SOURCE =
-      100;
-
-  /**
-   * Max distinct enrollments with source registration per { Publisher X Advertiser X TimePeriod }.
-   */
   public static final int MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE = 100;
+
+  public static final int MAX_FLEXIBLE_EVENT_REPORTS = 20;
+
+  public static final int MAX_FLEXIBLE_EVENT_TRIGGER_DATA_CARDINALITY = 8;
+
+  public static final int MAX_FLEXIBLE_EVENT_REPORTING_WINDOWS = 5;
+
+  public static final int PRIVACY_EPSILON = 14;
+
+  public static final double NUMBER_EQUAL_THRESHOLD = 0.0000001d;
+
+  public static final double MEASUREMENT_FLEX_API_MAX_INFO_GAIN_EVENT = 1.5849266F;
+
+  public static final double MEASUREMENT_FLEX_API_MAX_INFO_GAIN_NAVIGATION = 11.4617280F;
+
+  // place holder for future change
+  public static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN = Double.MAX_VALUE;
+
+  /**
+   * Maximum early reporting windows configured through {@link
+   * Flags#MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS} or {@link
+   * Flags#MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS}.
+   */
+  public static final int MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS = 2;
 
   static {
     Properties props = new Properties();
@@ -212,5 +228,25 @@ public final class PrivacyParams {
       throw new IllegalArgumentException(err);
     }
     return key;
+  }
+
+  public static int getMaxFlexibleEventReports() {
+    return MAX_FLEXIBLE_EVENT_REPORTS;
+  }
+
+  public static int getMaxFlexibleEventTriggerDataCardinality() {
+    return MAX_FLEXIBLE_EVENT_TRIGGER_DATA_CARDINALITY;
+  }
+
+  public static int getMaxFlexibleEventReportingWindows() {
+    return MAX_FLEXIBLE_EVENT_REPORTING_WINDOWS;
+  }
+
+  public static int getPrivacyEpsilon() {
+    return PRIVACY_EPSILON;
+  }
+
+  public static double getMaxFlexibleEventInformationGain() {
+    return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN;
   }
 }

@@ -16,24 +16,35 @@ java_library(
         "java/com/google/measurement/AdServicesConfig.java",
         "java/com/google/measurement/AdtechUrl.java",
         "java/com/google/measurement/ApiChoice.java",
+        "java/com/google/measurement/AttributedTrigger.java",
         "java/com/google/measurement/Attribution.java",
         "java/com/google/measurement/AttributionConfig.java",
         "java/com/google/measurement/AttributionJobHandler.java",
         "java/com/google/measurement/Constants.java",
         "java/com/google/measurement/DatastoreManager.java",
+        "java/com/google/measurement/DebugKeyAccessor.java",
+        "java/com/google/measurement/DebugReport.java",
+        "java/com/google/measurement/DebugReportApi.java",
         "java/com/google/measurement/EventReport.java",
+        "java/com/google/measurement/EventReportWindowCalcDelegate.java",
         "java/com/google/measurement/EventSurfaceType.java",
         "java/com/google/measurement/EventTrigger.java",
+        "java/com/google/measurement/ExtensionEvent.java",
         "java/com/google/measurement/FetcherUtil.java",
         "java/com/google/measurement/FilterMap.java",
+        "java/com/google/measurement/Flags.java",
         "java/com/google/measurement/IMeasurementDAO.java",
         "java/com/google/measurement/MeasurementDAO.java",
+        "java/com/google/measurement/Pair.java",
         "java/com/google/measurement/PrivacyParams.java",
+        "java/com/google/measurement/ReportSpec.java",
+        "java/com/google/measurement/ReportSpecUtil.java",
         "java/com/google/measurement/Source.java",
         "java/com/google/measurement/SourceProcessor.java",
         "java/com/google/measurement/SystemHealthParams.java",
         "java/com/google/measurement/Trigger.java",
         "java/com/google/measurement/TriggerProcessor.java",
+        "java/com/google/measurement/TriggerSpec.java",
         "java/com/google/measurement/UserSimulation.java",
         "java/com/google/measurement/XNetworkData.java",
         "java/com/google/measurement/aggregation/AggregatableAttributionSource.java",
@@ -49,9 +60,13 @@ java_library(
         "java/com/google/measurement/noising/Combinatorics.java",
         "java/com/google/measurement/noising/ImpressionNoiseParams.java",
         "java/com/google/measurement/noising/ImpressionNoiseUtil.java",
+        "java/com/google/measurement/noising/SourceNoiseHandler.java",
         "java/com/google/measurement/util/BaseUriExtractor.java",
+        "java/com/google/measurement/util/Debug.java",
         "java/com/google/measurement/util/Filter.java",
         "java/com/google/measurement/util/MathUtils.java",
+        "java/com/google/measurement/util/ReportUtil.java",
+        "java/com/google/measurement/util/Validation.java",
         "java/com/google/measurement/util/Web.java",
     ],
     deps = [
@@ -80,13 +95,31 @@ java_test(
     data = [":config"],
     deps = [
         ":ClientDevice",
+        ":Util",
+        "@maven//:com_google_code_gson_gson",
         "@maven//:com_googlecode_json_simple_json_simple",
     ],
 )
 
 java_library(
     name = "SourceFixture",
-    srcs = ["javatests/com/google/measurement/SourceFixture.java"],
+    srcs = [
+        "javatests/com/google/measurement/SourceFixture.java",
+        "javatests/com/google/measurement/WebUtil.java",
+    ],
+    deps = [
+        ":ClientDevice",
+        ":Util",
+        "@maven//:com_googlecode_json_simple_json_simple",
+    ],
+)
+
+java_library(
+    name = "EventReportFixture",
+    srcs = [
+        "javatests/com/google/measurement/EventReportFixture.java",
+        "javatests/com/google/measurement/WebUtil.java",
+    ],
     deps = [
         ":ClientDevice",
         ":Util",
@@ -99,6 +132,19 @@ java_library(
     srcs = ["javatests/com/google/measurement/TriggerFixture.java"],
     deps = [
         ":ClientDevice",
+        "@maven//:com_googlecode_json_simple_json_simple",
+    ],
+)
+
+java_library(
+    name = "AggregateReportFixture",
+    srcs = [
+        "javatests/com/google/measurement/WebUtil.java",
+        "javatests/com/google/measurement/aggregation/AggregateReportFixture.java",
+    ],
+    deps = [
+        ":ClientDevice",
+        ":Util",
         "@maven//:com_googlecode_json_simple_json_simple",
     ],
 )
@@ -171,8 +217,12 @@ java_test(
     srcs = ["javatests/com/google/measurement/MeasurementDAOTest.java"],
     data = [":config"],
     deps = [
+        ":AggregateReportFixture",
         ":ClientDevice",
+        ":SourceFixture",
+        ":TriggerFixture",
         ":Util",
+        "@maven//:com_googlecode_json_simple_json_simple",
     ],
 )
 
@@ -211,6 +261,21 @@ java_test(
     data = [":config"],
     deps = [
         ":ClientDevice",
+        "@maven//:com_googlecode_json_simple_json_simple",
+        "@maven//:org_mockito_mockito_core",
+    ],
+)
+
+java_test(
+    name = "SourceNoiseHandlerTest",
+    srcs = [
+        "javatests/com/google/measurement/noising/SourceNoiseHandlerTest.java",
+    ],
+    data = [":config"],
+    deps = [
+        ":ClientDevice",
+        ":SourceFixture",
+        ":Util",
         "@maven//:com_googlecode_json_simple_json_simple",
         "@maven//:org_mockito_mockito_core",
     ],
@@ -357,7 +422,6 @@ java_test(
     name = "DataProcessorTest",
     srcs = ["javatests/com/google/measurement/DataProcessorTest.java"],
     data = [
-        "testdata",
         ":config",
     ],
     deps = [
@@ -436,8 +500,11 @@ java_test(
 )
 
 java_test(
-    name = "FilterTest",
-    srcs = ["javatests/com/google/measurement/util/FilterTest.java"],
+    name = "DebugReportTest",
+    srcs = [
+        "javatests/com/google/measurement/DebugReportTest.java",
+        "javatests/com/google/measurement/WebUtil.java",
+    ],
     deps = [
         ":ClientDevice",
         "@maven//:com_googlecode_json_simple_json_simple",
@@ -445,9 +512,48 @@ java_test(
 )
 
 java_test(
+    name = "DebugTest",
+    srcs = ["javatests/com/google/measurement/util/DebugTest.java"],
+    deps = [
+        ":ClientDevice",
+        ":SourceFixture",
+        ":TriggerFixture",
+        ":Util",
+    ],
+)
+
+java_test(
+    name = "ExtensionEventTest",
+    srcs = ["javatests/com/google/measurement/ExtensionEventTest.java"],
+    deps = [
+        ":ClientDevice",
+        "@maven//:com_googlecode_json_simple_json_simple",
+    ],
+)
+
+java_test(
+    name = "FilterTest",
+    srcs = ["javatests/com/google/measurement/util/FilterTest.java"],
+    deps = [
+        ":ClientDevice",
+        "@maven//:com_google_code_gson_gson",
+        "@maven//:com_googlecode_json_simple_json_simple",
+    ],
+)
+
+java_test(
+    name = "TriggerSpecTest",
+    srcs = ["javatests/com/google/measurement/TriggerSpecTest.java"],
+    deps = [
+        ":ClientDevice",
+        ":Util",
+        "@maven//:com_googlecode_json_simple_json_simple",
+    ],
+)
+
+java_test(
     name = "UtilTest",
     srcs = ["javatests/com/google/measurement/util/UtilTest.java"],
-    data = ["testdata"],
     deps = [
         ":Util",
         "@maven//:com_googlecode_json_simple_json_simple",
@@ -477,6 +583,7 @@ java_test(
     deps = [
         ":ClientDevice",
         ":Util",
+        "@maven//:com_google_code_gson_gson",
         "@maven//:com_googlecode_json_simple_json_simple",
         "@maven//:org_mockito_mockito_core",
     ],
@@ -518,6 +625,33 @@ java_test(
         "@maven//:org_apache_beam_beam_sdks_java_core",
         "@maven//:org_hamcrest_hamcrest_core",
         "@maven//:org_hamcrest_hamcrest_library",
+        "@maven//:org_mockito_mockito_core",
+    ],
+)
+
+java_test(
+    name = "ReportSpecUtilTest",
+    srcs = ["javatests/com/google/measurement/ReportSpecUtilTest.java"],
+    deps = [
+        ":ClientDevice",
+        ":EventReportFixture",
+        ":SourceFixture",
+        ":Util",
+        "@maven//:com_googlecode_json_simple_json_simple",
+        "@maven//:org_mockito_mockito_core",
+    ],
+)
+
+java_test(
+    name = "ReportSpecTest",
+    srcs = ["javatests/com/google/measurement/ReportSpecTest.java"],
+    deps = [
+        ":ClientDevice",
+        ":EventReportFixture",
+        ":SourceFixture",
+        ":Util",
+        "@maven//:com_googlecode_json_simple_json_simple",
+        "@maven//:org_mockito_mockito_core",
     ],
 )
 

@@ -34,6 +34,7 @@ public class DatastoreManager {
   private List<EventReport> eventReports;
   private List<Attribution> attributions;
   private List<AggregateReport> aggregateReports; // List of AggregateReports
+  private List<DebugReport> debugReports;
 
   public DatastoreManager() {
     this.sources = new ArrayList<>();
@@ -41,6 +42,7 @@ public class DatastoreManager {
     eventReports = new ArrayList<>();
     attributions = new ArrayList<>();
     aggregateReports = new ArrayList<>();
+    debugReports = new ArrayList<>();
   }
 
   // Getters/Modifiers Methods
@@ -73,6 +75,10 @@ public class DatastoreManager {
     return aggregateReports;
   }
 
+  public List<DebugReport> getDebugReports() {
+    return debugReports;
+  }
+
   public void updateSourceStatus(List<Source> sources, Status status) {
     List<String> ids = sources.stream().map(Source::getId).collect(Collectors.toList());
     sources.stream().filter((s) -> ids.contains(s.getId())).forEach((s) -> s.setStatus(status));
@@ -90,10 +96,22 @@ public class DatastoreManager {
         .forEach((s) -> s.setEventReportDedupKeys(source.getEventReportDedupKeys()));
   }
 
+  public void updateSourceAttributedTriggers(Source source) {
+    sources.stream()
+        .filter((s) -> s.getId().equals(source.getId()))
+        .forEach((s) -> s.setAttributedTriggers(source.getAttributedTriggers()));
+  }
+
   public void updateSourceAggregateReportDedupKeys(Source source) {
     sources.stream()
         .filter((s) -> s.getId().equals(source.getId()))
         .forEach((s) -> s.setAggregateReportDedupKeys(source.getAggregateReportDedupKeys()));
+  }
+
+  public void updateEventReportSummaryBucket(String eventReportId, Pair<Long, Long> summaryBucket) {
+    eventReports.stream()
+        .filter((s) -> s.getId().equals(eventReportId))
+        .forEach((s) -> s.setTriggerSummaryBucket(summaryBucket));
   }
 
   public void insertEventReport(EventReport report) {

@@ -96,15 +96,17 @@ public interface IMeasurementDAO {
 
   /**
    * Gets the count of distinct IDs of enrollments in the Sources list in a time window with
-   * matching publisher and destination, excluding a given enrollment ID.
+   * matching publisher and destinations, excluding a given enrollment ID.
    */
   Integer countDistinctEnrollmentsPerPublisherXDestinationInSource(
       URI publisher,
       EventSurfaceType publisherType,
-      URI destination,
+      List<URI> destinations,
       String enrollmentId,
       long windowStartTime,
       long windowEndTime);
+
+  long countDistinctDebugAdIdsUsedByEnrollment(String enrollmentId);
 
   /**
    * Queries and returns the list of matching {@link Source} for the provided {@link Trigger}.
@@ -128,6 +130,8 @@ public interface IMeasurementDAO {
    */
   void updateSourceEventReportDedupKeys(Source source);
 
+  void updateSourceAttributedTriggers(Source source);
+
   /**
    * Update the set of Aggregate dedup keys contained in the provided {@link Source}
    *
@@ -141,6 +145,14 @@ public interface IMeasurementDAO {
    * @param source the {@link Source} object.
    */
   void updateSourceAggregateContributions(Source source);
+
+  /**
+   * Change the summary bucket of the event report
+   *
+   * @param eventReportId the id of the event report to be updated
+   * @param summaryBucket the new summary bucket of the report
+   */
+  void updateEventReportSummaryBucket(String eventReportId, Pair<Long, Long> summaryBucket);
 
   /**
    * Returns list of all the reports associated with the {@link Source}.
@@ -186,6 +198,8 @@ public interface IMeasurementDAO {
 
   void insertAggregateReport(AggregateReport aggregateReport);
 
+  void insertDebugReport(DebugReport debugReport);
+
   /**
    * Returns list of IDs of all aggregate reports that have a scheduled reporting time in the given
    * window from windowStartTime (inclusive) to windowEndTime (inclusive).
@@ -200,6 +214,8 @@ public interface IMeasurementDAO {
   List<AggregateReport> getAllAggregateReports();
 
   List<EventReport> getAllEventReports();
+
+  List<DebugReport> getAllDebugReports();
 
   boolean canStoreSource(Source source);
 

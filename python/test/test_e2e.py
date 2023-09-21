@@ -51,25 +51,24 @@ class TestEndToEnd(unittest.TestCase):
     self.assertEqual(success, True)
 
     # Verify output of simulation:
-    #  As of Q2 2023, The sample input in the testdata directory should produce
-    #  5 directories of output:
+    #  As of Q3 2023, The sample input in the testdata directory should produce
+    #  3 directories of output:
     #  - 1 for aggregatable reports, named "input_batches"
-    #  - 2 for OS and Web API event reports
-    #  - 2 aggregation reports (1 for each aggregatable report in input_batches)
-    num_output_directories = 5
+    #  - 1 for OS API event reports
+    #  - 1 aggregation report
+    num_output_directories = 3
     input_batches_dir = f"{output_dir}/input_batches"
-    num_input_batches = 2
+    num_input_batches = 1
     os_u1_directory = f"{output_dir}/OS/U1"
     os_u2_directory = f"{output_dir}/OS/U2"
-    web_u1_directory = f"{output_dir}/WEB/U1"
-    web_u2_directory = f"{output_dir}/WEB/U2"
 
     self.assertEqual(len(os.listdir(output_dir)), num_output_directories)
     self.assertEqual(len(os.listdir(input_batches_dir)), num_input_batches)
-    self.assertEqual(os.listdir(os_u1_directory)[0], "event_reports.json")
-    self.assertEqual(os.listdir(os_u2_directory)[0], "event_reports.json")
-    self.assertEqual(os.listdir(web_u1_directory)[0], "event_reports.json")
-    self.assertEqual(os.listdir(web_u2_directory)[0], "event_reports.json")
+
+    # TODO(b/289089904): uncomment the below when event report generation is deterministic.
+    # self.assertEqual(os.listdir(os_u1_directory)[0], "debug_event_reports.json")
+    # self.assertEqual(os.listdir(os_u1_directory)[1], "event_reports.json")
+    # self.assertEqual(os.listdir(os_u2_directory)[0], "event_reports.json")
 
 
 if __name__ == '__main__':

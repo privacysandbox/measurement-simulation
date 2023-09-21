@@ -63,6 +63,10 @@ public class Trigger implements Serializable {
   private boolean mArDebugPermission;
   @Nullable private String mAttributionConfig;
   @Nullable private String mAdtechKeyMapping;
+  @Nullable private String mDebugJoinKey;
+  @Nullable private String mPlatformAdId;
+  @Nullable private String mDebugAdId;
+  @Nullable private URI mRegistrationOrigin;
   private ApiChoice mApiChoice;
 
   public enum Status {
@@ -104,6 +108,10 @@ public class Trigger implements Serializable {
         && Objects.equals(mAttributionConfig, trigger.mAttributionConfig)
         && Objects.equals(mAdtechKeyMapping, trigger.mAdtechKeyMapping)
         && Objects.equals(mAggregateDeduplicationKeys, trigger.mAggregateDeduplicationKeys)
+        && Objects.equals(mDebugJoinKey, trigger.mDebugJoinKey)
+        && Objects.equals(mPlatformAdId, trigger.mPlatformAdId)
+        && Objects.equals(mDebugAdId, trigger.mDebugAdId)
+        && Objects.equals(mRegistrationOrigin, trigger.mRegistrationOrigin)
         && mApiChoice == trigger.mApiChoice;
   }
 
@@ -127,7 +135,11 @@ public class Trigger implements Serializable {
         mArDebugPermission,
         mAttributionConfig,
         mAdtechKeyMapping,
-        mAggregateDeduplicationKeys);
+        mAggregateDeduplicationKeys,
+        mDebugJoinKey,
+        mPlatformAdId,
+        mDebugAdId,
+        mRegistrationOrigin);
   }
 
   /** Unique identifier for the {@link Trigger}. */
@@ -282,6 +294,40 @@ public class Trigger implements Serializable {
   }
 
   /**
+   * Returns join key that should be matched with source's join key at the time of generating
+   * reports.
+   */
+  @Nullable
+  public String getDebugJoinKey() {
+    return mDebugJoinKey;
+  }
+
+  /**
+   * Returns SHA256 hash of AdID from getAdId() on app registration concatenated with enrollment ID,
+   * to be matched with a web source's {@link Source#getDebugAdId()} value at the time of generating
+   * reports.
+   */
+  @Nullable
+  public String getPlatformAdId() {
+    return mPlatformAdId;
+  }
+
+  /**
+   * Returns SHA256 hash of AdID from registration response on web registration concatenated with
+   * enrollment ID, to be matched with an app source's {@link Source#getPlatformAdId()} value at the
+   * time of generating reports.
+   */
+  @Nullable
+  public String getDebugAdId() {
+    return mDebugAdId;
+  }
+
+  /** Returns registration origin used to register the source */
+  public URI getRegistrationOrigin() {
+    return mRegistrationOrigin;
+  }
+
+  /**
    * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
    * values string in Trigger.
    */
@@ -335,8 +381,12 @@ public class Trigger implements Serializable {
       JSONArray dedupKeyObjects = (JSONArray) parser.parse(this.getAggregateDeduplicationKeys());
       for (int i = 0; i < dedupKeyObjects.size(); i++) {
         JSONObject dedupKeyObject = (JSONObject) dedupKeyObjects.get(i);
-        UnsignedLong dedupKey = Util.parseJsonUnsignedLong(dedupKeyObject, "deduplication_key");
-        AggregateDeduplicationKey.Builder builder = new AggregateDeduplicationKey.Builder(dedupKey);
+        AggregateDeduplicationKey.Builder builder = new AggregateDeduplicationKey.Builder();
+
+        if (dedupKeyObject.containsKey("deduplication_key")) {
+          UnsignedLong dedupKey = Util.parseJsonUnsignedLong(dedupKeyObject, "deduplication_key");
+          builder.setDeduplicationKey(dedupKey);
+        }
         if (dedupKeyObject.containsKey("filters")) {
           List<FilterMap> filterSet =
               Filter.deserializeFilterSet((JSONArray) dedupKeyObject.get("filters"));
@@ -364,7 +414,7 @@ public class Trigger implements Serializable {
    * @return list of {@link EventTrigger}s
    * @throws ParseException if JSON parsing fails
    */
-  public List<EventTrigger> parseEventTriggers() throws ParseException {
+  public List<EventTrigger> parseEventTriggers(boolean readValue) throws ParseException {
     JSONParser parser = new JSONParser();
     JSONArray jsonArray = (JSONArray) parser.parse(this.mEventTriggers);
     List<EventTrigger> eventTriggers = new ArrayList<>();
@@ -376,6 +426,12 @@ public class Trigger implements Serializable {
       if (eventTrigger.containsKey(EventTriggerContract.PRIORITY)) {
         eventTriggerBuilder.setTriggerPriority(
             Util.parseJsonLong(eventTrigger, EventTriggerContract.PRIORITY));
+      }
+      if (readValue && eventTrigger.containsKey(EventTriggerContract.VALUE)) {
+        eventTriggerBuilder.setTriggerValue(
+            Util.parseJsonLong(eventTrigger, EventTriggerContract.VALUE));
+      } else {
+        eventTriggerBuilder.setTriggerValue(1L);
       }
       if (eventTrigger.containsKey(EventTriggerContract.DEDUPLICATION_KEY)) {
         eventTriggerBuilder.setDedupKey(
@@ -568,6 +624,30 @@ public class Trigger implements Serializable {
       return this;
     }
 
+    /** See {@link Trigger#getDebugJoinKey()} */
+    public Builder setDebugJoinKey(@Nullable String debugJoinKey) {
+      mBuilding.mDebugJoinKey = debugJoinKey;
+      return this;
+    }
+
+    /** See {@link Trigger#getPlatformAdId()} */
+    public Builder setPlatformAdId(@Nullable String platformAdId) {
+      mBuilding.mPlatformAdId = platformAdId;
+      return this;
+    }
+
+    /** See {@link Trigger#getDebugAdId()} */
+    public Builder setDebugAdId(@Nullable String debugAdId) {
+      mBuilding.mDebugAdId = debugAdId;
+      return this;
+    }
+
+    /** See {@link Source#getRegistrationOrigin()} */
+    public Trigger.Builder setRegistrationOrigin(URI registrationOrigin) {
+      mBuilding.mRegistrationOrigin = registrationOrigin;
+      return this;
+    }
+
     public Builder setApiChoice(ApiChoice apiChoice) {
       mBuilding.mApiChoice = apiChoice;
       return this;
@@ -586,5 +666,6 @@ public class Trigger implements Serializable {
     String DEDUPLICATION_KEY = "deduplication_key";
     String FILTERS = "filters";
     String NOT_FILTERS = "not_filters";
+    String VALUE = "value";
   }
 }

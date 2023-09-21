@@ -20,6 +20,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.google.measurement.util.UnsignedLong;
 import java.io.IOException;
 import java.net.URI;
@@ -46,7 +49,7 @@ public class UserSimulationTest {
     // Create temp dir and pass that into UserSimulation
     Path tempdir = Files.createTempDirectory("AttributionJobHandlerTest");
     UserSimulation userSimulation = new UserSimulation("U1", tempdir.toString());
-    userSimulation.runSimulation(measurementDAO);
+    userSimulation.runSimulation(measurementDAO, null);
 
     // Check if folder/file is created in tempdir
     Path reportPath = tempdir.resolve("U1/event_reports.json");
@@ -57,20 +60,36 @@ public class UserSimulationTest {
     String correctReportContents =
         "{\"report_id\":\"1\",\"scheduled_report_time\":\"2\",\"source_event_id\":21,\"source_type\":\"NAVIGATION\",\"randomized_trigger_rate\":0.0,\"attribution_destination\":\"http:\\/\\/bar.com\",\"trigger_data\":8}\n";
 
-    assertEquals(correctReportContents, reportContents);
+    JsonElement reportJson = JsonParser.parseString(reportContents);
+    JsonElement expectedJson = JsonParser.parseString(correctReportContents);
+
+    assertEquals(expectedJson, reportJson);
 
     // Confirm a second call deletes previous contents
-    userSimulation.runSimulation(measurementDAO);
+    userSimulation.runSimulation(measurementDAO, null);
     reportContents = Files.readString(reportPath);
-    assertEquals(correctReportContents, reportContents);
+
+    reportJson = JsonParser.parseString(reportContents);
+    expectedJson = JsonParser.parseString(correctReportContents);
+    assertEquals(expectedJson, reportJson);
 
     // Check if multiple reports are handled correctly
     when(measurementDAO.getAllEventReports())
         .thenReturn(List.of(createEventReport(), createEventReport()));
-    userSimulation.runSimulation(measurementDAO);
+    userSimulation.runSimulation(measurementDAO, null);
     reportContents = Files.readString(reportPath);
-    correctReportContents = correctReportContents + correctReportContents;
-    assertEquals(correctReportContents, reportContents);
+
+    JsonArray reportArray = new JsonArray();
+    String[] reports = reportContents.split("\n");
+    for (String report : reports) {
+      reportArray.add(JsonParser.parseString(report));
+    }
+
+    JsonArray expectedArray = new JsonArray();
+    expectedArray.add(JsonParser.parseString(correctReportContents));
+    expectedArray.add(JsonParser.parseString(correctReportContents));
+
+    assertEquals(expectedArray, reportArray);
   }
 
   private EventReport createEventReport() {

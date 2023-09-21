@@ -34,6 +34,7 @@ import org.json.simple.JSONObject;
 public class SimulationRunner {
   private static TupleTag<Source> sourceTag = new TupleTag<>();
   private static TupleTag<Trigger> triggerTag = new TupleTag<>();
+  private static TupleTag<ExtensionEvent> extensionEventTupleTag = new TupleTag<>();
 
   protected PCollection<KV<String, CoGbkResult>> joinSourceAndTriggerData(
       PCollection<KV<String, Source>> userToAdtechSourceData,
@@ -43,12 +44,27 @@ public class SimulationRunner {
         userToAdtechSourceData, userToAdtechTriggerData, sourceTag, triggerTag);
   }
 
+  protected PCollection<KV<String, CoGbkResult>> joinUserIdData(
+      PCollection<KV<String, Source>> userToAdtechSourceData,
+      PCollection<KV<String, Trigger>> userToAdtechTriggerData,
+      PCollection<KV<String, ExtensionEvent>> userToAdtechExtensionEventData) {
+    return DataProcessor.joinUserIdData(
+        userToAdtechSourceData,
+        userToAdtechTriggerData,
+        userToAdtechExtensionEventData,
+        sourceTag,
+        triggerTag,
+        extensionEventTupleTag);
+  }
+
   protected PCollection<JSONObject> runUserSimulationInParallel(
       PCollection<KV<String, CoGbkResult>> joinedData, String outputDirectory) {
     // Simulate attribution reporting API for each user id in parallel.
     PCollection<List<JSONObject>> aggregatableReportList =
         joinedData.apply(
-            ParDo.of(new RunSimulationPerUser(sourceTag, triggerTag, outputDirectory)));
+            ParDo.of(
+                new RunSimulationPerUser(
+                    sourceTag, triggerTag, extensionEventTupleTag, outputDirectory)));
 
     return aggregatableReportList.apply(Flatten.iterables());
   }
@@ -70,11 +86,14 @@ public class SimulationRunner {
 
     PCollection<KV<String, Source>> sourceMap = DataProcessor.buildUserToSourceMap(p, options);
     PCollection<KV<String, Trigger>> triggerMap = DataProcessor.buildUserToTriggerMap(p, options);
+    PCollection<KV<String, ExtensionEvent>> extensionEventMap =
+        DataProcessor.buildUserToExtensionEventMap(p, options);
+
     PCollection<JSONObject> aggregatableReportsForOs =
-        getAggregatableReports(options, sourceMap, triggerMap, ApiChoice.OS);
+        getAggregatableReports(options, sourceMap, triggerMap, extensionEventMap);
 
     PCollection<JSONObject> aggregatableReportsForWeb =
-        getAggregatableReports(options, sourceMap, triggerMap, ApiChoice.WEB);
+        getAggregatableReports(options, sourceMap, triggerMap);
 
     PCollection<JSONObject> aggregatableReports =
         PCollectionList.of(aggregatableReportsForOs)
@@ -93,16 +112,33 @@ public class SimulationRunner {
       SimulationConfig options,
       PCollection<KV<String, Source>> sourceMap,
       PCollection<KV<String, Trigger>> triggerMap,
-      ApiChoice apiChoice) {
+      PCollection<KV<String, ExtensionEvent>> extensionEventMap) {
     PCollection<KV<String, Source>> userToAdtechSourceData =
-        DataProcessor.filterSourceMap(sourceMap, apiChoice);
+        DataProcessor.filterSourceMap(sourceMap, ApiChoice.OS);
     PCollection<KV<String, Trigger>> userToAdtechTriggerData =
-        DataProcessor.filterTriggerMap(triggerMap, apiChoice);
+        DataProcessor.filterTriggerMap(triggerMap, ApiChoice.OS);
+
+    PCollection<KV<String, CoGbkResult>> joinedData =
+        joinUserIdData(userToAdtechSourceData, userToAdtechTriggerData, extensionEventMap);
+    // Create event reports for each API separately
+    String outputDirectory = options.getOutputDirectory() + "/" + ApiChoice.OS.toString();
+
+    return runUserSimulationInParallel(joinedData, outputDirectory);
+  }
+
+  private PCollection<JSONObject> getAggregatableReports(
+      SimulationConfig options,
+      PCollection<KV<String, Source>> sourceMap,
+      PCollection<KV<String, Trigger>> triggerMap) {
+    PCollection<KV<String, Source>> userToAdtechSourceData =
+        DataProcessor.filterSourceMap(sourceMap, ApiChoice.WEB);
+    PCollection<KV<String, Trigger>> userToAdtechTriggerData =
+        DataProcessor.filterTriggerMap(triggerMap, ApiChoice.WEB);
 
     PCollection<KV<String, CoGbkResult>> joinedData =
         joinSourceAndTriggerData(userToAdtechSourceData, userToAdtechTriggerData);
     // Create event reports for each API separately
-    String outputDirectory = options.getOutputDirectory() + "/" + apiChoice.toString();
+    String outputDirectory = options.getOutputDirectory() + "/" + ApiChoice.WEB.toString();
 
     return runUserSimulationInParallel(joinedData, outputDirectory);
   }

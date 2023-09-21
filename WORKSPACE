@@ -53,6 +53,8 @@ JUNIT_VERSION = "4.13.2"
 
 CBOR_VERSION = "0.7"
 
+GSON_VERSION = "2.8.6"
+
 load("@rules_jvm_external//:repositories.bzl", "rules_jvm_external_deps")
 
 rules_jvm_external_deps()
@@ -80,9 +82,8 @@ maven_install(
         "org.hamcrest:hamcrest-core:" + HAMCREST_VERSION,
         "org.hamcrest:hamcrest-library:" + HAMCREST_VERSION,
         "net.sf.py4j:py4j:" + PY4J_VERSION,
-        "com.fasterxml.jackson.core:jackson-core:2.13.3",
-        "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.13.3",
         "co.nstant.in:cbor:" + CBOR_VERSION,
+        "com.google.code.gson:gson:" + GSON_VERSION,
     ],
     repositories = [
         "https://repo1.maven.org/maven2",

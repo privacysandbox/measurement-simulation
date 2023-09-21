@@ -8,12 +8,12 @@ import java.util.Optional;
 
 /** Aggregate Deduplication Key containing de-deup key and filters info. */
 public class AggregateDeduplicationKey {
-  private UnsignedLong mDedupKey;
+  private Optional<UnsignedLong> mDedupKey;
   private Optional<List<FilterMap>> mFilterSet;
   private Optional<List<FilterMap>> mNotFilterSet;
 
   private AggregateDeduplicationKey() {
-    mDedupKey = null;
+    mDedupKey = Optional.empty();
     mFilterSet = Optional.empty();
     mNotFilterSet = Optional.empty();
   }
@@ -35,7 +35,7 @@ public class AggregateDeduplicationKey {
   }
 
   /** Deduplication key to match dedup key with source. */
-  public UnsignedLong getDeduplicationKey() {
+  public Optional<UnsignedLong> getDeduplicationKey() {
     return mDedupKey;
   }
 
@@ -53,9 +53,14 @@ public class AggregateDeduplicationKey {
   public static final class Builder {
     private final AggregateDeduplicationKey mBuilding;
 
-    public Builder(UnsignedLong dedupKey) {
+    public Builder() {
       mBuilding = new AggregateDeduplicationKey();
-      mBuilding.mDedupKey = dedupKey;
+    }
+
+    /** See {@link AggregateDeduplicationKey#getDeduplicationKey()}. */
+    public Builder setDeduplicationKey(UnsignedLong filterSet) {
+      mBuilding.mDedupKey = Optional.of(filterSet);
+      return this;
     }
 
     /** See {@link AggregateDeduplicationKey#getFilterSet()}. */

@@ -29,6 +29,9 @@ The library uses general simulation related arguments which can be passed in the
 | trigger_start_date           | triggerStartDate          | The first date of trigger events                                                                                                    |
 | trigger_end_date             | triggerEndDate            | The last date of trigger events, should come on or after trigger_start_date                                                         |
 | trigger_file_name            | triggerFileName           | The file name that will be used to identify the files that hold trigger events. Default value: "trigger.json"                       |
+| extension_event_start_date   | extensionEventStartDate   | The first date of install/uninstall events                                                                                          |
+| extension_event_end_date     | extensionEventEndDate     | The last date of install/uninstall events, should come on or after extension_event_start_date                                       |
+| extension_event_file_name    | extensionEventFileName    | The file name that will be used to identify the files that hold install/uninstall events. Default value: "extension.json"           |
 
 
 ### Configuring Privacy parameters
@@ -85,8 +88,6 @@ After the successful run, you should see the following files and directories in 
 
 - OS/U1/event_reports.json - Event reports for the user "U1" using logs for the OS platform
 - OS/U2/event_reports.json - Event reports for the user "U2" using logs for the OS platform
-- WEB/U1/event_reports.json - Event reports for the user "U1" using logs for the WEB platform
-- WEB/U2/event_reports.json - Event reports for the user "U2" using logs for the WEB platform
 
 ### Reading from the output avro files
 You can download the Avro tools jar 1.11.1 [here](https://downloads.apache.org/avro/stable/java/avro-tools-1.11.1.jar). To read the avro file in human-readable json format, run:
@@ -99,6 +100,7 @@ You can see the output as:
 {"bucket": "key1", "metric": <value1>}
 {"bucket": "key2", "metric": <value2>}
 ```
+
 
 # Contribution
 

@@ -23,6 +23,7 @@ import static com.google.measurement.util.Web.topPrivateDomainAndScheme;
 import com.google.measurement.Source.AttributionMode;
 import com.google.measurement.Source.SourceType;
 import com.google.measurement.Source.Status;
+import com.google.measurement.util.UnsignedLong;
 import com.google.measurement.util.Util;
 import java.net.URI;
 import java.util.ArrayList;
@@ -33,8 +34,10 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 public class SourceProcessor {
@@ -84,13 +87,119 @@ public class SourceProcessor {
       builder.setAggregateSource(aggregationKeys.toString());
     }
 
+    if (jsonObject.containsKey("debug_key")) {
+      builder.setDebugKey(Util.parseJsonUnsignedLong(jsonObject, "debug_key"));
+    }
+
     if (jsonObject.containsKey("shared_aggregation_keys")) {
       JSONArray sharedAggregationKeys = (JSONArray) jsonObject.get("shared_aggregation_keys");
       builder.setSharedAggregationKeys(sharedAggregationKeys.toString());
     }
-
+    if (jsonObject.containsKey("max_event_level_reports")) {
+      builder.setMaxEventLevelReports(Util.parseJsonInt(jsonObject, "max_event_level_reports"));
+    }
     builder.setStatus(Status.ACTIVE);
+    if (jsonObject.containsKey("trigger_specs")) {
+      String triggerSpecString = ((JSONArray) jsonObject.get("trigger_specs")).toJSONString();
+
+      if (!isTriggerSpecArrayValid(triggerSpecString, PrivacyParams.EXPIRY)) {
+        throw new Exception("Unable to parse Source data: Invalid Trigger Spec format");
+      }
+      String updatedTriggerSpec =
+          populateTriggerSpecDefaults(
+              triggerSpecString,
+              null,
+              PrivacyParams.EXPIRY,
+              Enum.valueOf(SourceType.class, (String) jsonObject.get("source_type")));
+
+      builder.setTriggerSpecs(updatedTriggerSpec);
+
+      // This step must be after source type is set and max event level report
+      builder.buildInitialFlexEventReportSpec();
+      if (!builder.hasValidInformationGain()) {
+        throw new Exception("Unable to parse Source data: Information gain exceeds limit");
+      }
+    }
     return builder.build();
+  }
+
+  private static boolean isTriggerSpecArrayValid(String triggerSpecString, long expiry) {
+    JSONArray triggerSpecArray = new JSONArray();
+    JSONParser parser = new JSONParser();
+    try {
+      triggerSpecArray = (JSONArray) parser.parse(triggerSpecString);
+      Set<UnsignedLong> triggerDataSet = new HashSet<>();
+      for (int i = 0; i < triggerSpecArray.size(); i++) {
+        if (!isTriggerSpecValid((JSONObject) triggerSpecArray.get(i), expiry, triggerDataSet)) {
+          return false;
+        }
+      }
+      // Check cardinality of trigger_data across the whole trigger spec array
+      if (triggerDataSet.size() > PrivacyParams.MAX_FLEXIBLE_EVENT_TRIGGER_DATA_CARDINALITY) {
+        return false;
+      }
+    } catch (ParseException e) {
+      logger.info("Trigger Spec parsing failed");
+      return false;
+    }
+    return true;
+  }
+
+  private static boolean isTriggerSpecValid(
+      JSONObject triggerSpec, long expiry, Set<UnsignedLong> triggerDataSet) {
+    List<UnsignedLong> triggerDataList =
+        TriggerSpec.getTriggerDataArrayFromJSON(
+            triggerSpec, ReportSpecUtil.FlexEventReportJsonKeys.TRIGGER_DATA);
+    if (triggerDataList.isEmpty()
+        || triggerDataList.size() > PrivacyParams.MAX_FLEXIBLE_EVENT_TRIGGER_DATA_CARDINALITY) {
+      return false;
+    }
+    // Check exclusivity of trigger_data across the whole trigger spec array
+    for (UnsignedLong triggerData : triggerDataList) {
+      if (!triggerDataSet.add(triggerData)) {
+        return false;
+      }
+    }
+
+    if (triggerSpec.containsKey(ReportSpecUtil.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS)
+        && !isEventReportWindowsValid(
+            (JSONObject)
+                triggerSpec.get(ReportSpecUtil.FlexEventReportJsonKeys.EVENT_REPORT_WINDOWS),
+            expiry)) {
+      return false;
+    }
+
+    TriggerSpec.SummaryOperatorType summaryWindowOperator = TriggerSpec.SummaryOperatorType.COUNT;
+    if (triggerSpec.containsKey(ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR)) {
+      try {
+        String op =
+            (String)
+                triggerSpec.get(ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR);
+
+        summaryWindowOperator = TriggerSpec.SummaryOperatorType.valueOf(op.toUpperCase());
+      } catch (IllegalArgumentException e) {
+        // If a summary window operator is not in the pre-defined list, it will throw to
+        // exception.
+        logger.info("Summary Operator parsing failed");
+        return false;
+      }
+    }
+    List<Long> summaryBuckets = null;
+    if (triggerSpec.containsKey(ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS)) {
+      summaryBuckets =
+          TriggerSpec.getLongArrayFromJSON(
+              triggerSpec, ReportSpecUtil.FlexEventReportJsonKeys.SUMMARY_BUCKETS);
+    }
+    if ((summaryBuckets == null || summaryBuckets.isEmpty())
+        && summaryWindowOperator != TriggerSpec.SummaryOperatorType.COUNT) {
+      return false;
+    }
+
+    if (summaryBuckets != null && !TriggerSpec.isStrictIncreasing(summaryBuckets)) {
+      return false;
+    }
+
+    return true;
   }
 
   private static boolean parseSource(Source.Builder builder, JSONObject jsonObject)
@@ -138,7 +247,8 @@ public class SourceProcessor {
     } else {
       eventReportWindow = expiry;
     }
-    builder.setEventReportWindow(timestamp + TimeUnit.SECONDS.toMillis(eventReportWindow));
+    builder.setEventReportWindow(
+        Long.valueOf(timestamp + TimeUnit.SECONDS.toMillis(eventReportWindow)));
 
     long aggregatableReportWindow;
     if (jsonObject.containsKey("aggregatable_report_window")) {
@@ -284,5 +394,57 @@ public class SourceProcessor {
       return upperLimit;
     }
     return value;
+  }
+
+  private static boolean isEventReportWindowsValid(JSONObject jsonReportWindows, long expiry) {
+    long startTime = 0;
+    if (jsonReportWindows.containsKey(ReportSpecUtil.FlexEventReportJsonKeys.START_TIME)) {
+      startTime = (Long) jsonReportWindows.get(ReportSpecUtil.FlexEventReportJsonKeys.START_TIME);
+    }
+    if (startTime < 0 || startTime > expiry) {
+      return false;
+    }
+    List<Long> windowsEnd =
+        TriggerSpec.getLongArrayFromJSON(
+            jsonReportWindows, ReportSpecUtil.FlexEventReportJsonKeys.END_TIMES);
+    if (windowsEnd.isEmpty()
+        || windowsEnd.size()
+            > PrivacyParams.MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS) {
+      return false;
+    }
+
+    if (startTime > windowsEnd.get(0) || windowsEnd.get(windowsEnd.size() - 1) > expiry) {
+      return false;
+    }
+
+    if (!TriggerSpec.isStrictIncreasing(windowsEnd)) {
+      return false;
+    }
+    return true;
+  }
+
+  private static String populateTriggerSpecDefaults(
+      String triggerSpecString,
+      String eventReportWindows,
+      long expiry,
+      Source.SourceType sourceType) {
+    List<Pair<Long, Long>> parsedEventReportWindows =
+        Source.getOrDefaultEventReportWindows(eventReportWindows, sourceType, expiry);
+    long defaultStart = parsedEventReportWindows.get(0).first;
+    List<Long> defaultEnds =
+        parsedEventReportWindows.stream().map((x) -> x.second).collect(Collectors.toList());
+    JSONParser parser = new JSONParser();
+    try {
+      JSONArray triggerSpecJson = (JSONArray) parser.parse(triggerSpecString);
+      TriggerSpec[] triggerSpecs = new TriggerSpec[triggerSpecJson.size()];
+      for (int i = 0; i < triggerSpecJson.size(); i++) {
+        triggerSpecs[i] =
+            new TriggerSpec.Builder((JSONObject) triggerSpecJson.get(i), defaultStart, defaultEnds)
+                .build();
+      }
+      return ReportSpec.encodeTriggerSpecsToJson(triggerSpecs);
+    } catch (ParseException e) {
+      return "";
+    }
   }
 }

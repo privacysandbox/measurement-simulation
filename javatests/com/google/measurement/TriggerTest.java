@@ -400,7 +400,7 @@ public class TriggerTest {
     assertEquals(2, aggregateTrigger.getAggregateDeduplicationKeys().get().size());
     assertEquals(
         new UnsignedLong(10L),
-        aggregateTrigger.getAggregateDeduplicationKeys().get().get(0).getDeduplicationKey());
+        aggregateTrigger.getAggregateDeduplicationKeys().get().get(0).getDeduplicationKey().get());
     assertTrue(
         aggregateTrigger.getAggregateDeduplicationKeys().get().get(0).getFilterSet().isPresent());
     assertEquals(
@@ -569,7 +569,7 @@ public class TriggerTest {
     assertEquals(2, aggregateTrigger.getAggregateDeduplicationKeys().get().size());
     assertEquals(
         new UnsignedLong(10L),
-        aggregateTrigger.getAggregateDeduplicationKeys().get().get(0).getDeduplicationKey());
+        aggregateTrigger.getAggregateDeduplicationKeys().get().get(0).getDeduplicationKey().get());
     assertTrue(
         aggregateTrigger.getAggregateDeduplicationKeys().get().get(0).getFilterSet().isPresent());
     assertEquals(
@@ -736,6 +736,7 @@ public class TriggerTest {
                     + "{\n"
                     + "  \"trigger_data\": 3,\n"
                     + "  \"priority\": 3,\n"
+                    + "  \"value\": 1013,\n"
                     + "  \"deduplication_key\": 3,\n"
                     + "  \"not_filters\": [{\n"
                     + "    \"key_1\": [\"value_1_x\"] \n"
@@ -747,6 +748,7 @@ public class TriggerTest {
     EventTrigger eventTrigger1 =
         new EventTrigger.Builder(new UnsignedLong(2L))
             .setTriggerPriority(2L)
+            .setTriggerValue(1L)
             .setDedupKey(new UnsignedLong(2L))
             .setFilterSet(List.of(new FilterMap.Builder().buildFilterData(filtersMap1).build()))
             .setNotFilterSet(
@@ -755,12 +757,13 @@ public class TriggerTest {
     EventTrigger eventTrigger2 =
         new EventTrigger.Builder(new UnsignedLong(3L))
             .setTriggerPriority(3L)
+            .setTriggerValue(1013L)
             .setDedupKey(new UnsignedLong(3L))
             .setNotFilterSet(
                 List.of(new FilterMap.Builder().buildFilterData(notFiltersMap2).build()))
             .build();
     // Action
-    List<EventTrigger> actualEventTriggers = trigger.parseEventTriggers();
+    List<EventTrigger> actualEventTriggers = trigger.parseEventTriggers(true);
     // Assertion
     assertEquals(Arrays.asList(eventTrigger1, eventTrigger2), actualEventTriggers);
   }

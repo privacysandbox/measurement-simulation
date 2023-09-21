@@ -17,6 +17,7 @@
 package com.google.measurement.aggregation;
 
 import com.google.measurement.Constants;
+import com.google.measurement.util.UnsignedLong;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,10 +46,12 @@ public class AggregateReport {
   private DebugReportStatus mDebugReportStatus;
 
   private String mApiVersion;
-  private Long mSourceDebugKey;
-  private Long mTriggerDebugKey;
+  private UnsignedLong mSourceDebugKey;
+  private UnsignedLong mTriggerDebugKey;
   private String mSourceId;
   private String mTriggerId;
+  private UnsignedLong mDedupKey;
+  private URI mRegistrationOrigin;
 
   public enum Status {
     PENDING,
@@ -73,8 +76,10 @@ public class AggregateReport {
     mAggregateAttributionData = null;
     mStatus = AggregateReport.Status.PENDING;
     mDebugReportStatus = AggregateReport.DebugReportStatus.NONE;
-    mSourceDebugKey = 0L;
-    mTriggerDebugKey = 0L;
+    mSourceDebugKey = null;
+    mTriggerDebugKey = null;
+    mDedupKey = null;
+    mRegistrationOrigin = null;
   }
 
   @Override
@@ -96,7 +101,9 @@ public class AggregateReport {
         && Objects.equals(mSourceDebugKey, aggregateReport.mSourceDebugKey)
         && Objects.equals(mTriggerDebugKey, aggregateReport.mTriggerDebugKey)
         && Objects.equals(mSourceId, aggregateReport.mSourceId)
-        && Objects.equals(mTriggerId, aggregateReport.mTriggerId);
+        && Objects.equals(mTriggerId, aggregateReport.mTriggerId)
+        && Objects.equals(mDedupKey, aggregateReport.mDedupKey)
+        && Objects.equals(mRegistrationOrigin, aggregateReport.mRegistrationOrigin);
   }
 
   @Override
@@ -115,7 +122,9 @@ public class AggregateReport {
         mSourceDebugKey,
         mTriggerDebugKey,
         mSourceId,
-        mTriggerId);
+        mTriggerId,
+        mDedupKey,
+        mRegistrationOrigin);
   }
 
   /** Unique identifier for the {@link AggregateReport}. */
@@ -154,12 +163,12 @@ public class AggregateReport {
   }
 
   /** Source Debug Key */
-  public Long getSourceDebugKey() {
+  public UnsignedLong getSourceDebugKey() {
     return mSourceDebugKey;
   }
 
   /** Trigger Debug Key */
-  public Long getTriggerDebugKey() {
+  public UnsignedLong getTriggerDebugKey() {
     return mTriggerDebugKey;
   }
 
@@ -176,6 +185,16 @@ public class AggregateReport {
   /** Current {@link DebugReportStatus} of the report. */
   public DebugReportStatus getDebugReportStatus() {
     return mDebugReportStatus;
+  }
+
+  /** Debug Key */
+  public UnsignedLong getDebugKey() {
+    return mDedupKey;
+  }
+
+  /** Registration URI */
+  public URI getRegistrationOrigin() {
+    return mRegistrationOrigin;
   }
 
   /** Api version when the report was issued. */
@@ -307,13 +326,13 @@ public class AggregateReport {
     }
 
     /** See {@link AggregateReport#getSourceDebugKey()} */
-    public Builder setSourceDebugKey(Long sourceDebugKey) {
+    public Builder setSourceDebugKey(UnsignedLong sourceDebugKey) {
       mAttributionReport.mSourceDebugKey = sourceDebugKey;
       return this;
     }
 
     /** See {@link AggregateReport#getTriggerDebugKey()} */
-    public Builder setTriggerDebugKey(Long triggerDebugKey) {
+    public Builder setTriggerDebugKey(UnsignedLong triggerDebugKey) {
       mAttributionReport.mTriggerDebugKey = triggerDebugKey;
       return this;
     }
@@ -327,6 +346,18 @@ public class AggregateReport {
     /** See {@link AggregateReport#getTriggerId()} */
     public AggregateReport.Builder setTriggerId(String triggerId) {
       mAttributionReport.mTriggerId = triggerId;
+      return this;
+    }
+
+    /** See {@link AggregateReport#getDebugKey()} */
+    public Builder setDedupKey(UnsignedLong dedupKey) {
+      mAttributionReport.mDedupKey = dedupKey;
+      return this;
+    }
+
+    /** See {@link AggregateReport#getRegistrationOrigin()} */
+    public Builder setRegistrationOrigin(URI registrationOrigin) {
+      mAttributionReport.mRegistrationOrigin = registrationOrigin;
       return this;
     }
 

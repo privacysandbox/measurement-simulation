@@ -19,18 +19,21 @@ package com.google.measurement.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.json.simple.JSONObject;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.rules.TemporaryFolder;
 
 public class UtilTest {
-  @Rule public ExpectedException thrown = ExpectedException.none();
+  @Rule public final TemporaryFolder tempFolder = new TemporaryFolder();
 
   @Test
   public void parseJsonLongTest() {
@@ -213,35 +216,67 @@ public class UtilTest {
   }
 
   @Test
-  public void getPathsInDateRangeTest() {
+  public void roundDownToDayTest_withOffset() {
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    LocalDateTime dateTime =
+        LocalDateTime.parse("2022-01-15 00:00:00", formatter)
+            .atOffset(ZoneOffset.UTC)
+            .toLocalDateTime();
+
+    long timestamp = dateTime.toEpochSecond(ZoneOffset.UTC) * 1000;
+    long offset = -TimeUnit.HOURS.toMillis(6);
+    // 2022-01-15T00:00:00 - 6 hours = 2022-01-14T18:00:00
+    long timestampRounded = Util.roundDownToDay(timestamp, offset);
+
+    assertEquals(1642118400000L, timestampRounded);
+  }
+
+  @Test
+  public void getPathsInDateRangeTest() throws IOException {
+    int start = 15;
+    int end = 18;
+    File testdata;
+    File trigger;
+    String inputDir = "testdata/";
+    String fileName = "trigger.json";
+    for (int i = start; i <= end; i++) {
+      String testdataDir = inputDir + "2022/01/" + i;
+      testdata = tempFolder.newFolder(testdataDir);
+      trigger = tempFolder.newFile(testdataDir + "/trigger.json");
+    }
+
+    String testdataDir = inputDir + "2022/02/01";
+    testdata = tempFolder.newFolder(testdataDir);
+    trigger = tempFolder.newFile(testdataDir + "/trigger.json");
+
+    inputDir = tempFolder.getRoot() + "/" + inputDir;
+
     LocalDate startDate = Util.parseStringDate("2022-01-15");
     LocalDate endDate = Util.parseStringDate("2022-01-15");
-    String inputDir = "testdata";
-    String fileName = "trigger.json";
 
     List<String> paths = Util.getPathsInDateRange(startDate, endDate, inputDir, fileName);
     assertEquals(1, paths.size());
-    assertEquals("testdata/2022/01/15/trigger.json", paths.get(0));
+    assertEquals(inputDir + "2022/01/15/trigger.json", paths.get(0));
 
     endDate = Util.parseStringDate("2022-01-16");
     paths = Util.getPathsInDateRange(startDate, endDate, inputDir, fileName);
     assertEquals(2, paths.size());
-    assertEquals("testdata/2022/01/15/trigger.json", paths.get(0));
-    assertEquals("testdata/2022/01/16/trigger.json", paths.get(1));
+    assertEquals(inputDir + "2022/01/15/trigger.json", paths.get(0));
+    assertEquals(inputDir + "2022/01/16/trigger.json", paths.get(1));
 
-    endDate = Util.parseStringDate("2022-01-25");
+    endDate = Util.parseStringDate("2022-01-18");
     paths = Util.getPathsInDateRange(startDate, endDate, inputDir, fileName);
     assertEquals(4, paths.size());
-    assertEquals("testdata/2022/01/15/trigger.json", paths.get(0));
-    assertEquals("testdata/2022/01/16/trigger.json", paths.get(1));
-    assertEquals("testdata/2022/01/19/trigger.json", paths.get(2));
-    assertEquals("testdata/2022/01/24/trigger.json", paths.get(3));
+    assertEquals(inputDir + "2022/01/15/trigger.json", paths.get(0));
+    assertEquals(inputDir + "2022/01/16/trigger.json", paths.get(1));
+    assertEquals(inputDir + "2022/01/17/trigger.json", paths.get(2));
+    assertEquals(inputDir + "2022/01/18/trigger.json", paths.get(3));
 
-    startDate = Util.parseStringDate("2022-01-25");
-    endDate = Util.parseStringDate("2022-02-04");
+    startDate = Util.parseStringDate("2022-01-19");
+    endDate = Util.parseStringDate("2022-02-01");
     paths = Util.getPathsInDateRange(startDate, endDate, inputDir, fileName);
     assertEquals(1, paths.size());
-    assertEquals("testdata/2022/02/04/trigger.json", paths.get(0));
+    assertEquals(inputDir + "2022/02/01/trigger.json", paths.get(0));
 
     startDate = Util.parseStringDate("2022-01-13");
     endDate = Util.parseStringDate("2022-01-14");

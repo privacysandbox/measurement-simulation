@@ -14,6 +14,7 @@
 
 import unittest
 import os
+import sys
 from python.simulation_runner_wrapper import SimulationRunnerWrapper
 from python.constants import PY4J_VERSION, PY4J_GATEWAY_PORT
 from unittest.mock import patch
@@ -28,7 +29,10 @@ class TestSimulationRunnerWrapper(unittest.TestCase):
     mock_gateway.assert_called_with(jarpath='py4j_jar_path',
                                     classpath='classpath',
                                     port=PY4J_GATEWAY_PORT,
-                                    die_on_exit=True)
+                                    javaopts=["-Xlog:os+container=error"],
+                                    die_on_exit=True,
+                                    redirect_stdout=sys.stdout,
+                                    redirect_stderr=sys.stderr)
 
   def test_init_without_arguments(self, mock_gateway):
     mock_workspace_dir = "workspace"
@@ -43,7 +47,10 @@ class TestSimulationRunnerWrapper(unittest.TestCase):
     mock_gateway.assert_called_with(jarpath=py4j_jar_path,
                                     classpath=classpath,
                                     port=PY4J_GATEWAY_PORT,
-                                    die_on_exit=True)
+                                    javaopts=["-Xlog:os+container=error"],
+                                    die_on_exit=True,
+                                    redirect_stdout=sys.stdout,
+                                    redirect_stderr=sys.stderr)
 
   def test_init_without_py4j_jarpath(self, mock_gateway):
     mock_workspace_dir = "workspace"
@@ -57,7 +64,10 @@ class TestSimulationRunnerWrapper(unittest.TestCase):
     mock_gateway.assert_called_with(jarpath=py4j_jar_path,
                                     classpath="classpath",
                                     port=PY4J_GATEWAY_PORT,
-                                    die_on_exit=True)
+                                    javaopts=["-Xlog:os+container=error"],
+                                    die_on_exit=True,
+                                    redirect_stdout=sys.stdout,
+                                    redirect_stderr=sys.stderr)
 
   def test_init_without_classpath(self, mock_gateway):
     mock_workspace_dir = "workspace"
@@ -70,7 +80,10 @@ class TestSimulationRunnerWrapper(unittest.TestCase):
     mock_gateway.assert_called_with(jarpath="py4j_jar_path",
                                     classpath=classpath,
                                     port=PY4J_GATEWAY_PORT,
-                                    die_on_exit=True)
+                                    javaopts=["-Xlog:os+container=error"],
+                                    die_on_exit=True,
+                                    redirect_stdout=sys.stdout,
+                                    redirect_stderr=sys.stderr)
 
 
 if __name__ == '__main__':

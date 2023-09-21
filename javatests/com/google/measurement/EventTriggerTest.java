@@ -83,6 +83,7 @@ public class EventTriggerTest {
     EventTrigger eventTrigger1 =
         new EventTrigger.Builder(new UnsignedLong(101L))
             .setTriggerPriority(1L)
+            .setTriggerValue(100L)
             .setDedupKey(new UnsignedLong(1001L))
             .setFilterSet(List.of(new FilterMap.Builder().buildFilterData(sFilterMap1).build()))
             .setNotFilterSet(
@@ -91,6 +92,7 @@ public class EventTriggerTest {
     EventTrigger eventTrigger2 =
         new EventTrigger.Builder(new UnsignedLong(101L))
             .setTriggerPriority(1L)
+            .setTriggerValue(100L)
             .setDedupKey(new UnsignedLong(1001L))
             .setFilterSet(List.of(new FilterMap.Builder().buildFilterData(sFilterMap1).build()))
             .setNotFilterSet(
@@ -110,6 +112,9 @@ public class EventTriggerTest {
     assertNotEquals(
         new EventTrigger.Builder(new UnsignedLong(0L)).setDedupKey(new UnsignedLong(1L)).build(),
         new EventTrigger.Builder(new UnsignedLong(0L)).setDedupKey(new UnsignedLong(2L)).build());
+    assertNotEquals(
+        new EventTrigger.Builder(new UnsignedLong(0L)).setTriggerValue(1L).build(),
+        new EventTrigger.Builder(new UnsignedLong(0L)).setTriggerValue(2L).build());
     assertNotEquals(
         new EventTrigger.Builder(new UnsignedLong(0L))
             .setFilterSet(List.of(new FilterMap.Builder().buildFilterData(sFilterMap1).build()))

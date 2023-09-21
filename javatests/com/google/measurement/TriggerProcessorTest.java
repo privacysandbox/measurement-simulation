@@ -19,11 +19,7 @@ package com.google.measurement;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.measurement.Trigger.Status;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.junit.Test;
@@ -47,7 +43,8 @@ public class TriggerProcessorTest {
     Object obj = parser.parse(json);
     JSONObject jsonObject = (JSONObject) obj;
     Trigger trigger = TriggerProcessor.buildTriggerFromJson(jsonObject);
-    assertTrigger(trigger);
+    String destination = "https://www.example2.com/d1";
+    assertTrigger(trigger, destination);
   }
 
   @Test
@@ -67,21 +64,54 @@ public class TriggerProcessorTest {
     Object obj = parser.parse(json);
     JSONObject jsonObject = (JSONObject) obj;
     Trigger trigger = TriggerProcessor.buildTriggerFromJson(jsonObject);
-    assertTrigger(trigger);
+    String destination = "https://www.example2.com/d1";
+    assertTrigger(trigger, destination);
   }
 
-  private void assertTrigger(Trigger trigger) {
-    Map<String, List<String>> attributionFilterMap =
-        ImmutableMap.of(
-            "key_1",
-            Arrays.asList("value_1", "value_2"),
-            "key_2",
-            Arrays.asList("value_1", "value_2"));
+  @Test
+  public void testBuildingFromJson_withAppDestination() throws Exception {
+    String json =
+        "{\"user_id\": \"U1\", \"attribution_destination\": \"android-app://com.test.app\","
+            + " \"destination_type\": \"APP\", \"enrollment_id\": \"https://www.example3.com/r1\","
+            + " \"timestamp\": \"1642271444000\", \"event_trigger_data\": [{\"trigger_data\":"
+            + " \"1000\", \"priority\": \"100\", \"deduplication_key\": \"1\"}], \"registrant\":"
+            + " \"http://example1.com/4\", \"aggregatable_trigger_data\": [{\"key_piece\":"
+            + " \"0x400\", \"source_keys\": [\"campaignCounts\"], \"filters\": [{\"key_1\":"
+            + " [\"value_1\", \"value_2\"], \"key_2\":[\"value_1\", \"value_2\"]}] }],"
+            + " \"aggregatable_values\": {\"campaignCounts\":32768,\"geoValue\":1664}, "
+            + "\"filters\":{\"key_1\":[\"value_1\",\"value_2\"]}}";
 
-    FilterMap aggregateFilterData =
-        new FilterMap.Builder().setAttributionFilterMap(attributionFilterMap).build();
+    JSONParser parser = new JSONParser();
+    Object obj = parser.parse(json);
+    JSONObject jsonObject = (JSONObject) obj;
+    Trigger trigger = TriggerProcessor.buildTriggerFromJson(jsonObject);
+    String destination = "android-app://com.test.app";
+    assertTrigger(trigger, destination);
+  }
 
-    assertEquals("https://www.example2.com/d1", trigger.getAttributionDestination().toString());
+  @Test
+  public void testBuildingFromJson_withAppDestinationMissingScheme() throws Exception {
+    String json =
+        "{\"user_id\": \"U1\", \"attribution_destination\": \"com.test.app\","
+            + " \"destination_type\": \"APP\", \"enrollment_id\": \"https://www.example3.com/r1\","
+            + " \"timestamp\": \"1642271444000\", \"event_trigger_data\": [{\"trigger_data\":"
+            + " \"1000\", \"priority\": \"100\", \"deduplication_key\": \"1\"}], \"registrant\":"
+            + " \"http://example1.com/4\", \"aggregatable_trigger_data\": [{\"key_piece\":"
+            + " \"0x400\", \"source_keys\": [\"campaignCounts\"], \"filters\": [{\"key_1\":"
+            + " [\"value_1\", \"value_2\"], \"key_2\":[\"value_1\", \"value_2\"]}] }],"
+            + " \"aggregatable_values\": {\"campaignCounts\":32768,\"geoValue\":1664}, "
+            + "\"filters\":{\"key_1\":[\"value_1\",\"value_2\"]}}";
+
+    JSONParser parser = new JSONParser();
+    Object obj = parser.parse(json);
+    JSONObject jsonObject = (JSONObject) obj;
+    Trigger trigger = TriggerProcessor.buildTriggerFromJson(jsonObject);
+    String destination = "android-app://com.test.app";
+    assertTrigger(trigger, destination);
+  }
+
+  private void assertTrigger(Trigger trigger, String destination) {
+    assertEquals(destination, trigger.getAttributionDestination().toString());
     assertEquals("https://www.example3.com/r1", trigger.getEnrollmentId());
     assertEquals(
         "[{\"deduplication_key\":1,\"priority\":100,\"trigger_data\":1000}]",

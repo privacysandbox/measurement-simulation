@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.google.measurement.FilterMap;
 import java.util.Arrays;
 import java.util.Collections;
@@ -441,7 +443,10 @@ public class FilterTest {
     // Execution
     JSONArray actualWrappedJsonArray = Filter.maybeWrapFilters(topLevelObject, key);
     // Assertion
-    assertEquals(expectedWrappedJsonArray.toString(), actualWrappedJsonArray.toString());
+    JsonElement expected = JsonParser.parseString(expectedWrappedJsonArray.toString());
+    JsonElement actual = JsonParser.parseString(actualWrappedJsonArray.toString());
+
+    assertEquals(expected, actual);
   }
 
   @Test
@@ -467,6 +472,8 @@ public class FilterTest {
     // Execution
     JSONArray wrappedJsonArray = Filter.maybeWrapFilters(topLevelObject, key);
     // Assertion
-    assertEquals(jsonArray.toString(), wrappedJsonArray.toString());
+    JsonElement expected = JsonParser.parseString(jsonArray.toString());
+    JsonElement actual = JsonParser.parseString(wrappedJsonArray.toString());
+    assertEquals(expected, actual);
   }
 }

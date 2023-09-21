@@ -16,6 +16,15 @@
 
 package com.google.measurement.noising;
 
+import com.google.common.math.DoubleMath;
+import com.google.measurement.PrivacyParams;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 /** Combinatorics utilities used for randomization. */
 public class Combinatorics {
   /**
@@ -176,5 +185,262 @@ public class Combinatorics {
     int numStars = numBucketIncrements;
     int numBars = Math.multiplyExact(numTriggerData, numWindows);
     return getNumberOfStarsAndBarsSequences(numStars, numBars);
+  }
+
+  /**
+   * Using dynamic programming to compute number of states. Assuming the parameter validation has
+   * been checked to avoid overflow or out of memory error
+   *
+   * @param totalCap total incremental cap
+   * @param perTypeNumWindowList reporting window per trigger data
+   * @param perTypeCapList cap per trigger data
+   * @return number of states
+   */
+  private static int getNumStatesRecursive(
+      int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
+    int index = perTypeNumWindowList.length - 1;
+    return getNumStatesRecursive(
+        totalCap,
+        index,
+        perTypeNumWindowList[index],
+        perTypeCapList[index],
+        perTypeNumWindowList,
+        perTypeCapList,
+        new HashMap<>());
+  }
+
+  private static int getNumStatesRecursive(
+      int totalCap,
+      int index,
+      int winVal,
+      int capVal,
+      int[] perTypeNumWindowList,
+      int[] perTypeCapList,
+      Map<List<Integer>, Integer> dp) {
+    List<Integer> key = List.of(totalCap, index, winVal, capVal);
+    if (!dp.containsKey(key)) {
+      if (winVal == 0 && index == 0) {
+        dp.put(key, 1);
+      } else if (winVal == 0) {
+        dp.put(
+            key,
+            getNumStatesRecursive(
+                totalCap,
+                index - 1,
+                perTypeNumWindowList[index - 1],
+                perTypeCapList[index - 1],
+                perTypeNumWindowList,
+                perTypeCapList,
+                dp));
+      } else {
+        int result = 0;
+        for (int i = 0; i <= Math.min(totalCap, capVal); i++) {
+          result =
+              Math.addExact(
+                  result,
+                  getNumStatesRecursive(
+                      totalCap - i,
+                      index,
+                      winVal - 1,
+                      capVal - i,
+                      perTypeNumWindowList,
+                      perTypeCapList,
+                      dp));
+        }
+        dp.put(key, result);
+      }
+    }
+    return dp.get(key);
+  }
+
+  /**
+   * Compute number of states for flexible event report API
+   *
+   * @param totalCap number of total increments
+   * @param perTypeNumWindowList reporting window for each trigger data
+   * @param perTypeCapList limit of the increment of each trigger data
+   * @return number of states
+   */
+  public static int getNumStatesFlexAPI(
+      int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
+    if (!validateInputReportingPara(totalCap, perTypeNumWindowList, perTypeCapList)) {
+      return -1;
+    }
+    boolean canComputeArithmetic = true;
+    for (int i = 1; i < perTypeNumWindowList.length; i++) {
+      if (perTypeNumWindowList[i] != perTypeNumWindowList[i - 1]) {
+        canComputeArithmetic = false;
+        break;
+      }
+    }
+    for (int n : perTypeCapList) {
+      if (n < totalCap) {
+        canComputeArithmetic = false;
+        break;
+      }
+    }
+    if (canComputeArithmetic) {
+      return getNumStatesArithmetic(totalCap, perTypeCapList.length, perTypeNumWindowList[0]);
+    }
+    return getNumStatesRecursive(totalCap, perTypeNumWindowList, perTypeCapList);
+  }
+
+  private static boolean validateInputReportingPara(
+      int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
+    for (int n : perTypeNumWindowList) {
+      if (n > PrivacyParams.MAX_FLEXIBLE_EVENT_REPORTING_WINDOWS) return false;
+    }
+    return PrivacyParams.MAX_FLEXIBLE_EVENT_REPORTS
+            >= Math.min(totalCap, Arrays.stream(perTypeCapList).sum())
+        && perTypeNumWindowList.length <= PrivacyParams.MAX_FLEXIBLE_EVENT_TRIGGER_DATA_CARDINALITY;
+  }
+
+  /**
+   * @param numOfStates Number of States
+   * @return the probability to use fake reports
+   */
+  public static double getFlipProbability(int numOfStates) {
+    int epsilon = PrivacyParams.PRIVACY_EPSILON;
+    return numOfStates / (numOfStates + Math.exp(epsilon) - 1);
+  }
+
+  private static double getBinaryEntropy(double x) {
+    if (DoubleMath.fuzzyEquals(x, 0.0d, PrivacyParams.NUMBER_EQUAL_THRESHOLD)
+        || DoubleMath.fuzzyEquals(x, 1.0d, PrivacyParams.NUMBER_EQUAL_THRESHOLD)) {
+      return 0;
+    }
+    return (-1.0) * x * DoubleMath.log2(x) - (1 - x) * DoubleMath.log2(1 - x);
+  }
+
+  /**
+   * @param numOfStates Number of States
+   * @param flipProbability Flip Probability
+   * @return the information gain
+   */
+  public static double getInformationGain(int numOfStates, double flipProbability) {
+    double log2Q = DoubleMath.log2(numOfStates);
+    double fakeProbability = flipProbability * (numOfStates - 1) / numOfStates;
+    return log2Q
+        - getBinaryEntropy(fakeProbability)
+        - fakeProbability * DoubleMath.log2(numOfStates - 1);
+  }
+
+  /**
+   * Generate fake report set given a report specification and the rank order number
+   *
+   * @param totalCap total_cap
+   * @param perTypeNumWindowList per type number of window list
+   * @param perTypeCapList per type cap list
+   * @param rank the rank order of the fake report
+   * @param dp the data structure store the dynamic programming
+   * @return a report set based on the input rank
+   */
+  public static List<AtomReportState> getReportSetBasedOnRank(
+      int totalCap,
+      int[] perTypeNumWindowList,
+      int[] perTypeCapList,
+      int rank,
+      Map<List<Integer>, Integer> dp) {
+    int triggerTypeIndex = perTypeNumWindowList.length - 1;
+    return getReportSetBasedOnRankRecursive(
+        totalCap,
+        triggerTypeIndex,
+        perTypeNumWindowList[triggerTypeIndex],
+        perTypeCapList[triggerTypeIndex],
+        rank,
+        perTypeNumWindowList,
+        perTypeCapList,
+        dp);
+  }
+
+  private static List<AtomReportState> getReportSetBasedOnRankRecursive(
+      int totalCap,
+      int triggerTypeIndex,
+      int winVal,
+      int capVal,
+      int rank,
+      int[] perTypeNumWindowList,
+      int[] perTypeCapList,
+      Map<List<Integer>, Integer> numStatesLookupTable) {
+    if (winVal == 0 && triggerTypeIndex == 0) {
+      return new ArrayList<>();
+    } else if (winVal == 0) {
+      return getReportSetBasedOnRankRecursive(
+          totalCap,
+          triggerTypeIndex - 1,
+          perTypeNumWindowList[triggerTypeIndex - 1],
+          perTypeCapList[triggerTypeIndex - 1],
+          rank,
+          perTypeNumWindowList,
+          perTypeCapList,
+          numStatesLookupTable);
+    }
+    for (int i = 0; i <= Math.min(totalCap, capVal); i++) {
+      int currentNumStates =
+          getNumStatesRecursive(
+              totalCap - i,
+              triggerTypeIndex,
+              winVal - 1,
+              capVal - i,
+              perTypeNumWindowList,
+              perTypeCapList,
+              numStatesLookupTable);
+      if (currentNumStates > rank) {
+        // The triggers to be appended.
+        List<AtomReportState> toAppend = new ArrayList<>();
+        for (int k = 0; k < i; k++) {
+          toAppend.add(new AtomReportState(triggerTypeIndex, winVal - 1));
+        }
+        List<AtomReportState> otherReports =
+            getReportSetBasedOnRankRecursive(
+                totalCap - i,
+                triggerTypeIndex,
+                winVal - 1,
+                capVal - i,
+                rank,
+                perTypeNumWindowList,
+                perTypeCapList,
+                numStatesLookupTable);
+        toAppend.addAll(otherReports);
+        return toAppend;
+      } else {
+        rank -= currentNumStates;
+      }
+    }
+    // will not reach here
+    return new ArrayList<>();
+  }
+
+  /** A single report including triggerDataType and window index for the fake report generation */
+  public static class AtomReportState {
+    private final int mTriggerDataType;
+    private final int mWindowIndex;
+
+    public AtomReportState(int triggerDataType, int windowIndex) {
+      this.mTriggerDataType = triggerDataType;
+      this.mWindowIndex = windowIndex;
+    }
+
+    public int getTriggerDataType() {
+      return mTriggerDataType;
+    }
+
+    public final int getWindowIndex() {
+      return mWindowIndex;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (!(obj instanceof AtomReportState)) {
+        return false;
+      }
+      AtomReportState t = (AtomReportState) obj;
+      return mTriggerDataType == t.mTriggerDataType && mWindowIndex == t.mWindowIndex;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(mWindowIndex, mTriggerDataType);
+    }
   }
 }

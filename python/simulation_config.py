@@ -71,9 +71,12 @@ class SimulationConfig:
       source_end_date: date,
       trigger_start_date: date,
       trigger_end_date: date,
+      extension_event_start_date: date = None,
+      extension_event_end_date: date = None,
       output_directory: str = None,
       attribution_source_file_name: str = "attribution_source.json",
-      trigger_file_name: str = "trigger.json"):
+      trigger_file_name: str = "trigger.json",
+      extension_event_file_name: str = "extension.json"):
     """Perform validation and populate attributes"""
     self.errors = []
 
@@ -96,10 +99,14 @@ class SimulationConfig:
                                                  "trigger_start_date")
     self.trigger_end_date = self.validate_date(trigger_end_date,
                                                "trigger_end_date")
+    self.extension_event_start_date = extension_event_start_date
+    self.extension_event_end_date = extension_event_end_date
     self.attribution_source_file_name = self.validate_file_name(
         attribution_source_file_name, "attribution_source_file_name")
     self.trigger_file_name = self.validate_file_name(trigger_file_name,
                                                      "trigger_file_name")
+    self.extension_event_file_name = self.validate_file_name(extension_event_file_name,
+                                                     "extension_event_file_name")
     if len(self.errors) > 0:
       errors = "\n".join(list(self.errors))
       raise ValueError(errors)

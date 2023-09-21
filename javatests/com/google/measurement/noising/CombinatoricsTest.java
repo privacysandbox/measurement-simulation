@@ -21,9 +21,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.math.DoubleMath;
+import com.google.measurement.PrivacyParams;
+import com.google.measurement.noising.Combinatorics.AtomReportState;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Test;
@@ -324,5 +332,228 @@ public class CombinatoricsTest {
                     () ->
                         Combinatorics.getNumStatesArithmetic(
                             testCase[0], testCase[1], testCase[2])));
+  }
+
+  @Test
+  public void testNumStatesArithmeticNoOverflow() {
+    // Test Case: {numBucketIncrements, numTriggerData, numWindows}, {expected number of states}
+    int[][][] testCases = {
+      {{3, 8, 3}, {2925}},
+      {{1, 1, 1}, {2}},
+      {{1, 2, 3}, {7}},
+      {{3, 2, 1}, {10}}
+    };
+
+    Arrays.stream(testCases)
+        .forEach(
+            (testCase) ->
+                assertEquals(
+                    testCase[1][0],
+                    Combinatorics.getNumStatesArithmetic(
+                        testCase[0][0], testCase[0][1], testCase[0][2])));
+  }
+
+  @Test
+  public void testNumStatesArithmeticOverflow() {
+    // Test Case: {numBucketIncrements, numTriggerData, numWindows}
+    int[][] testCasesOverflow = {
+      {3, Integer.MAX_VALUE - 1, 3},
+      {3, 8, Integer.MAX_VALUE - 1},
+      {8, 10, 6},
+    };
+
+    Arrays.stream(testCasesOverflow)
+        .forEach(
+            (testCase) ->
+                assertThrows(
+                    ArithmeticException.class,
+                    () ->
+                        Combinatorics.getNumStatesArithmetic(
+                            testCase[0], testCase[1], testCase[2])));
+  }
+
+  @Test
+  public void testNumStatesFlexAPI() {
+    // Test Case: {numBucketIncrements, perTypeNumWindows, perTypeCap}, {expected number of
+    // states}
+    int[][][][] testCases = {
+      {{{3}, {3, 3, 3, 3, 3, 3, 3, 3}, {3, 3, 3, 3, 3, 3, 3, 3}}, {{2925}}},
+      {{{3}, {8, 8}, {2, 2}}, {{-1}}},
+      {{{2}, {6, 7}, {1, 2}}, {{-1}}},
+      {{{3}, {2, 2}, {3, 3}}, {{35}}},
+      {{{3}, {4, 4}, {2, 2}}, {{125}}},
+      {{{7}, {2, 2}, {3, 3}}, {{100}}},
+      {{{7}, {2, 2}, {4, 5}}, {{236}}},
+      {{{1000}, {2, 2}, {4, 5}}, {{315}}},
+      {{{1000}, {2, 2, 2}, {4, 5, 4}}, {{4725}}},
+      {{{1000}, {2, 2, 2, 2}, {4, 5, 4, 2}}, {{28350}}},
+      {{{5}, {2}, {5}}, {{21}}},
+      {{{100}, {2, 2, 2, 2}, {5, 6, 6, 6}}, {{-1}}},
+      // number of trigger events out of range
+      {{{5}, {2, 2, 2, 2, 2, 2, 2, 2, 2}, {1, 1, 1, 1, 1, 1, 1, 1, 1}}, {{-1}}},
+      // trigger data cardinality out of range
+      {{{5}, {6}, {5}}, {{-1}}} // number reporting windows out of range
+    };
+
+    Arrays.stream(testCases)
+        .forEach(
+            (testCase) ->
+                assertEquals(
+                    testCase[1][0][0],
+                    Combinatorics.getNumStatesFlexAPI(
+                        testCase[0][0][0], testCase[0][1], testCase[0][2])));
+  }
+
+  @Test
+  public void testFlipProbability() {
+    // Test Case: {number of states}, {expected flip probability multiply 100}
+    double[][] testCases = {
+      {2925.0, 0.24263221679834088d},
+      {3.0, 0.0002494582008677539d},
+      {455.0, 0.037820279032938435d},
+      {2.0, 0.0001663056055328264d}
+    };
+
+    Arrays.stream(testCases)
+        .forEach(
+            (testCase) -> {
+              double result = 100 * Combinatorics.getFlipProbability((int) testCase[0]);
+              assertTrue(
+                  DoubleMath.fuzzyEquals(
+                      testCase[1], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD));
+            });
+  }
+
+  @Test
+  public void testInformationGain() {
+    // Test Case: {number of states}, {expected flip probability multiply 100}
+    double[][] testCases = {
+      {2925.0, 11.461727965384876d},
+      {3.0, 1.5849265115082312d},
+      {455.0, 8.821556150827456d},
+      {2.0, 0.9999820053790732d}
+    };
+
+    Arrays.stream(testCases)
+        .forEach(
+            (testCase) -> {
+              double result =
+                  Combinatorics.getInformationGain(
+                      (int) testCase[0], Combinatorics.getFlipProbability((int) testCase[0]));
+              assertTrue(
+                  DoubleMath.fuzzyEquals(
+                      testCase[1], result, PrivacyParams.NUMBER_EQUAL_THRESHOLD));
+            });
+  }
+
+  @Test
+  public void getSingleRandomSelectReportSet_checkNoDuplication_success() {
+    int[][][] testCases = getTestCaseForRandomState();
+    Arrays.stream(testCases)
+        .forEach(
+            (testCase) -> {
+              Map<List<Integer>, Integer> dp = new HashMap<>();
+              ArrayList<List<AtomReportState>> allReportSets = new ArrayList<>();
+              int numberStates =
+                  Combinatorics.getNumStatesFlexAPI(testCase[0][0], testCase[1], testCase[2]);
+              for (int i = 0; i < numberStates; i++) {
+                List<Combinatorics.AtomReportState> ithSet =
+                    Combinatorics.getReportSetBasedOnRank(
+                        testCase[0][0], testCase[1], testCase[2], i, dp);
+                Collections.sort(ithSet, new AtomReportStateComparator());
+                allReportSets.add(ithSet);
+              }
+              HashSet<List<Combinatorics.AtomReportState>> set = new HashSet<>(allReportSets);
+              assertEquals(allReportSets.size(), set.size());
+            });
+  }
+
+  @Test
+  public void getSingleRandomSelectReportSet_checkReportSetsMeetRequirement_success() {
+    int[][][] testCases = getTestCaseForRandomState();
+
+    Arrays.stream(testCases)
+        .forEach(
+            (testCase) -> {
+              Map<List<Integer>, Integer> dp = new HashMap<>();
+              int numberStates =
+                  Combinatorics.getNumStatesFlexAPI(testCase[0][0], testCase[1], testCase[2]);
+              for (int i = 0; i < numberStates; i++) {
+                List<Combinatorics.AtomReportState> ithSet =
+                    Combinatorics.getReportSetBasedOnRank(
+                        testCase[0][0], testCase[1], testCase[2], i, dp);
+                assertTrue(
+                    atomReportStateSetMeetRequirement(
+                        testCase[0][0], testCase[1], testCase[2], ithSet));
+              }
+            });
+  }
+
+  private static int[][][] getTestCaseForRandomState() {
+    // Test Case: {numBucketIncrements, perTypeNumWindows, perTypeCap}}
+    int[][][] testCases = {
+      {{2}, {2, 2}, {1, 1}},
+      {{3}, {2, 2}, {3, 3}},
+      {{7}, {2, 2}, {3, 3}},
+      {
+        {3},
+        {3, 3, 3, 3, 3, 3, 3, 3},
+        {
+          Integer.MAX_VALUE,
+          Integer.MAX_VALUE,
+          Integer.MAX_VALUE,
+          Integer.MAX_VALUE,
+          Integer.MAX_VALUE,
+          Integer.MAX_VALUE,
+          Integer.MAX_VALUE,
+          Integer.MAX_VALUE
+        }
+      }, // Default parameters for existing event reporting API. Since no local limited is
+      // set, just put max integer value here.
+      {{5}, {3, 3, 3, 3, 3, 3, 3, 3}, {3, 3, 3, 3, 3, 3, 3, 3}},
+      // larger test case. On purpose comment out for long-running time.
+    };
+    return testCases;
+  }
+
+  private static boolean atomReportStateSetMeetRequirement(
+      int totalCap,
+      int[] perTypeNumWindowList,
+      int[] perTypeCapList,
+      List<Combinatorics.AtomReportState> reportSet) {
+    // if number of report over max reports
+    if (reportSet.size() > totalCap) {
+      return false;
+    }
+    int[] perTypeReportList = new int[perTypeCapList.length];
+    // Initialize all elements to zero
+    for (int i = 0; i < perTypeCapList.length; i++) {
+      perTypeReportList[i] = 0;
+    }
+    for (Combinatorics.AtomReportState report : reportSet) {
+      int triggerDataIndex = report.getTriggerDataType();
+      // if the report window larger than total report window of this trigger data
+      // input perTypeNumWindowList is [3,3,3], and report windows index is 4, return false
+      if (report.getWindowIndex() + 1 > perTypeNumWindowList[triggerDataIndex]) {
+        return false;
+      }
+
+      perTypeReportList[triggerDataIndex]++;
+      // number of report for this trigger data over the per data limit
+      if (perTypeCapList[triggerDataIndex] < perTypeReportList[triggerDataIndex]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static class AtomReportStateComparator implements Comparator<AtomReportState> {
+    @Override
+    public int compare(Combinatorics.AtomReportState o1, Combinatorics.AtomReportState o2) {
+      if (o1.getTriggerDataType() != o2.getTriggerDataType()) {
+        return Integer.compare(o1.getTriggerDataType(), o2.getTriggerDataType());
+      }
+      return Integer.compare(o1.getWindowIndex(), o2.getWindowIndex());
+    }
   }
 }

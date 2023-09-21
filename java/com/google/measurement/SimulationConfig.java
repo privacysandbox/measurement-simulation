@@ -53,4 +53,17 @@ public interface SimulationConfig extends PipelineOptions {
   String getTriggerFileName();
 
   void setTriggerFileName(String triggerFileName);
+
+  String getExtensionEventStartDate();
+
+  void setExtensionEventStartDate(String extensionEventStartDate);
+
+  String getExtensionEventEndDate();
+
+  void setExtensionEventEndDate(String extensionEventEndDate);
+
+  @Default.String("extension.json")
+  String getExtensionEventFileName();
+
+  void setExtensionEventFileName(String extensionEventFileName);
 }

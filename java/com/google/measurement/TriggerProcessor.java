@@ -30,6 +30,9 @@ import org.json.simple.parser.ParseException;
 
 public class TriggerProcessor {
   private static final Logger logger = Logger.getLogger(TriggerProcessor.class.getName());
+  private static final String M_DEFAULT_ANDROID_APP_SCHEME = "android-app";
+  private static final String M_DEFAULT_ANDROID_APP_URI_PREFIX =
+      M_DEFAULT_ANDROID_APP_SCHEME + "://";
 
   /**
    * Build Trigger object from the input json object
@@ -54,8 +57,17 @@ public class TriggerProcessor {
       }
     }
 
-    builder.setAttributionDestination(
-        URI.create((String) jsonObject.get("attribution_destination")));
+    URI destination = URI.create((String) jsonObject.get("attribution_destination"));
+    if (destination.getScheme() == null) {
+      if (destinationType == EventSurfaceType.APP) {
+        logger.info("App destination is missing app scheme, adding.");
+        destination =
+            URI.create(
+                M_DEFAULT_ANDROID_APP_URI_PREFIX
+                    + (String) jsonObject.get("attribution_destination"));
+      }
+    }
+    builder.setAttributionDestination(destination);
     builder.setRegistrant(URI.create((String) jsonObject.get("registrant")));
     builder.setDestinationType(destinationType);
     builder.setTriggerTime(Util.parseJsonLong(jsonObject, "timestamp"));
@@ -128,6 +140,22 @@ public class TriggerProcessor {
     }
     builder.setApiChoice(apiChoice);
 
+    if (jsonObject.containsKey("has_ad_id_permission")) {
+      builder.setAdIdPermission((boolean) jsonObject.get("has_ad_id_permission"));
+    }
+
+    if (jsonObject.containsKey("has_ar_debug_permission")) {
+      builder.setArDebugPermission((boolean) jsonObject.get("has_ar_debug_permission"));
+    }
+
+    if (jsonObject.containsKey("debug_reporting")) {
+      builder.setIsDebugReporting((boolean) jsonObject.get("debug_reporting"));
+    }
+
+    if (jsonObject.containsKey("debug_key")) {
+      builder.setDebugKey(Util.parseJsonUnsignedLong(jsonObject, "debug_key"));
+    }
+
     return true;
   }
 
@@ -159,6 +187,16 @@ public class TriggerProcessor {
       if (eventTriggerDatum.containsKey("priority")) {
         try {
           validEventTriggerDatum.put("priority", Util.parseJsonLong(eventTriggerDatum, "priority"));
+        } catch (NumberFormatException e) {
+          logger.info(
+              String.format(
+                  "getValidEventTriggerData: parsing priority failed with error: %s.",
+                  e.getMessage()));
+        }
+      }
+      if (eventTriggerDatum.containsKey("value")) {
+        try {
+          validEventTriggerDatum.put("value", Util.parseJsonLong(eventTriggerDatum, "value"));
         } catch (NumberFormatException e) {
           logger.info(
               String.format(

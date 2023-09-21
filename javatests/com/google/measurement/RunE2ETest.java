@@ -17,7 +17,12 @@
 package com.google.measurement;
 
 import static com.google.measurement.util.BaseUriExtractor.getBaseUri;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 import co.nstant.in.cbor.CborDecoder;
 import co.nstant.in.cbor.CborException;
@@ -25,11 +30,13 @@ import co.nstant.in.cbor.model.Array;
 import co.nstant.in.cbor.model.ByteString;
 import co.nstant.in.cbor.model.DataItem;
 import co.nstant.in.cbor.model.UnicodeString;
+import com.google.measurement.noising.SourceNoiseHandler;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URI;
 import java.nio.file.Files;
@@ -37,9 +44,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.DefaultCoder;
@@ -47,9 +52,8 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.join.CoGbkResult;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -58,9 +62,9 @@ import org.junit.Test;
 
 @DefaultCoder(AvroCoder.class)
 class GenerateAggregatableReport extends DoFn<JSONObject, Boolean> {
-  private Set<JSONObject> expectedAggregatableReports;
+  private List<JSONObject> expectedAggregatableReports;
 
-  GenerateAggregatableReport(Set<JSONObject> expectedAggregatableReports) {
+  GenerateAggregatableReport(List<JSONObject> expectedAggregatableReports) {
     this.expectedAggregatableReports = expectedAggregatableReports;
   }
 
@@ -203,56 +207,55 @@ public final class RunE2ETest {
     JSONArray sources = (JSONArray) inputs.get("sources");
     JSONArray triggers = (JSONArray) inputs.get("triggers");
 
-    JSONObject outputs = (JSONObject) fileData.get("output");
-    JSONArray eventLevelResults =
-        (outputs.containsKey("event_level_results"))
-            ? (JSONArray) outputs.get("event_level_results")
-            : new JSONArray();
-    Set<JSONObject> expectedEventReports = new HashSet();
-    for (Object eventLevelResult : eventLevelResults) {
-      JSONObject report = (JSONObject) ((JSONObject) eventLevelResult).get("payload");
-      if (report.containsKey("source_debug_key")) {
-        report.remove("source_debug_key");
-      }
-      if (report.containsKey("trigger_debug_key")) {
-        report.remove("trigger_debug_key");
-      }
-      expectedEventReports.add(report);
+    JSONArray installs = new JSONArray();
+    if (inputs.containsKey("installs")) {
+      installs = (JSONArray) inputs.get("installs");
+    }
+    JSONArray uninstalls = new JSONArray();
+    if (inputs.containsKey("uninstalls")) {
+      uninstalls = (JSONArray) inputs.get("uninstalls");
     }
 
-    JSONArray aggregatableResults =
-        (outputs.containsKey("aggregatable_results"))
-            ? (JSONArray) outputs.get("aggregatable_results")
-            : new JSONArray();
-    Set<JSONObject> expectedAggregatableReports = new HashSet();
-    for (Object aggregatableResultObj : aggregatableResults) {
-      // We are not comparing the source site in our outputs
-      JSONObject aggregatableResult = (JSONObject) aggregatableResultObj;
-      JSONObject payload = (JSONObject) aggregatableResult.get("payload");
-      payload.remove("source_site");
-      aggregatableResult.put("payload", payload);
-      expectedAggregatableReports.add(aggregatableResult);
-    }
+    JSONObject outputs = (JSONObject) fileData.get("output");
+    List<JSONObject> expectedEventReports = getExpectedEventReports(outputs);
+    List<JSONObject> expectedAggregatableReports = getExpectedAggregatableReports(outputs);
 
     // Simulate Attribution Reporting API for a single user/device
-    List<KV<String, Source>> sourceObjs = new ArrayList();
-    List<KV<String, Trigger>> triggerObjs = new ArrayList();
+    List<Source> sourceObjs = new ArrayList<>();
+    List<Trigger> triggerObjs = new ArrayList<>();
+    List<ExtensionEvent> extensionEventObjs = new ArrayList<>();
     for (Object source : sources) {
-      sourceObjs.add(KV.of("User1", SourceProcessor.buildSourceFromJson((JSONObject) source)));
+      try {
+        sourceObjs.add(SourceProcessor.buildSourceFromJson((JSONObject) source));
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
     }
     for (Object trigger : triggers) {
-      triggerObjs.add(KV.of("User1", TriggerProcessor.buildTriggerFromJson((JSONObject) trigger)));
+      triggerObjs.add(TriggerProcessor.buildTriggerFromJson((JSONObject) trigger));
     }
-    SimulationRunner simulationRunner = new SimulationRunner();
-    Pipeline p = Pipeline.create();
-    PCollection<KV<String, Source>> userToAdtechSourceData = p.apply(Create.of(sourceObjs));
-    PCollection<KV<String, Trigger>> userToAdtechTriggerData = p.apply(Create.of(triggerObjs));
-    PCollection<KV<String, CoGbkResult>> joinedData =
-        simulationRunner.joinSourceAndTriggerData(userToAdtechSourceData, userToAdtechTriggerData);
+    for (Object install : installs) {
+      JSONObject eventInstall = (JSONObject) install;
+      eventInstall.put("action", "install");
+      extensionEventObjs.add(ExtensionEvent.buildExtensionEventFromJson((JSONObject) install));
+    }
+    for (Object uninstall : uninstalls) {
+      JSONObject eventUnInstall = (JSONObject) uninstall;
+      eventUnInstall.put("action", "uninstall");
+      extensionEventObjs.add(ExtensionEvent.buildExtensionEventFromJson((JSONObject) uninstall));
+    }
 
-    Path tempDir = Files.createTempDirectory("AttributionJobHandlerTest");
+    Pipeline p = Pipeline.create();
+
+    Path tempDir = Files.createTempDirectory("E2ETest");
+
+    SourceNoiseHandler sourceNoiseHandler = getSourceNoiseHandler();
+
+    UserSimulation userSimulation =
+        new UserSimulation("User1", tempDir.toString(), sourceNoiseHandler);
+
     PCollection<JSONObject> aggregatableReports =
-        simulationRunner.runUserSimulationInParallel(joinedData, tempDir.toString());
+        getAggregatableReports(sourceObjs, triggerObjs, extensionEventObjs, p, userSimulation);
 
     // Match the output aggregatable reports
     PCollection<Boolean> matchingAggregatableReports =
@@ -264,11 +267,17 @@ public final class RunE2ETest {
 
     p.run().waitUntilFinish();
 
-    // Match event level reports
-    // Read event reports from the simulation library output
-    Set<JSONObject> simLibEventReports = new HashSet();
+    assertEventReports(parser, expectedEventReports, tempDir);
+  }
+
+  // Match event level reports
+  // Read event reports from the simulation library output
+  private static void assertEventReports(
+      JSONParser parser, List<JSONObject> expectedEventReports, Path tempDir)
+      throws IOException, ParseException {
+    List<JSONObject> simLibEventReports = new ArrayList<>();
     try {
-      FileReader fileReader = new FileReader(tempDir.toString() + "/User1/event_reports.json");
+      FileReader fileReader = new FileReader(tempDir + "/User1/event_reports.json");
       BufferedReader reader = new BufferedReader(fileReader);
       String line = reader.readLine();
       while (line != null) {
@@ -278,14 +287,85 @@ public final class RunE2ETest {
         Long triggerData = (Long) eventReport.get("trigger_data");
         eventReport.put("trigger_data", triggerData.toString());
         eventReport.put("source_type", ((String) eventReport.get("source_type")).toLowerCase());
+        if (eventReport.containsKey("trigger_summary_bucket")) {
+          eventReport.put(
+              "trigger_summary_bucket",
+              ((String) eventReport.get("trigger_summary_bucket")).toLowerCase());
+        }
         simLibEventReports.add(eventReport);
         line = reader.readLine();
       }
       reader.close();
       assertEquals(expectedEventReports.size(), simLibEventReports.size());
-      assertEquals(expectedEventReports, simLibEventReports);
+      assertThat(simLibEventReports, containsInAnyOrder(expectedEventReports.toArray()));
     } catch (FileNotFoundException e) {
       assertEquals(expectedEventReports.size(), 0);
     }
+  }
+
+  private static PCollection<JSONObject> getAggregatableReports(
+      List<Source> sourceObjs,
+      List<Trigger> triggerObjs,
+      List<ExtensionEvent> extensionEventObjs,
+      Pipeline p,
+      UserSimulation userSimulation)
+      throws ParseException {
+    List<JSONObject> aggregatableReportsList =
+        userSimulation.runSimulation(sourceObjs, triggerObjs, extensionEventObjs);
+    PCollection<JSONObject> aggregatableReports;
+    if (aggregatableReportsList == null || aggregatableReportsList.isEmpty()) {
+      aggregatableReports = p.apply(Create.empty(TypeDescriptor.of(JSONObject.class)));
+    } else {
+      aggregatableReports = p.apply(Create.of(aggregatableReportsList));
+    }
+    return aggregatableReports;
+  }
+
+  /*
+   * Mock the source noise handler so that all tests run deterministically.
+   */
+  private static SourceNoiseHandler getSourceNoiseHandler() {
+    SourceNoiseHandler sourceNoiseHandler = spy(new SourceNoiseHandler(new Flags()));
+
+    doReturn(Collections.emptyList())
+        .when(sourceNoiseHandler)
+        .assignAttributionModeAndGenerateFakeReports(any(Source.class));
+    return sourceNoiseHandler;
+  }
+
+  private static List<JSONObject> getExpectedAggregatableReports(JSONObject outputs) {
+    JSONArray aggregatableResults =
+        (outputs.containsKey("aggregatable_results"))
+            ? (JSONArray) outputs.get("aggregatable_results")
+            : new JSONArray();
+    List<JSONObject> expectedAggregatableReports = new ArrayList<>();
+    for (Object aggregatableResultObj : aggregatableResults) {
+      // We are not comparing the source site in our outputs
+      JSONObject aggregatableResult = (JSONObject) aggregatableResultObj;
+      JSONObject payload = (JSONObject) aggregatableResult.get("payload");
+      payload.remove("source_site");
+      aggregatableResult.put("payload", payload);
+      expectedAggregatableReports.add(aggregatableResult);
+    }
+    return expectedAggregatableReports;
+  }
+
+  private static List<JSONObject> getExpectedEventReports(JSONObject outputs) {
+    JSONArray eventLevelResults =
+        (outputs.containsKey("event_level_results"))
+            ? (JSONArray) outputs.get("event_level_results")
+            : new JSONArray();
+    List<JSONObject> expectedEventReports = new ArrayList<>();
+    for (Object eventLevelResult : eventLevelResults) {
+      JSONObject report = (JSONObject) ((JSONObject) eventLevelResult).get("payload");
+      if (report.containsKey("source_debug_key")) {
+        report.remove("source_debug_key");
+      }
+      if (report.containsKey("trigger_debug_key")) {
+        report.remove("trigger_debug_key");
+      }
+      expectedEventReports.add(report);
+    }
+    return expectedEventReports;
   }
 }

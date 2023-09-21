@@ -17,12 +17,18 @@
 package com.google.measurement;
 
 import com.google.measurement.InputFileProcessor.AttributionSourceJsonMapperDoFn;
+import com.google.measurement.InputFileProcessor.ExtensionEventJsonMapperDoFn;
 import com.google.measurement.InputFileProcessor.TriggerJsonMapperDoFn;
 import com.google.measurement.util.Util;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Logger;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.coders.AvroCoder;
+import org.apache.beam.sdk.coders.KvCoder;
+import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.io.FileIO.ReadableFile;
 import org.apache.beam.sdk.io.TextIO;
@@ -37,6 +43,7 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TupleTag;
 
 public class DataProcessor {
+  private static final Logger logger = Logger.getLogger(DataProcessor.class.getName());
 
   /**
    * Given a PCollection of Source objects keyed by UserId and a choice of which API platform to
@@ -111,6 +118,33 @@ public class DataProcessor {
         "Invalid file type for triggerFileName. Acceptable file format is json");
   }
 
+  /**
+   * Build a list of pairs of userId and ExtensionEvent objects from the input data.
+   *
+   * @param p Beam pipeline object
+   * @param options Simulation related configuration parameters
+   * @return KV object with key as userId and Value as ExtensionEvent object.
+   */
+  public static PCollection<KV<String, ExtensionEvent>> buildUserToExtensionEventMap(
+      Pipeline p, SimulationConfig options) {
+    try {
+      PCollection<ReadableFile> files = getExtensionEventFiles(p, options);
+      String extensionEventFileType = Util.getFileType(options.getExtensionEventFileName());
+      if (Objects.equals(extensionEventFileType, "json")) {
+        return files.apply(TextIO.readFiles()).apply(ParDo.of(new ExtensionEventJsonMapperDoFn()));
+      }
+    } catch (Exception e) {
+      logger.info("No extension events found in the given time interval.");
+      HashMap<String, ExtensionEvent> userExtensionEventMap = new HashMap();
+      return p.apply(
+          Create.of(userExtensionEventMap)
+              .withCoder(KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(ExtensionEvent.class))));
+    }
+
+    throw new IllegalArgumentException(
+        "Invalid file type for extensionEventFileName. Acceptable file format is json");
+  }
+
   private static PCollection<ReadableFile> getAttributionSourceFiles(
       Pipeline p, SimulationConfig options) {
     String inputDir = options.getInputDirectory();
@@ -133,6 +167,18 @@ public class DataProcessor {
     return p.apply(Create.of(paths)).apply(FileIO.matchAll()).apply(FileIO.readMatches());
   }
 
+  private static PCollection<ReadableFile> getExtensionEventFiles(
+      Pipeline p, SimulationConfig options) {
+    String inputDir = options.getInputDirectory();
+    String extensionEventFileName = options.getExtensionEventFileName();
+    LocalDate extensionEventStartDate = Util.parseStringDate(options.getExtensionEventStartDate());
+    LocalDate extensionEventEndDate = Util.parseStringDate(options.getExtensionEventEndDate());
+    List<String> paths =
+        Util.getPathsInDateRange(
+            extensionEventStartDate, extensionEventEndDate, inputDir, extensionEventFileName);
+    return p.apply(Create.of(paths)).apply(FileIO.matchAll()).apply(FileIO.readMatches());
+  }
+
   /**
    * Join Source and Trigger data based on the userId
    *
@@ -150,6 +196,32 @@ public class DataProcessor {
       TupleTag<Trigger> triggerTag) {
     return KeyedPCollectionTuple.of(sourceTag, userToAdtechSourceData)
         .and(triggerTag, userToAdtechTriggerData)
+        .apply(CoGroupByKey.create());
+  }
+
+  /**
+   * Join Source, Trigger and ExtensionEvent data based on the userId
+   *
+   * @param userToAdtechSourceData PCollection of key-value pairs of userIds and Source objects
+   * @param userToAdtechTriggerData PCollection of key-value pairs of userIds and Trigger objects
+   * @param userToAdtechExtensionEventData PCollection of key-value pairs of userIds and
+   *     ExtensionEvent objects
+   * @param sourceTag Tag to identify Source object
+   * @param triggerTag Tag to identify Trigger object
+   * @param extensionEventTupleTag Tag to identify ExtensionEvent object
+   * @return PCollection of joined data with key as userId and value as list of Source, Trigger and
+   *     ExtensionEvent objects which belong to that userId
+   */
+  public static PCollection<KV<String, CoGbkResult>> joinUserIdData(
+      PCollection<KV<String, Source>> userToAdtechSourceData,
+      PCollection<KV<String, Trigger>> userToAdtechTriggerData,
+      PCollection<KV<String, ExtensionEvent>> userToAdtechExtensionEventData,
+      TupleTag<Source> sourceTag,
+      TupleTag<Trigger> triggerTag,
+      TupleTag<ExtensionEvent> extensionEventTupleTag) {
+    return KeyedPCollectionTuple.of(sourceTag, userToAdtechSourceData)
+        .and(triggerTag, userToAdtechTriggerData)
+        .and(extensionEventTupleTag, userToAdtechExtensionEventData)
         .apply(CoGroupByKey.create());
   }
 }

@@ -17,8 +17,15 @@
 package com.google.measurement;
 
 import static com.google.measurement.AttributionConfig.AttributionConfigContract.END;
+import static com.google.measurement.AttributionConfig.AttributionConfigContract.EXPIRY;
+import static com.google.measurement.AttributionConfig.AttributionConfigContract.FILTER_DATA;
+import static com.google.measurement.AttributionConfig.AttributionConfigContract.POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.google.measurement.AttributionConfig.AttributionConfigContract.PRIORITY;
+import static com.google.measurement.AttributionConfig.AttributionConfigContract.SOURCE_EXPIRY_OVERRIDE;
 import static com.google.measurement.AttributionConfig.AttributionConfigContract.SOURCE_FILTERS;
+import static com.google.measurement.AttributionConfig.AttributionConfigContract.SOURCE_NETWORK;
+import static com.google.measurement.AttributionConfig.AttributionConfigContract.SOURCE_NOT_FILTERS;
+import static com.google.measurement.AttributionConfig.AttributionConfigContract.SOURCE_PRIORITY_RANGE;
 import static com.google.measurement.AttributionConfig.AttributionConfigContract.START;
 import static com.google.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.google.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
@@ -30,11 +37,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.logging.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 /** POJO for AttributionConfig. */
 public class AttributionConfig {
+  private static final Logger logger = Logger.getLogger(AttributionConfig.class.getName());
   private final String mSourceAdtech;
   private final Map<Long, Long> mSourcePriorityRange;
   private final List<FilterMap> mSourceFilters;
@@ -156,42 +165,42 @@ public class AttributionConfig {
    * @return serialized JSON object
    */
   public JSONObject serializeAsJson() {
-    JSONObject attributionConfig = new JSONObject();
-    attributionConfig.put(AttributionConfigContract.SOURCE_NETWORK, mSourceAdtech);
-    if (mSourcePriorityRange != null) {
-      JSONObject sourcePriorityRange = new JSONObject();
-      Long key = mSourcePriorityRange.keySet().iterator().next();
-      sourcePriorityRange.put(START, key);
-      sourcePriorityRange.put(END, mSourcePriorityRange.get(key));
-      attributionConfig.put(AttributionConfigContract.SOURCE_PRIORITY_RANGE, sourcePriorityRange);
+    try {
+      JSONObject attributionConfig = new JSONObject();
+      attributionConfig.put(SOURCE_NETWORK, mSourceAdtech);
+      if (mSourcePriorityRange != null) {
+        JSONObject sourcePriorityRange = new JSONObject();
+        Long rangeStart = mSourcePriorityRange.keySet().iterator().next();
+        sourcePriorityRange.put(START, mSourcePriorityRange.keySet().stream().iterator().next());
+        sourcePriorityRange.put(END, mSourcePriorityRange.get(rangeStart));
+        attributionConfig.put(SOURCE_PRIORITY_RANGE, sourcePriorityRange);
+      }
+      if (mSourceFilters != null) {
+        attributionConfig.put(SOURCE_FILTERS, Filter.serializeFilterSet(mSourceFilters));
+      }
+      if (mSourceNotFilters != null) {
+        attributionConfig.put(SOURCE_NOT_FILTERS, Filter.serializeFilterSet(mSourceNotFilters));
+      }
+      if (mSourceExpiryOverride != null) {
+        attributionConfig.put(SOURCE_EXPIRY_OVERRIDE, mSourceExpiryOverride);
+      }
+      if (mPriority != null) {
+        attributionConfig.put(PRIORITY, mPriority);
+      }
+      if (mExpiry != null) {
+        attributionConfig.put(EXPIRY, mExpiry);
+      }
+      if (mFilterData != null) {
+        attributionConfig.put(FILTER_DATA, Filter.serializeFilterSet(mFilterData));
+      }
+      if (mPostInstallExclusivityWindow != null) {
+        attributionConfig.put(POST_INSTALL_EXCLUSIVITY_WINDOW, mPostInstallExclusivityWindow);
+      }
+      return attributionConfig;
+    } catch (Exception e) {
+      logger.severe("Serializing attribution config failed");
+      return null;
     }
-    if (mSourceFilters != null) {
-      attributionConfig.put(SOURCE_FILTERS, Filter.serializeFilterSet(mSourceFilters));
-    }
-    if (mSourceNotFilters != null) {
-      attributionConfig.put(
-          AttributionConfigContract.SOURCE_NOT_FILTERS,
-          Filter.serializeFilterSet(mSourceNotFilters));
-    }
-    if (mSourceExpiryOverride != null) {
-      attributionConfig.put(
-          AttributionConfigContract.SOURCE_EXPIRY_OVERRIDE, mSourceExpiryOverride);
-    }
-    if (mPriority != null) {
-      attributionConfig.put(PRIORITY, mPriority);
-    }
-    if (mExpiry != null) {
-      attributionConfig.put(AttributionConfigContract.EXPIRY, mExpiry);
-    }
-    if (mFilterData != null) {
-      attributionConfig.put(
-          AttributionConfigContract.FILTER_DATA, Filter.serializeFilterSet(mFilterData));
-    }
-    if (mPostInstallExclusivityWindow != null) {
-      attributionConfig.put(
-          AttributionConfigContract.POST_INSTALL_EXCLUSIVITY_WINDOW, mPostInstallExclusivityWindow);
-    }
-    return attributionConfig;
   }
 
   /** Builder for {@link AttributionConfig}. */
@@ -211,22 +220,20 @@ public class AttributionConfig {
     /**
      * Parses the string serialized json object under an {@link AttributionConfig}.
      *
-     * @throws IllegalArgumentException if JSON parsing fails
+     * @throws Exception if JSON parsing fails
      */
-    public Builder(JSONObject attributionConfigsJson) throws IllegalArgumentException {
+    public Builder(JSONObject attributionConfigsJson) throws Exception {
       if (attributionConfigsJson == null) {
-        throw new IllegalArgumentException(
-            "AttributionConfig.Builder: Empty or null attributionConfigsJson");
+        throw new Exception("AttributionConfig.Builder: Empty or null attributionConfigsJson");
       }
-      if (!attributionConfigsJson.containsKey(AttributionConfigContract.SOURCE_NETWORK)) {
-        throw new IllegalArgumentException(
+      if (!attributionConfigsJson.containsKey(SOURCE_NETWORK)) {
+        throw new Exception(
             "AttributionConfig.Builder: Required field source_network is not present.");
       }
-      mSourceAdtech = (String) attributionConfigsJson.get(AttributionConfigContract.SOURCE_NETWORK);
-      if (attributionConfigsJson.containsKey(AttributionConfigContract.SOURCE_PRIORITY_RANGE)) {
+      mSourceAdtech = (String) attributionConfigsJson.get(SOURCE_NETWORK);
+      if (attributionConfigsJson.containsKey(SOURCE_PRIORITY_RANGE)) {
         JSONObject sourcePriorityRangeJson =
-            (JSONObject)
-                attributionConfigsJson.get(AttributionConfigContract.SOURCE_PRIORITY_RANGE);
+            (JSONObject) attributionConfigsJson.get(SOURCE_PRIORITY_RANGE);
         mSourcePriorityRange = new HashMap<>();
         mSourcePriorityRange.put(
             Util.parseJsonLong(sourcePriorityRangeJson, START),
@@ -236,16 +243,12 @@ public class AttributionConfig {
         JSONArray filterSet = Filter.maybeWrapFilters(attributionConfigsJson, SOURCE_FILTERS);
         mSourceFilters = Filter.deserializeFilterSet(filterSet);
       }
-      if (attributionConfigsJson.containsKey(AttributionConfigContract.SOURCE_NOT_FILTERS)) {
-        JSONArray filterSet =
-            Filter.maybeWrapFilters(
-                attributionConfigsJson, AttributionConfigContract.SOURCE_NOT_FILTERS);
+      if (attributionConfigsJson.containsKey(SOURCE_NOT_FILTERS)) {
+        JSONArray filterSet = Filter.maybeWrapFilters(attributionConfigsJson, SOURCE_NOT_FILTERS);
         mSourceNotFilters = Filter.deserializeFilterSet(filterSet);
       }
-      if (attributionConfigsJson.containsKey(AttributionConfigContract.SOURCE_EXPIRY_OVERRIDE)) {
-        long override =
-            Util.parseJsonLong(
-                attributionConfigsJson, AttributionConfigContract.SOURCE_EXPIRY_OVERRIDE);
+      if (attributionConfigsJson.containsKey(SOURCE_EXPIRY_OVERRIDE)) {
+        long override = Util.parseJsonLong(attributionConfigsJson, SOURCE_EXPIRY_OVERRIDE);
         mSourceExpiryOverride =
             MathUtils.extractValidNumberInRange(
                 override,
@@ -255,24 +258,21 @@ public class AttributionConfig {
       if (attributionConfigsJson.containsKey(PRIORITY)) {
         mPriority = Util.parseJsonLong(attributionConfigsJson, PRIORITY);
       }
-      if (attributionConfigsJson.containsKey(AttributionConfigContract.EXPIRY)) {
-        long expiry = Util.parseJsonLong(attributionConfigsJson, AttributionConfigContract.EXPIRY);
+      if (attributionConfigsJson.containsKey(EXPIRY)) {
+        long expiry = Util.parseJsonLong(attributionConfigsJson, EXPIRY);
         mExpiry =
             MathUtils.extractValidNumberInRange(
                 expiry,
                 MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
                 MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
       }
-      if (attributionConfigsJson.containsKey(AttributionConfigContract.FILTER_DATA)) {
-        JSONArray filterSet =
-            Filter.maybeWrapFilters(attributionConfigsJson, AttributionConfigContract.FILTER_DATA);
+      if (attributionConfigsJson.containsKey(FILTER_DATA)) {
+        JSONArray filterSet = Filter.maybeWrapFilters(attributionConfigsJson, FILTER_DATA);
         mFilterData = Filter.deserializeFilterSet(filterSet);
       }
-      if (attributionConfigsJson.containsKey(
-          AttributionConfigContract.POST_INSTALL_EXCLUSIVITY_WINDOW)) {
+      if (attributionConfigsJson.containsKey(POST_INSTALL_EXCLUSIVITY_WINDOW)) {
         mPostInstallExclusivityWindow =
-            Util.parseJsonLong(
-                attributionConfigsJson, AttributionConfigContract.POST_INSTALL_EXCLUSIVITY_WINDOW);
+            Util.parseJsonLong(attributionConfigsJson, POST_INSTALL_EXCLUSIVITY_WINDOW);
       }
     }
 

@@ -27,6 +27,7 @@ that gateway.
 from py4j.java_gateway import JavaGateway
 from py4j.java_collections import ListConverter
 import os
+import sys
 
 from simulation_config import SimulationConfig
 from constants import PY4J_VERSION, PY4J_GATEWAY_PORT
@@ -85,10 +86,19 @@ class SimulationRunnerWrapper:
       py4j_jar_path = get_default_py4j_jar_path(bin_dir)
     if classpath is None:
       classpath = f"{bin_dir}/SimulationRunner_deploy.jar"
+
+    # The -Xlog:os+container=error java opt is necessary because of Java's
+    # behavior when executing inside a container. Java will print warning
+    # messages to STDOUT instead of STDERR thereby breaking py4j processes that
+    # read information from STDOUT.
     self.gateway = JavaGateway.launch_gateway(jarpath=py4j_jar_path,
                                               classpath=classpath,
                                               port=PY4J_GATEWAY_PORT,
-                                              die_on_exit=True)
+                                              javaopts=
+                                              ["-Xlog:os+container=error"],
+                                              die_on_exit=True,
+                                              redirect_stdout=sys.stdout,
+                                              redirect_stderr=sys.stderr)
     self.runner = self.gateway.jvm.com.google.measurement.SimulationRunner()
 
   def run(self, simulation_config: SimulationConfig = None) -> bool:

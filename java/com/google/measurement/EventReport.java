@@ -16,10 +16,13 @@
 
 package com.google.measurement;
 
+import com.google.measurement.noising.SourceNoiseHandler;
+import com.google.measurement.util.Debug;
 import com.google.measurement.util.UnsignedLong;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -45,6 +48,9 @@ public class EventReport implements Serializable {
   private UnsignedLong mTriggerDebugKey;
   private String mSourceId;
   private String mTriggerId;
+  private URI mRegistrationOrigin;
+  private long mTriggerValue;
+  private Pair<Long, Long> mTriggerSummaryBucket;
 
   public enum Status {
     PENDING,
@@ -82,7 +88,10 @@ public class EventReport implements Serializable {
         && Objects.equals(mSourceDebugKey, eventReport.mSourceDebugKey)
         && Objects.equals(mTriggerDebugKey, eventReport.mTriggerDebugKey)
         && Objects.equals(mSourceId, eventReport.mSourceId)
-        && Objects.equals(mTriggerId, eventReport.mTriggerId);
+        && Objects.equals(mTriggerId, eventReport.mTriggerId)
+        && Objects.equals(mRegistrationOrigin, eventReport.mRegistrationOrigin)
+        && Objects.equals(mTriggerValue, eventReport.mTriggerValue)
+        && Objects.equals(mTriggerSummaryBucket, eventReport.mTriggerSummaryBucket);
   }
 
   @Override
@@ -103,7 +112,10 @@ public class EventReport implements Serializable {
         mSourceDebugKey,
         mTriggerDebugKey,
         mSourceId,
-        mTriggerId);
+        mTriggerId,
+        mRegistrationOrigin,
+        mTriggerValue,
+        mTriggerSummaryBucket);
   }
 
   /** Unique identifier for the report. */
@@ -191,6 +203,30 @@ public class EventReport implements Serializable {
     return mTriggerId;
   }
 
+  /** Returns registration origin used to register the source and trigger */
+  public URI getRegistrationOrigin() {
+    return mRegistrationOrigin;
+  }
+
+  /** Trigger summary bucket */
+  public Pair<Long, Long> getTriggerSummaryBucket() {
+    return mTriggerSummaryBucket;
+  }
+
+  /** See {@link EventReport#getTriggerSummaryBucket()} */
+  public void setTriggerSummaryBucket(Pair<Long, Long> summaryBucket) {
+    mTriggerSummaryBucket = summaryBucket;
+  }
+
+  /**
+   * Update the summary bucket in the event report
+   *
+   * @param summaryBucket the summary bucket
+   */
+  public void updateSummaryBucket(Pair<Long, Long> summaryBucket) {
+    mTriggerSummaryBucket = summaryBucket;
+  }
+
   /** Builder for {@link EventReport} */
   public static final class Builder {
     private final EventReport mBuilding;
@@ -238,6 +274,12 @@ public class EventReport implements Serializable {
     /** See {@link EventReport#getTriggerPriority()} */
     public Builder setTriggerPriority(long triggerPriority) {
       mBuilding.mTriggerPriority = triggerPriority;
+      return this;
+    }
+
+    /** See {@link EventReport#getTriggerPriority()} */
+    public Builder setTriggerValue(long triggerValue) {
+      mBuilding.mTriggerValue = triggerValue;
       return this;
     }
 
@@ -301,26 +343,91 @@ public class EventReport implements Serializable {
       return this;
     }
 
+    /** See {@link Source#getRegistrationOrigin()} */
+    public Builder setRegistrationOrigin(URI registrationOrigin) {
+      mBuilding.mRegistrationOrigin = registrationOrigin;
+      return this;
+    }
+
+    /**
+     * set the summary bucket from input DB text encode summary bucket
+     *
+     * @param summaryBucket the string encoded summary bucket
+     * @return builder
+     */
+    public Builder setTriggerSummaryBucket(String summaryBucket) {
+      if (summaryBucket == null || summaryBucket.isEmpty()) {
+        mBuilding.mTriggerSummaryBucket = null;
+        return this;
+      }
+      String[] numbers = summaryBucket.split(",");
+
+      Long firstNumber = Long.parseLong(numbers[0].trim());
+      Long secondNumber = Long.parseLong(numbers[1].trim());
+      mBuilding.mTriggerSummaryBucket = new Pair<>(firstNumber, secondNumber);
+
+      return this;
+    }
+
+    /** See {@link EventReport#getTriggerSummaryBucket()} */
+    public Builder setTriggerSummaryBucket(Pair<Long, Long> summaryBucket) {
+      mBuilding.mTriggerSummaryBucket = summaryBucket;
+      return this;
+    }
+
     /** Populates fields using {@link Source}, {@link Trigger} and {@link EventTrigger}. */
     public Builder populateFromSourceAndTrigger(
-        Source source, Trigger trigger, EventTrigger eventTrigger) {
+        Source source,
+        Trigger trigger,
+        EventTrigger eventTrigger,
+        Map<UnsignedLong, UnsignedLong> debugKeyPair,
+        EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
+        SourceNoiseHandler sourceNoiseHandler,
+        List<URI> eventReportDestinations) {
       mBuilding.mId = UUID.randomUUID().toString();
-      mBuilding.mTriggerPriority = eventTrigger.getTriggerPriority();
       mBuilding.mTriggerDedupKey = eventTrigger.getDedupKey();
       // truncate trigger data to 3-bit or 1-bit based on {@link Source.SourceType}
-      mBuilding.mTriggerData = getTruncatedTriggerData(source, eventTrigger);
       mBuilding.mTriggerTime = trigger.getTriggerTime();
       mBuilding.mSourceEventId = source.getEventId();
       mBuilding.mEnrollmentId = source.getEnrollmentId();
       mBuilding.mStatus = Status.PENDING;
-      mBuilding.mAttributionDestinations =
-          source.getAttributionDestinations(trigger.getDestinationType());
-      mBuilding.mReportTime =
-          source.getReportingTime(trigger.getTriggerTime(), trigger.getDestinationType());
+      mBuilding.mAttributionDestinations = eventReportDestinations;
       mBuilding.mSourceType = source.getSourceType();
-      mBuilding.mRandomizedTriggerRate = source.getRandomAttributionProbability();
+      mBuilding.mDebugReportStatus = DebugReportStatus.NONE;
+      if (Debug.isAttributionDebugReportPermitted(
+          source, trigger, mBuilding.mSourceDebugKey, mBuilding.mTriggerDebugKey)) {
+        mBuilding.mDebugReportStatus = DebugReportStatus.PENDING;
+      }
       mBuilding.mSourceId = source.getId();
       mBuilding.mTriggerId = trigger.getId();
+      mBuilding.mRegistrationOrigin = trigger.getRegistrationOrigin();
+      if (source.getTriggerSpecs() != null && !source.getTriggerSpecs().isEmpty()) {
+        // The source is using flexible event API
+        source.buildFlexibleEventReportApi();
+        mBuilding.mTriggerPriority =
+            source
+                .getFlexEventReportSpec()
+                .getHighestPriorityOfAttributedAndIncomingTriggers(
+                    eventTrigger.getTriggerData(), eventTrigger.getTriggerPriority());
+        mBuilding.mTriggerData = eventTrigger.getTriggerData();
+        mBuilding.mReportTime =
+            ReportSpecUtil.getFlexEventReportingTime(
+                source.getFlexEventReportSpec(),
+                source.getEventTime(),
+                trigger.getTriggerTime(),
+                eventTrigger.getTriggerData());
+        mBuilding.mRandomizedTriggerRate = source.getFlexEventReportSpec().getFlipProbability();
+        mBuilding.mTriggerValue = eventTrigger.getTriggerValue();
+      } else {
+        mBuilding.mTriggerPriority = eventTrigger.getTriggerPriority();
+        // truncate trigger data to 3-bit or 1-bit based on {@link Source.SourceType}
+        mBuilding.mTriggerData = getTruncatedTriggerData(source, eventTrigger);
+        mBuilding.mReportTime =
+            eventReportWindowCalcDelegate.getReportingTime(
+                source, trigger.getTriggerTime(), trigger.getDestinationType());
+        mBuilding.mRandomizedTriggerRate =
+            sourceNoiseHandler.getRandomAttributionProbability(source);
+      }
       return this;
     }
 
@@ -350,6 +457,9 @@ public class EventReport implements Serializable {
     payload.put("report_id", mId);
     payload.put("source_type", mSourceType.toString());
     payload.put("randomized_trigger_rate", mRandomizedTriggerRate);
+    if (mTriggerSummaryBucket != null) {
+      payload.put("trigger_summary_bucket", mTriggerSummaryBucket.encodeAsList());
+    }
     return payload;
   }
 
@@ -364,5 +474,19 @@ public class EventReport implements Serializable {
               .collect(Collectors.toList());
       return destinations;
     }
+  }
+
+  /**
+   * In flexible event API, the trigger priority might change so see a setter here
+   *
+   * @param priority the new priority
+   */
+  public void setTriggerPriority(long priority) {
+    mTriggerPriority = priority;
+  }
+
+  /** Trigger Value */
+  public long getTriggerValue() {
+    return mTriggerValue;
   }
 }

@@ -103,6 +103,7 @@ public class Util {
 
     return unsignedLong;
   }
+
   /**
    * Given a string that is to be used within a Unix filepath, sanitize that string so that illegal
    * characters don't prevent creation of the filepath.
@@ -127,7 +128,11 @@ public class Util {
   }
 
   public static long roundDownToDay(long timestamp) {
-    return Math.floorDiv(timestamp, TimeUnit.DAYS.toMillis(1)) * TimeUnit.DAYS.toMillis(1);
+    return roundDownToDay(timestamp, 0);
+  }
+
+  public static long roundDownToDay(long timestamp, long offset) {
+    return Math.floorDiv(timestamp + offset, TimeUnit.DAYS.toMillis(1)) * TimeUnit.DAYS.toMillis(1);
   }
 
   public static LocalDate parseStringDate(String inDate) {
