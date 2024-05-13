@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Attribution Reporting Header Validation</title>
+
+<!--Load Webpage Style-->
+<link rel="stylesheet" href="style.css">
+
+<body>
+    <!--Title-->
+    <h1>Attribution Reporting Header Validation</h1>
+    <form id=validation-form>
+        <noscript>JavaScript is required to use this form.</noscript>
+        <!--Input Box-->
+        <fieldset id=input>
+            <legend>Value</legend>
+            <textarea id=input-text></textarea>
+        </fieldset>
+        <!--Input Options/Output Results-->
+        <div id=right>
+            <!--Input Options-->
+            <fieldset id=header-options>
+                <legend>Header</legend>
+                <!--Header Type-->
+                <p><label><input type=radio name=header value=trigger checked><code>Attribution-Reporting-Register-Trigger</code></label>
+                <p><label><input type=radio name=header value=source><code>Attribution-Reporting-Register-Source</code></label>
+                <!--Source Type (only applicable to header type: Attribution-Reporting-Register-Source)-->
+                <fieldset id=source-type-options>
+                    <legend>Source Type</legend>
+                    <p><label><input type=radio name=source-type value=event checked>event</label>
+                    <p><label><input type=radio name=source-type value=navigation>navigation</label>
+                </fieldset>
+                <!-- Registration Type -->
+                <fieldset id=registration-type-options>
+                    <legend>Registration Type</legend>
+                    <p><label><input type=radio name=registration-type value=app checked>app</label>
+                    <p><label><input type=radio name=registration-type value=web>web</label>
+                </fieldset>
+                <!--Additional Feature Selection-->
+                <p><label><input type=checkbox name=feature-ara-parsing-alignment-v1>Measurement Enable ARA Parsing Alignment V1</label>
+                <p><label><input type=checkbox name=feature-lookback-window-filter>Measurement Enable Lookback Window Filter</label>
+                <p><label><input type=checkbox name=feature-trigger-data-matching>Measurement Enable Trigger Data Matching</label>
+            </fieldset>
+
+            <!--Output Results-->
+            <fieldset id=output>
+                <legend>Validation Result</legend>
+                <!--Output Options-->
+                <button type=button id=linkify>Copy Link</button>
+                <!--Output Text-->
+                <output>
+                    <div id=success></div>
+                    <p>Errors:
+                    <ul id=errors></ul>
+                    <p>Warnings:
+                    <ul id=warnings></ul>
+                    <p>Notes:
+                    <ul id=notes></ul>
+                </output>
+            </fieldset>
+        </div>
+    </form>
+
+    <!--Load Webpage Script-->
+    <script src="./dist/main.js"></script>
+</body>
