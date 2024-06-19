@@ -5,11 +5,13 @@ on:
     - main
     paths:
     - 'Makefile'
+    - 'index.bs'
   push:
     branches:
     - main
     paths:
     - 'Makefile'
+    - 'index.bs'
     - 'header-validation/**'
 jobs:
   build:
