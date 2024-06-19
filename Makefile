@@ -1,5 +1,3 @@
-# Makefile to generate output files for header validation tool
-
 SHELL = /bin/bash
 OUT_DIR ?= out
 OUT_DIR_SUB ?= out/dist
@@ -8,7 +6,7 @@ OUT_DIR_SUB ?= out/dist
 
 all: validator
 
-validator: $(OUT_DIR)/validate-headers.html $(OUT_DIR)/style.css $(OUT_DIR)/dist/main.js
+validator: $(OUT_DIR)/index.html $(OUT_DIR)/style.css $(OUT_DIR)/dist/main.js
 
 $(OUT_DIR):
 	@ mkdir -p $@
@@ -16,7 +14,7 @@ $(OUT_DIR):
 $(OUT_DIR_SUB):
 	@ mkdir -p $@
 
-$(OUT_DIR)/validate-headers.html: header-validation/index.html $(OUT_DIR)
+$(OUT_DIR)/index.html: header-validation/index.html $(OUT_DIR)
 	@ cp $< $@
 
 $(OUT_DIR)/style.css: header-validation/style.css $(OUT_DIR)
