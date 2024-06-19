@@ -1,3 +1,5 @@
+# Generates output files for header validation tool
+
 SHELL = /bin/bash
 OUT_DIR ?= out
 OUT_DIR_SUB ?= out/dist
