@@ -1,45 +1,45 @@
 * {
-  box-sizing: border-box;
-}
-
-html {
-  height: 100vh;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  margin: 0;
-  padding: 1em;
-}
-
-body,
-form,
-textarea,
-#output {
-  height: 100%;
-  width: 100%;
-}
-
-body,
-form,
-#right {
-  display: flex;
-}
-
-body,
-#right {
-  flex-direction: column;
-}
-
-#header {
-  flex: none;
-}
-
-#input {
-  flex: 1;
-}
-
-textarea {
-  resize: none;
-}
+    box-sizing: border-box;
+  }
+  
+  html {
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    margin: 0;
+    padding: 1em;
+  }
+  
+  body,
+  form,
+  textarea,
+  #output {
+    height: 100%;
+    width: 100%;
+  }
+  
+  body,
+  form,
+  #right {
+    display: flex;
+  }
+  
+  body,
+  #right {
+    flex-direction: column;
+  }
+  
+  #header {
+    flex: none;
+  }
+  
+  #input {
+    flex: 1;
+  }
+  
+  textarea {
+    resize: none;
+  }

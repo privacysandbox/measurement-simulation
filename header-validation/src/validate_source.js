@@ -11,6 +11,7 @@ const {
   array,
   optArray,
   optional,
+  formatKeys,
   isValidAppDestinationHost,
   isValidWebDestinationHost,
   isValidSourceFilterData,
@@ -24,6 +25,7 @@ const {
 function validateSource(source, flagValues) {
   try {
     sourceJSON = JSON.parse(source);
+    sourceJSON = formatKeys(sourceJSON);
   } catch (err) {
     return {errors: [err instanceof Error ? err.toString() : 'unknown error'], warnings: []};
   }

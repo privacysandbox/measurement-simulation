@@ -8,6 +8,7 @@ const {
   optString,
   optStringFallback,
   object,
+  formatKeys,
   isValidAttributionScopes,
   isValidXNetworkKeyMapping,
   isValidAggregationCoordinatorOrigin,
@@ -24,6 +25,7 @@ const {
 function validateTrigger(trigger, flagValues) {
   try {
     triggerJSON = JSON.parse(trigger);
+    triggerJSON = formatKeys(triggerJSON);
   } catch (err) {
     return {errors: [err instanceof Error ? err.toString() : 'unknown error'], warnings: []};
   }

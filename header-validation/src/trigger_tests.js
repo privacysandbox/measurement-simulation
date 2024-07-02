@@ -4076,6 +4076,16 @@ const triggerTestCases = [
             errors: [],
             warnings: []
         }
+    },
+    {
+        name: "Case Insensitive - Process Error | Invalid",
+        flags: {},
+        json: "{\"DEBUG_KEY\":1000}",
+        result: {
+            valid: false,
+            errors: ["must be a string: `debug_key`"],
+            warnings: []
+        }
     }
 ]
 

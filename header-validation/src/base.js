@@ -1021,6 +1021,14 @@ function maybeWrapFilters(value, state, fieldId) {
   return arr;
 }
 
+function formatKeys(json) {
+  newJSON = {};
+  for (key in json) {
+    newJSON[key.toLowerCase()] = json[key];
+  }
+  return newJSON;
+}
+
 
 module.exports = {
   State,
@@ -1037,6 +1045,7 @@ module.exports = {
   optArray,
   optional,
   getDataType,
+  formatKeys,
   isValidAppDestinationHost,
   isValidWebDestinationHost,
   isValidSourceFilterData,

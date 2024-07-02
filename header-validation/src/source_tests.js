@@ -1604,6 +1604,16 @@ const sourceTestCases = [
             errors: [],
             warnings: []
         }
+    },
+    {
+        name: "Case Insensitive - Process Error | Invalid",
+        flags: {},
+        json: "{\"DESTINATION\":\"com.myapps\"}",
+        result: {
+            valid: false,
+            errors: ["invalid app URI format: `destination`"],
+            warnings: []
+        }
     }
 ]
 
