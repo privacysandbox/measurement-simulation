@@ -4,9 +4,9 @@ OUT_DIR_SUB ?= out/dist
 
 .PHONY: all clean validator
 
-all: validator
+all: $(OUT_DIR)/index.html validator
 
-validator: $(OUT_DIR)/index.html $(OUT_DIR)/style.css $(OUT_DIR_SUB)/main.js
+validator: $(OUT_DIR)/validate-headers.html $(OUT_DIR)/style.css $(OUT_DIR_SUB)/main.js
 
 $(OUT_DIR):
 	@ mkdir -p $@
@@ -15,6 +15,9 @@ $(OUT_DIR_SUB):
 	@ mkdir -p $@
 
 $(OUT_DIR)/index.html: header-validation/index.html $(OUT_DIR)
+	@ cp $< $@
+
+$(OUT_DIR)/validate-headers.html: header-validation/validate-headers.html $(OUT_DIR)
 	@ cp $< $@
 
 $(OUT_DIR)/style.css: header-validation/style.css $(OUT_DIR)
@@ -29,4 +32,3 @@ header-validation/dist/main.js: header-validation/package.json header-validation
 
 clean:
 	@ rm -rf $(OUT_DIR)
-
