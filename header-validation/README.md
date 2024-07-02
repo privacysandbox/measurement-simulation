@@ -8,7 +8,7 @@ The Attribution Reporting Header Validation tool validates the header responses 
 npm install && npm run build && npm run test
 ```
 
-Interactive form is deployed at: https://privacysandbox.github.io/measurement-simulation/
+Interactive form is deployed at: https://privacysandbox.github.io/measurement-simulation/validate-headers
 
 Select the type of response you want to validate:
 1. Attribution-Reporting-Register-Source, or

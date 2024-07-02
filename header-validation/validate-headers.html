@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Attribution Reporting Header Validation</title>
+
+<!--Load Webpage Style-->
+<link rel="stylesheet" href="style.css">
+
+<body>
+    <!--Title-->
+    <h1>Attribution Reporting Header Validation</h1>
+    <form id=validation-form>
+        <noscript>JavaScript is required to use this form.</noscript>
+        <!--Input Box-->
+        <fieldset id=input>
+            <legend>Value</legend>
+            <textarea id=input-text></textarea>
+        </fieldset>
+        <!--Input Options/Output Results-->
+        <div id=right>
+            <!--Input Options-->
+            <fieldset id=header-options>
+                <legend>Header</legend>
+                <!--Header Type-->
+                <p><label><input type=radio name=header value=source checked><code>Attribution-Reporting-Register-Source</code></label>
+                <p><label><input type=radio name=header value=trigger><code>Attribution-Reporting-Register-Trigger</code></label>
+                <!--Additional Feature Selection-->
+                <p>Flags
+                <p><label><input type=checkbox name=feature-lookback-window-filter>Measurement Enable Lookback Window Filter</label>
+                <p><label><input type=checkbox name=feature-trigger-data-matching checked>Measurement Enable Trigger Data Matching</label>
+                <p><label><input type=checkbox name=feature-coarse-event-report-destination checked>Measurement Coarse Event Report Destination</label>
+                <p><label><input type=checkbox name=feature-shared-source-debug-key checked>Measurement Enable Shared Source Debug Key</label>
+                <p><label><input type=checkbox name=feature-xna>Measurement Enable XNA</label>
+                <p><label><input type=checkbox name=feature-shared-filter-data-keys checked>Measurement Enable Shared Filter Data Keys (XNA)</label>
+                <p><label><input type=checkbox name=feature-preinstall-check>Measurement Enable Preinstall Check</label>
+                <p><label><input type=checkbox name=feature-attribution-scopes>Measurement Enable Attribution Scopes</label>
+                <p><label><input type=checkbox name=feature-aggregation-coordinator-origin checked>Measurement Aggregation Coordinator Origin</label>
+                <p><label><input type=checkbox name=feature-source-registration-time-optional-for-agg-reports>Measurement Source Registration Time Optional For Aggregate Reports</label>
+                <p><label><input type=checkbox name=feature-trigger-context-id>Measurement Enable Trigger Context Id</label>
+                <p><label><input type=checkbox name=feature-enable-update-trigger-header-limit>Measurement Enable Update Trigger Header Limit</label>
+                <p><label><input type=checkbox name=feature-enable-reinstall-reattribution>Measurement Enable Reinstall Reattribution</label>
+            </fieldset>
+
+            <!--Output Results-->
+            <fieldset id=output>
+                <legend>Validation Result</legend>
+                <!--Output Options-->
+                <button type=button id=linkify>Copy Link</button>
+                <!--Output Text-->
+                <output>
+                    <div id=success></div>
+                    <p>Errors:
+                    <ul id=errors></ul>
+                    <p>Warnings:
+                    <ul id=warnings></ul>
+                    <p>Notes:
+                    <ul id=notes></ul>
+                </output>
+            </fieldset>
+        </div>
+    </form>
+
+    <!--Load Webpage Script-->
+    <script src="./dist/main.js"></script>
+</body>
