@@ -2,19 +2,23 @@
 
 The Attribution Reporting Header Validation tool validates the header responses related to Attribution Reporting API. This document shows how to set up and run the tool.
 
-## Setup
-
-```sh
-npm install && npm run build && npm run test
-```
-
-Interactive form is deployed at: https://privacysandbox.github.io/measurement-simulation/
+Interactive form is deployed at: https://privacysandbox.github.io/measurement-simulation/validate-headers
 
 Select the type of response you want to validate:
 1. Attribution-Reporting-Register-Source, or
 2. Attribution-Reporting-Register-Trigger
 
 `Validation Result` section shows any errors or warnings if your data is invalid.
+
+## Local Setup
+
+Run the following command from the `header-validation` sub-directory:
+
+```sh
+npm install && npm run build && npm run test
+```
+
+Ensure that the above command runs successfully. Now, open `validate-headers.html` on your web browser and you should be able to validate your header spec locally.
 
 ## Feedback
 
