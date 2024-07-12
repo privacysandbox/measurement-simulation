@@ -15,8 +15,20 @@ const successDiv = document.getElementById('success');
 validationForm.addEventListener('input', validate);
 copyButton.addEventListener('click', copyLink);
 
-
 // Define functions
+function loadUrlParameters() {
+  let params = new URLSearchParams(location.search);
+  let paramsJSON = params.get('json');
+  let paramsHeader = params.get('header');
+
+  if (paramsJSON) {
+    inputTextbox.value = paramsJSON;
+  }
+  if (paramsHeader) {
+    headerOptions.value = paramsHeader;
+  }
+}
+
 async function copyLink() {
   const url = new URL(location.toString());
   url.search = '';
@@ -93,4 +105,5 @@ function validate() {
 }
 
 // Load initial state of page
+loadUrlParameters();
 validate();
