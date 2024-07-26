@@ -25,7 +25,7 @@ const sourceTestCases = [
         json: "{\"destination\":\"com.myapps\"}",
         result: {
             valid: false,
-            errors: ["invalid app URI format: `destination`"],
+            errors: ["invalid URL format: `destination`"],
             warnings: []
         }
     },
@@ -35,7 +35,7 @@ const sourceTestCases = [
         json: "{\"destination\":\"http://com.myapps\"}",
         result: {
             valid: false,
-            errors: ["app URI host/scheme is invalid: `destination`"],
+            errors: ["app URL host/scheme is invalid: `destination`"],
             warnings: []
         }
     },
@@ -1611,7 +1611,7 @@ const sourceTestCases = [
         json: "{\"DESTINATION\":\"com.myapps\"}",
         result: {
             valid: false,
-            errors: ["invalid app URI format: `destination`"],
+            errors: ["invalid URL format: `destination`"],
             warnings: []
         }
     }
