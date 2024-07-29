@@ -1008,7 +1008,6 @@ function isValidLocation(state, value) {
   if (state.errors.length > 0) {
     return;
   }
-  // TODO: Implement Expected Value Logic
 }
 
 function isValidAttributionReportingRedirect(state, value, flags) {
