@@ -353,6 +353,14 @@ function addQuotes(str, char) {
   return str + " ";
 }
 
+function isValidURL(value, state) {
+    try {
+      return new URL(value);
+    } catch (err) {
+      state.error("invalid URL format");
+    }
+}
+
 function isValidSourceFilterData(state, value, flags) {
   flags["can_include_lookback_window"] = false;
   flags["should_check_filter_size"] = true;
@@ -481,11 +489,8 @@ function isValidWebDestinationHost(state, value, flags) {
   }
 
   for (let i = 0; i < value.length; i++) {
-    let url;
-    try {
-      url = new URL(value[i]);
-    } catch (err) {
-      state.error("invalid URL format");
+    let url = isValidURL(value[i], state);
+    if (state.errors.length > 0) {
       return;
     }
 
@@ -665,16 +670,13 @@ function isValidAttributionScopes(state, value, flags) {
 }
 
 function isValidAppDestinationHost(state, value) {
-  let url;
-  try {
-    url = new URL(value);
-  } catch (err) {
-    state.error("invalid app URI format")
+  let url = isValidURL(value, state);
+  if (state.errors.length > 0) {
     return;
   }
   
   if (url.protocol !== "android-app:") {
-      state.error("app URI host/scheme is invalid");
+      state.error("app URL host/scheme is invalid");
   }
 }
 
@@ -704,10 +706,8 @@ function isValidAggregationCoordinatorOrigin(state, value) {
     state.error("value must be non-empty");
     return;
   }
-  try {
-    url = new URL(value);
-  } catch (err) {
-    state.error("invalid URL format")
+  isValidURL(value, state);
+  if (state.errors.length > 0) {
     return;
   }
 }
@@ -1003,6 +1003,30 @@ function isValidAttributionConfig(state, value, flags) {
   }
 }
 
+function isValidLocation(state, value) {
+  isValidURL(value, state);
+  if (state.errors.length > 0) {
+    return;
+  }
+}
+
+function isValidAttributionReportingRedirect(state, value, flags) {
+  if (value.length > flags["max_registration_redirects"]) {
+    state.warning("max allowed reporting redirects: " + flags["max_registration_redirects"] + ", all other reporting redirects will be ignored");
+  }
+
+  for (let i = 0; i < Math.min(value.length, flags["max_registration_redirects"]); i++) {
+    if (getDataType(value[i]) !== "string") {
+      state.error("must be an array of strings");
+      return;
+    }
+    isValidURL(value[i], state);
+    if (state.errors.length > 0) {
+      return;
+    }
+  }
+}
+
 function maybeWrapFilters(value, state, fieldId) {
   fieldId = (fieldId === undefined) ? "" : addQuotes(fieldId, "'");
   if (getDataType(value) !== "array" && getDataType(value) !== "object") {
@@ -1063,5 +1087,7 @@ module.exports = {
   isValidAggregatableValues,
   isValidTriggerFilters,
   isValidAggregatableDeduplicationKey,
-  isValidAttributionConfig
+  isValidAttributionConfig,
+  isValidLocation,
+  isValidAttributionReportingRedirect
 };

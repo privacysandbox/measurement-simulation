@@ -1,5 +1,6 @@
 const {validateSource} = require('./validate_source');
 const {validateTrigger} = require('./validate_trigger');
+const {validateRedirect} = require('./validate_redirect');
 
 // Initialize page elements
 const validationForm = document.getElementById('validation-form');
@@ -50,6 +51,14 @@ function populateUIList(element, items) {
   })
 }
 
+function getRedirectPlaceholder() {
+  return "{\n" +
+      "   \"Location\": \"\",\n" +
+      "   \"Attribution-Reporting-Redirect-Config\": \"\",\n" +
+      "   \"Attribution-Reporting-Redirect\": []\n" +
+    "}";
+}
+
 function validate() {
   // Fetch Flag Values
   let flagValues = {};
@@ -87,6 +96,7 @@ function validate() {
   flagValues["max_aggregate_keys_per_trigger_registration"] = 50;
   flagValues["max_sum_of_aggregate_values_per_source"] = 65536;
   flagValues["max_aggregate_deduplication_keys_per_registration"] = 50;
+  flagValues["max_registration_redirects"] = 20;
   flagValues['header_type'] = headerOptions.value;
 
   // Validate input
@@ -95,10 +105,13 @@ function validate() {
     result = validateSource(inputTextbox.value, flagValues);
   } else if (headerOptions.value === 'trigger') {
     result = validateTrigger(inputTextbox.value, flagValues);
+  } else if (headerOptions.value === 'redirect') {
+    inputTextbox.placeholder = getRedirectPlaceholder();
+    result = validateRedirect(inputTextbox.value, flagValues);
   }
 
   // Show results
-  successDiv.textContent = (result.errors.length === 0 && result.warnings.length === 0) ? 'The header is valid.' : '';
+  successDiv.textContent = (result.errors.length === 0) ? 'The header is valid.' : '';
   populateUIList(errorList, result.errors);
   populateUIList(warningList, result.warnings);
   populateUIList(noteList, []);
