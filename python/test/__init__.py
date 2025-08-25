@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-import os
+"""Initializes the test package."""
 
-path = os.path.join(os.path.dirname(__file__), 'python')
+import os
+import sys
+
+path = os.path.join(os.path.dirname(__file__), "python")
 if path not in sys.path:
   sys.path.append(path)
+

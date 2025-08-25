@@ -8,10 +8,11 @@ This document shows you how to get up and running with the Attribution Reporting
 
 # Build & Run
 
-This repository depends on Bazel 4.2.2 with JDK 11 and Python 3.8. The following environment variables should be set in your local environment (the exact location will depend on your environment):
+This repository depends on Bazel 7.3.2 with JDK 21 and Python 3.8. The following environment variables should be set in your local environment (the exact location will depend on your environment):
 
 ```
-JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+PATH="path/to/java/jdk-21/bin:$PATH"
 python=/usr/local/bin/python
 ```
 
@@ -19,29 +20,23 @@ python=/usr/local/bin/python
 ### Simulation CLI arguments
 The library uses general simulation related arguments which can be passed in the CLI. Following is the list of such arguments:
 
-| Running Python wrapper       | Running java code         | Description                                                                                                                         |
-|------------------------------|---------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
-| input_directory              | inputDirectory            | The top level directory of where the library will get its inputs                                                                    |
-| output_directory             | outputDirectory           | The directory that will hold results from the simulation                                                                            |
-| source_start_date            | sourceStartDate           | The first date of attribution source events                                                                                         |
-| source_end_date              | sourceEndDate             | The last date of attribution source events, should come on or after source_start_date                                               |
-| attribution_source_file_name | attributionSourceFileName | The file name that will be used to identify the files that hold attribution source events. Default value: "attribution_source.json" |
-| trigger_start_date           | triggerStartDate          | The first date of trigger events                                                                                                    |
-| trigger_end_date             | triggerEndDate            | The last date of trigger events, should come on or after trigger_start_date                                                         |
-| trigger_file_name            | triggerFileName           | The file name that will be used to identify the files that hold trigger events. Default value: "trigger.json"                       |
-| extension_event_start_date   | extensionEventStartDate   | The first date of install/uninstall events                                                                                          |
-| extension_event_end_date     | extensionEventEndDate     | The last date of install/uninstall events, should come on or after extension_event_start_date                                       |
-| extension_event_file_name    | extensionEventFileName    | The file name that will be used to identify the files that hold install/uninstall events. Default value: "extension.json"           |
+| Argument                           | Description                                                                                                                         |
+|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| runfilesDirectory                  | Directory to PipelineRunner runfiles.                                                                                               |
+| inputDirectory                     | Directory to input files. Must be an absolute path to a directory. All json files will be ingested from that directory. The names of the files will indicate the user-id to the simulation. |
+| eventReportsOutputDirectory        | Directory to write event reports to. Must be an absolute path to a directory. All event reports for a user will be written to a single file. The filename will be the user id. Default: /tmp/event_reports/ |
+| aggregatableReportsOutputDirectory | Directory to write aggregatable reports to. Must be an absolute path to a directory. The format will be avro. These files will be used as input to the Aggregation Service LocalTestingTool. Default: /tmp/aggregatable_reports/ |
+| aggregationResultsDirectory        | Directory to write aggregation results to. Must be an absolute path to a directory. Default: /tmp/aggregation_results/                |
 
 
 ### Configuring Privacy parameters
 
-The library allows you to configure the privacy params for both Event and Aggregate API. These params are located in the library's `config` directory:
+Privacy parameters for the Event and Aggregate APIs are configured directly within the Java source code.
 
-1. AggregationArgs.properties: Configurable params for Aggregation service.
-2. PrivacyParams.properties: Configurable noising params for Event API.
+- **Event API Noising:** Parameters are managed in `java/com/google/measurement/client/Flags.java`, mirroring the AdServices code in the Android codebase.
+- **Aggregation Service:** Arguments for the aggregation service are set in `java/com/google/measurement/pipeline/AggregationServiceTransform.java`.
 
-Simply modify the params in these properties file and run the library.
+To change these parameters, you will need to modify the respective Java files and rebuild the project.
 
 You can run the simulation library as a standalone Python library, imported as a Python module, or as a JAR:
 
@@ -54,51 +49,53 @@ You can run the simulation library as a standalone Python library, imported as a
 2. Import the Attribution Reporting Simulation Library and instantiate the simulation runner:
 
     ```
-    from simulation_runner_wrapper import SimulationRunnerWrapper
-    simulation_runner = SimulationRunnerWrapper()
-    ```
-3. Instantiate the `SimulationConfig` class to provide command-line arguments:
+    from pipeline_runner_wrapper import PipelineRunnerWrapper
+    from pipeline_config import PipelineConfig
 
-    ```
-    from simulation_config import SimulationConfig
-    config = SimulationConfig(input_directory=<path_to_testdata>, source_start_date="2022-10-20", ...)
+    config = PipelineConfig(input_directory=<path_to_testdata>, ...)
+    runner = PipelineRunnerWrapper(pipeline_config=config)
     ```
 
-4. Finally, execute the simulation by calling
+3. Finally, execute the simulation by calling
     ```
-    simulation_runner.run(simulation_config=config)
+    runner.run()
     ```
 
 ### Run the JAR directly
-Execute the simulation by running `bazel run -- //:SimulationRunner` followed by desired arguments, e.g. `--inputDirectory=<path_to_testdata>`.
+Execute the simulation by running `bazel run -- //:PipelineRunner` followed by desired arguments, e.g. `--inputDirectory=<path_to_testdata>`.
 
 
 ### Sample run
 ```
-$ bazel run -- //:SimulationRunner --sourceStartDate=2022-01-15 --sourceEndDate=2022-01-16 --triggerStartDate=2022-01-15 --triggerEndDate=2022-02-06 --inputDirectory=<path_to_simulation_library>/testdata/ --outputDirectory=<path_to_output_directory>
+$ bazel run -- //:PipelineRunner --inputDirectory=<path_to_simulation_library>/testdata/ --eventReportsOutputDirectory=<path_to_output_directory>/event_reports --aggregatableReportsOutputDirectory=<path_to_output_directory>/aggregatable_reports --aggregationResultsDirectory=<path_to_output_directory>/aggregation_results
 ```
 
 After the successful run, you should see the following files and directories in the output directory:
-- input_batches
+- event_reports
+  - <user_id>.json - Event reports for each user.
+- aggregatable_reports
   - Several .avro files - These are aggregatable batches that are sent to the aggregation service as input.
+- aggregation_results
+  - For each .avro file in aggregatable_reports, an output directory will be created with the same name which contains:
+    - output.json - Output aggregate report
+    - result_info.json
 
-- For each .avro file, the following will also be generated:
-  - <input_avro_file_name>/output.avro - Output aggregate report
-  - <input_avro_file_name>/result_info.json
-
-- OS/U1/event_reports.json - Event reports for the user "U1" using logs for the OS platform
-- OS/U2/event_reports.json - Event reports for the user "U2" using logs for the OS platform
-
-### Reading from the output avro files
-You can download the Avro tools jar 1.11.1 [here](https://downloads.apache.org/avro/stable/java/avro-tools-1.11.1.jar). To read the avro file in human-readable json format, run:
+### Reading from the aggregatable report avro files
+You can download the Avro tools jar 1.12.0 [here](https://downloads.apache.org/avro/stable/java/avro-tools-1.12.0.jar). To read the avro file in human-readable json format, run:
 ```
-java -jar avro-tools-1.11.1.jar tojson <output_avro_file>
+java -jar avro-tools-1.12.0.jar tojson <output_avro_file>
 ```
 
-You can see the output as:
+You can see output similar to:
 ```
-{"bucket": "key1", "metric": <value1>}
-{"bucket": "key2", "metric": <value2>}
+{"payload":"¢ddata¢evalueD\u0000\u0000\u0000fbucketP\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0005Y¢evalueD\u0000\u0000\u0006fbucketP\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\n
+ioperationihistogram","key_id":"ea91d481-1482-4975-8c63-635fb866b4c8","shared_info":"{\"api\":\"attribution-reporting\",\"attribution_destination\":\"android-app:\\/\\/com.advertiser\",\"report_id\":\"f2c53430-dccc-4844-9dc7-53301c58f0dd\",\"reporting_origin\":\"https:\\/\\/reporter.com\",\"scheduled_report_time\":\"800000858\",\"source_registration_time\":\"799977600\",\"version\":\"0.1\"}"}
+```
+
+### Memory Considerations
+The simulation library requires the entire data to be in memory in order to run. If you get Java Heap space out of memory exception, you can increase the upper bound on the Java heap memory by specifying `-Xmx` option while running the library. For instance, if you want to set the maximum heap memory to 128GB, you can specify it as:
+```
+$ bazel run --jvmopt="-Xmx128g" -- //:PipelineRunner --inputDirectory=<path_to_simulation_library>/testdata/ --eventReportsOutputDirectory=<path_to_output_directory>/event_reports --aggregatableReportsOutputDirectory=<path_to_output_directory>/aggregatable_reports --aggregationResultsDirectory=<path_to_output_directory>/aggregation_results
 ```
 
 

@@ -1,0 +1,296 @@
+{
+  "description": "Test attribution scope selection logic for attribution scope feature.",
+  "phflags_override": {
+    "measurement_enable_attribution_scope": "true"
+  },
+  "input": {
+    "sources": [
+      // S1: attribution scopes-> ["1", "2", "3"]  destinations -> [D1]
+      {
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "example.1s1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "source_event_id": "1",
+                "destination": "android-app://example.2d1.test",
+                "priority": "102",
+                "filter_data": {
+                  "top_key_1": [
+                    "top_value_1",
+                    "top_value_2"
+                  ],
+                  "event_key_1": [
+                    "event_value_1",
+                    "event_value_2"
+                  ]
+                },
+                "attribution_scopes": {
+                  "limit": 3,
+                  "values": [
+                    "1",
+                    "2",
+                    "3"
+                  ],
+                  "max_event_states": 10
+                }
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ],
+        "timestamp": "800000000001"
+      },
+      // S2: attribution scopes-> ["3", "4", "5"]  destinations -> [D1]
+      // S1 attribution scopes are deleted as attribution scope "1" and "2" are not selected.
+      {
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "example.1s1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "source_event_id": "2",
+                "destination": "android-app://example.2d1.test",
+                "priority": "101",
+                "filter_data": {
+                  "top_key_1": [
+                    "top_value_1",
+                    "top_value_2"
+                  ],
+                  "event_key_1": [
+                    "event_value_1",
+                    "event_value_2"
+                  ]
+                },
+                "attribution_scopes": {
+                  "limit": 3,
+                  "values": [
+                    "3",
+                    "4",
+                    "5"
+                  ],
+                  "max_event_states": 10
+                }
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ],
+        "timestamp": "800000000002"
+      },
+      // S3: attribution scopes-> ["4"]  destinations -> [D1]
+      {
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "example.1s1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "source_event_id": "3",
+                "destination": "android-app://example.2d1.test",
+                "priority": "100",
+                "filter_data": {
+                  "top_key_1": [
+                    "top_value_1",
+                    "top_value_2"
+                  ],
+                  "event_key_1": [
+                    "event_value_1",
+                    "event_value_2"
+                  ]
+                },
+                "attribution_scopes": {
+                  "limit": 3,
+                  "values": [
+                    "4"
+                  ],
+                  "max_event_states": 10
+                }
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ],
+        "timestamp": "800000000003"
+      }
+    ],
+    "triggers": [
+      // T1: attribution scope -> "1", destination -> D1
+      // Given attribution scopes for S1 were removed, this should match to none.
+      {
+        "registration_request": {
+          "registrant": "example.2d1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "attribution_scopes": [
+                  "1"
+                ],
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "0",
+                    "priority": "101",
+                    "filters": {
+                      "event_key_1": [
+                        "event_value_x"
+                      ]
+                    }
+                  },
+                  {
+                    "trigger_data": "1",
+                    "priority": "102",
+                    "filters": [
+                      {
+                        "event_key_1": [
+                          "unmatched"
+                        ]
+                      },
+                      {
+                        "source_type": [
+                          "navigation"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "trigger_data": "2",
+                    "priority": "103",
+                    "filters": {
+                      "source_type": [
+                        "navigation"
+                      ]
+                    }
+                  }
+                ],
+                "filters": [
+                  {
+                    "top_key_1": [
+                      "unmatched"
+                    ]
+                  },
+                  {
+                    "top_key_1": [
+                      "top_value_1"
+                    ],
+                    "source_type": [
+                      "navigation"
+                    ]
+                  }
+                ]
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ],
+        "timestamp": "800000005001"
+      },
+      // T2: attribution scope -> "3", destination -> D1
+      // This should match to S2 with the right scope. S3 is not selected due to scope mismatch.
+      {
+        "registration_request": {
+          "registrant": "example.2d1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "attribution_scopes": [
+                  "3"
+                ],
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "1",
+                    "priority": "101",
+                    "filters": {
+                      "event_key_1": [
+                        "event_value_x"
+                      ]
+                    }
+                  },
+                  {
+                    "trigger_data": "2",
+                    "priority": "102",
+                    "filters": [
+                      {
+                        "event_key_1": [
+                          "unmatched"
+                        ]
+                      },
+                      {
+                        "source_type": [
+                          "navigation"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "trigger_data": "3",
+                    "priority": "103",
+                    "filters": {
+                      "source_type": [
+                        "navigation"
+                      ]
+                    }
+                  }
+                ],
+                "filters": [
+                  {
+                    "top_key_1": [
+                      "unmatched"
+                    ]
+                  },
+                  {
+                    "top_key_1": [
+                      "top_value_1"
+                    ],
+                    "source_type": [
+                      "navigation"
+                    ]
+                  }
+                ]
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ],
+        "timestamp": "800000005002"
+      }
+    ]
+  },
+  "output": {
+    "event_level_results": [
+      {
+        "report_time": "800172800002",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
+        "payload": {
+          "attribution_destination": "android-app://example.2d1.test",
+          "scheduled_report_time": "800172800",
+          "source_event_id": "2",
+          "trigger_data": "2",
+          "source_type": "navigation",
+          "randomized_trigger_rate": 0.0024263
+        }
+      }
+    ]
+  }
+}

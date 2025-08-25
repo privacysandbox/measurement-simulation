@@ -1,3 +1,17 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 load("@deps//:requirements.bzl", "requirement")
 load(
     "@rules_python//python:defs.bzl",
@@ -7,55 +21,46 @@ load(
 )
 
 py_library(
-    name = "params",
+    name = "pipeline_config_lib",
     srcs = [
-        "simulation_config.py",
+        "pipeline_config.py",
     ],
 )
 
 py_library(
-    name = "constants",
-    srcs = ["constants.py"],
-)
-
-py_library(
-    name = "simulation_runner_wrapper",
-    srcs = ["simulation_runner_wrapper.py"],
+    name = "pipeline_runner_wrapper",
+    srcs = ["pipeline_runner_wrapper.py"],
     data = [
-        "//:SimulationRunner_deploy.jar",
-        "//:config",
-        "//:reports",
+        "//:PipelineRunner_deploy.jar",
     ],
     imports = ["."],
     deps = [
-        ":constants",
-        ":params",
-        requirement("py4j"),
+        ":pipeline_config_lib",
+        requirement("jpype1"),
     ],
 )
 
 py_binary(
     name = "main",
     srcs = ["main.py"],
-    deps = [":simulation_runner_wrapper"],
+    deps = [":pipeline_runner_wrapper"],
 )
 
 py_test(
-    name = "test_simulation_config",
-    srcs = ["test/test_simulation_config.py"],
+    name = "test_pipeline_config",
+    srcs = ["test/test_pipeline_config.py"],
     deps = [
-        ":params",
+        ":pipeline_config_lib",
         requirement("pyfakefs"),
     ],
 )
 
 py_test(
-    name = "test_simulation_runner_wrapper",
-    srcs = ["test/test_simulation_runner_wrapper.py"],
+    name = "test_pipeline_runner_wrapper",
+    srcs = ["test/test_pipeline_runner_wrapper.py"],
     deps = [
-        ":constants",
-        ":simulation_runner_wrapper",
-        requirement("py4j"),
+        ":pipeline_runner_wrapper",
+        requirement("pyfakefs"),
     ],
 )
 
@@ -63,12 +68,15 @@ py_test(
     name = "test_e2e",
     srcs = ["test/test_e2e.py"],
     data = [
-        "//:config",
+        "//:AggregatableReportConverter_deploy.jar",
+        "//:LocalTestingTool",
+        "//:MockRunner_deploy.jar",
+        "//:PipelineRunner_deploy.jar",
         "//:testdata",
     ],
     deps = [
-        ":constants",
-        ":params",
-        ":simulation_runner_wrapper",
+        ":pipeline_config_lib",
+        ":pipeline_runner_wrapper",
+        requirement("pyfakefs"),
     ],
 )

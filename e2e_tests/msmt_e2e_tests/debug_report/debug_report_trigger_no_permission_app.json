@@ -1,0 +1,34 @@
+{
+  "description": "Trigger is an App, no ADID permission, no trigger debug report can be generated",
+  "input": {
+    "triggers": [
+      {
+        "timestamp": "800000000001",
+        "registration_request": {
+          "registrant": "example.1d1.test",
+          "destination_origin": "android-app://example.1d1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "2",
+                    "priority": "101"
+                  }
+                ],
+                "debug_reporting": true,
+                "debug_key": "8971346783"
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "output": {}
+}

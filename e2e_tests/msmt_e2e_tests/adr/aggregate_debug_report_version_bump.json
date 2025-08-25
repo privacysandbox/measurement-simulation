@@ -1,0 +1,150 @@
+{
+  "description": "Aggregate debug report with api bump from 0.1 to 1.0",
+  "phflags_override": {
+    "Measurement__enable_aggregate_debug_reporting": "true",
+    "measurement_enable_flexible_contribution_filtering": "true",
+    "measurement_aggregation_coordinator_origin_list": "https://c1.test,https://c2.test"
+  },
+  "input": {
+    "sources": [
+      // Source is registered with budget and key piece. No report generated due
+      // to missing debug data.
+      {
+        "timestamp": "0",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "source.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-source",
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "destination": "android-app://destination.test",
+                "aggregation_keys": {
+                  "a": "0x5"
+                },
+                "aggregatable_debug_reporting": {
+                  "budget": 1024.0,
+                  "key_piece": "0x1"
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "triggers": [
+      // Should create an aggregatable debug report with version 1.0 and a
+      // default filtering id value.
+      {
+        "timestamp": "1000",
+        "registration_request": {
+          "registrant": "destination.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_values": {
+                  "a": 64513
+                },
+                "aggregatable_debug_reporting": {
+                  "key_piece": "0x4",
+                  "debug_data": [
+                    {
+                      "types": [
+                        "trigger-aggregate-insufficient-budget"
+                      ],
+                      "key_piece": "0x8",
+                      "value": 123.0
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      // Should create a null aggregatable debug report with version 1.0 and a
+      // default filtering id value.
+      {
+        "timestamp": "2000",
+        "registration_request": {
+          "registrant": "destination2.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_values": {
+                  "a": 64513
+                },
+                "aggregatable_debug_reporting": {
+                  "key_piece": "0x4",
+                  "debug_data": [
+                    {
+                      "types": [
+                        "trigger-aggregate-insufficient-budget"
+                      ],
+                      "key_piece": "0x8",
+                      "value": 123.0
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "event_level_results": [],
+    "aggregatable_results": [],
+    "debug_aggregatable_results": [
+      {
+        "report_time": "1000",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/report-aggregate-debug",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting-debug",
+            "attribution_destination": "android-app://destination.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "1",
+            "version": "1.0"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.com",
+          "histograms": [
+            {
+              "key": "0xd",
+              "value": 123
+            }
+          ]
+        }
+      },
+      {
+        "report_time": "2000",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/report-aggregate-debug",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting-debug",
+            "attribution_destination": "android-app://destination2.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "2",
+            "version": "1.0"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.com",
+          "histograms": [
+            {
+              "key": "0x0",
+              "value": 0
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

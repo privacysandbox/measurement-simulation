@@ -1,0 +1,371 @@
+{
+  "description": "Test source deactivation logic based on smaller attribution scope limit for attribution scope feature.",
+  "phflags_override": {
+    "measurement_enable_attribution_scope": "true"
+  },
+  "input": {
+    "sources": [
+      // S1: attribution scope limit -> 3 destinations -> [D1], priority -> 102
+      {
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "example.1s1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "source_event_id": "1",
+                "destination": "android-app://example.2d1.test",
+                "priority": "102",
+                "attribution_scopes": {
+                  "limit": 3,
+                  "values": [
+                    "1",
+                    "2"
+                  ],
+                  "max_event_states": 10
+                },
+                "filter_data": {
+                  "top_key_1": [
+                    "top_value_1",
+                    "top_value_2"
+                  ],
+                  "event_key_1": [
+                    "event_value_1",
+                    "event_value_2"
+                  ]
+                }
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ],
+        "timestamp": "800000000001"
+      },
+      // S2: attribution scope limit -> 4, priority -> 101
+      // S1 will be deactivated due to smaller limit.
+      {
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "example.1s1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "source_event_id": "2",
+                "destination": "android-app://example.2d1.test",
+                "priority": "101",
+                "filter_data": {
+                  "top_key_1": [
+                    "top_value_1",
+                    "top_value_2"
+                  ],
+                  "event_key_1": [
+                    "event_value_1",
+                    "event_value_2"
+                  ]
+                },
+                "attribution_scopes": {
+                  "limit": 4,
+                  "values": [
+                    "2",
+                    "3"
+                  ],
+                  "max_event_states": 10
+                }
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ],
+        "timestamp": "800000000003"
+      },
+      // S3: attribution scope limit -> 3, priority -> 100
+      // S2 will be NOT be deactivated as it has higher attribution scope limit.
+      {
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "example.1s1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "source_event_id": "3",
+                "destination": "android-app://example.2d1.test",
+                "priority": "100",
+                "filter_data": {
+                  "top_key_1": [
+                    "top_value_1",
+                    "top_value_2"
+                  ],
+                  "event_key_1": [
+                    "event_value_1",
+                    "event_value_2"
+                  ]
+                },
+                "attribution_scopes": {
+                  "limit": 3,
+                  "values": [
+                    "3",
+                    "4"
+                  ],
+                  "max_event_states": 10
+                }
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ],
+        "timestamp": "800000000005"
+      }
+    ],
+    "triggers": [
+      // T1: attribution scope -> "1", destination -> D1, source registered -> [S1, S2]
+      // Given S1 was deactivated, this should match to none.
+      {
+        "registration_request": {
+          "registrant": "example.2d1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "attribution_scopes": [
+                  "1"
+                ],
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "0",
+                    "priority": "101",
+                    "filters": {
+                      "event_key_1": [
+                        "event_value_x"
+                      ]
+                    }
+                  },
+                  {
+                    "trigger_data": "1",
+                    "priority": "102",
+                    "filters": [
+                      {
+                        "event_key_1": [
+                          "unmatched"
+                        ]
+                      },
+                      {
+                        "source_type": [
+                          "navigation"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "trigger_data": "2",
+                    "priority": "103",
+                    "filters": {
+                      "source_type": [
+                        "navigation"
+                      ]
+                    }
+                  }
+                ],
+                "filters": [
+                  {
+                    "top_key_1": [
+                      "unmatched"
+                    ]
+                  },
+                  {
+                    "top_key_1": [
+                      "top_value_1"
+                    ],
+                    "source_type": [
+                      "navigation"
+                    ]
+                  }
+                ]
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ],
+        "timestamp": "800000000004"
+      },
+      // T2: attribution scope -> "2", destination -> D1, sources registered -> [S1, S2, S3]
+      // Given S1 was deactivated and S3 has lower priority, this should match to S2.
+      // S3 will be deactivated after losing the attribution.
+      {
+        "registration_request": {
+          "registrant": "example.2d1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "attribution_scopes": [
+                  "2"
+                ],
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "1",
+                    "priority": "101",
+                    "filters": {
+                      "event_key_1": [
+                        "event_value_x"
+                      ]
+                    }
+                  },
+                  {
+                    "trigger_data": "2",
+                    "priority": "102",
+                    "filters": [
+                      {
+                        "event_key_1": [
+                          "unmatched"
+                        ]
+                      },
+                      {
+                        "source_type": [
+                          "navigation"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "trigger_data": "3",
+                    "priority": "103",
+                    "filters": {
+                      "source_type": [
+                        "navigation"
+                      ]
+                    }
+                  }
+                ],
+                "filters": [
+                  {
+                    "top_key_1": [
+                      "unmatched"
+                    ]
+                  },
+                  {
+                    "top_key_1": [
+                      "top_value_1"
+                    ],
+                    "source_type": [
+                      "navigation"
+                    ]
+                  }
+                ]
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ],
+        "timestamp": "800000000006"
+      },
+      // T3: attribution scope -> "4", destination -> D1, sources registered -> [S1, S2, S3]
+      // Given S1 was deactivated and S3 matches the attribution scope, but was deactivated after
+      // losing attribution for T2.
+      {
+        "registration_request": {
+          "registrant": "example.2d1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "attribution_scopes": [
+                  "4"
+                ],
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "2",
+                    "priority": "101",
+                    "filters": {
+                      "event_key_1": [
+                        "event_value_x"
+                      ]
+                    }
+                  },
+                  {
+                    "trigger_data": "3",
+                    "priority": "102",
+                    "filters": [
+                      {
+                        "event_key_1": [
+                          "unmatched"
+                        ]
+                      },
+                      {
+                        "source_type": [
+                          "navigation"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "trigger_data": "4",
+                    "priority": "103",
+                    "filters": {
+                      "source_type": [
+                        "navigation"
+                      ]
+                    }
+                  }
+                ],
+                "filters": [
+                  {
+                    "top_key_1": [
+                      "unmatched"
+                    ]
+                  },
+                  {
+                    "top_key_1": [
+                      "top_value_1"
+                    ],
+                    "source_type": [
+                      "navigation"
+                    ]
+                  }
+                ]
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ],
+        "timestamp": "800000000007"
+      }
+    ]
+  },
+  "output": {
+    "event_level_results": [
+      {
+        "report_time": "800172800003",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
+        "payload": {
+          "attribution_destination": "android-app://example.2d1.test",
+          "scheduled_report_time": "800172800",
+          "source_event_id": "2",
+          "trigger_data": "2",
+          "source_type": "navigation",
+          "randomized_trigger_rate": 0.0024263
+        }
+      }
+    ]
+  }
+}

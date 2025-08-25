@@ -1,0 +1,304 @@
+{
+  "description": "Incoming sources are rejected if including them would exceed per-minute or per-day rate limits.",
+  "phflags_override": {
+    "measurement_max_dest_per_publisher_x_enrollment_per_rate_limit_window": "1",
+    "measurement_enable_destination_per_day_rate_limit_window": "true",
+    "measurement_destination_per_day_rate_limit": "2",
+    "measurement_max_destinations_per_publisher_per_rate_limit_window": "1"
+  },
+  "input": {
+    "registrations": [
+      // S1 - Succeeds
+      {
+        "timestamp": "0",
+        "registration_request": {
+          "registrant": "test.publisher1",
+          "Attribution-Reporting-Eligible": "navigation-source"
+        },
+        "responses": [
+          {
+            "url": "https://reporter1.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "destination": "android-app://test.destination1",
+                "source_event_id": "1",
+                "priority": "50",
+                "debug_reporting": true
+              }
+            }
+          }
+        ]
+      },
+      // S2 - Rejected - hits the per enrollment per-minute rate limit.
+      {
+        "timestamp": "20000",
+        "registration_request": {
+          "registrant": "test.publisher1",
+          "Attribution-Reporting-Eligible": "navigation-source"
+        },
+        "responses": [
+          {
+            "url": "https://reporter1.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "destination": "android-app://test.destination2",
+                "source_event_id": "2",
+                "priority": "100",
+                "debug_reporting": true
+              }
+            }
+          }
+        ]
+      },
+      // S3 - Rejected - hits the global destinations per-minute rate limit.
+      {
+        "timestamp": "40000",
+        "registration_request": {
+          "registrant": "test.publisher1",
+          "Attribution-Reporting-Eligible": "navigation-source"
+        },
+        "responses": [
+          {
+            "url": "https://reporter2.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "destination": "android-app://test.destination3",
+                "source_event_id": "3",
+                "priority": "100",
+                "debug_reporting": true
+              }
+            }
+          }
+        ]
+      },
+      // S4 - Succeeds
+      {
+        "timestamp": "14400000",
+        "registration_request": {
+          "registrant": "test.publisher1",
+          "Attribution-Reporting-Eligible": "navigation-source"
+        },
+        "responses": [
+          {
+            "url": "https://reporter1.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "destination": "android-app://test.destination4",
+                "source_event_id": "4",
+                "priority": "25",
+                "debug_reporting": true
+              }
+            }
+          }
+        ]
+      },
+      // Rejected - hits the destinations per-day rate limit.
+      {
+        "timestamp": "28800000",
+        "registration_request": {
+          "registrant": "test.publisher1",
+          "Attribution-Reporting-Eligible": "navigation-source"
+        },
+        "responses": [
+          {
+            "url": "https://reporter1.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "destination": "android-app://test.destination5",
+                "source_event_id": "5",
+                "priority": "100",
+                "debug_reporting": true
+              }
+            }
+          }
+        ]
+      },
+      // Verifies that the S1 was registered.
+      {
+        "timestamp": "1",
+        "registration_request": {
+          "registrant": "test.destination1"
+        },
+        "responses": [
+          {
+            "url": "https://reporter1.test/register-trigger",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "1"
+                  }
+                ],
+                "debug_reporting": true
+              }
+            }
+          }
+        ]
+      },
+      // Verifies that S3 wasn't registered.
+      {
+        "timestamp": "40001",
+        "registration_request": {
+          "registrant": "test.destination3"
+        },
+        "responses": [
+          {
+            "url": "https://reporter2.test/register-trigger",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "3"
+                  }
+                ],
+                "debug_reporting": true
+              }
+            }
+          }
+        ]
+      },
+      // Verifies that S4 was registered.
+      {
+        "timestamp": "14400001",
+        "registration_request": {
+          "registrant": "test.destination4"
+        },
+        "responses": [
+          {
+            "url": "https://reporter1.test/register-trigger",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "4"
+                  }
+                ],
+                "debug_reporting": true
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "reports": [
+      {
+        "report_time": "0",
+        "payload": [
+          {
+            "type": "source-success",
+            "body": {
+              "source_event_id": "1",
+              "attribution_destination": "android-app://test.destination1",
+              "source_site": "android-app://test.publisher1"
+            }
+          }
+        ],
+        "report_url": "https://reporter1.test/.well-known/attribution-reporting/debug/verbose"
+      },
+      {
+        "report_time": "20000",
+        "payload": [
+          {
+            "type": "source-destination-rate-limit",
+            "body": {
+              "source_event_id": "2",
+              "attribution_destination": "android-app://test.destination2",
+              "source_site": "android-app://test.publisher1",
+              "limit": "1"
+            }
+          }
+        ],
+        "report_url": "https://reporter1.test/.well-known/attribution-reporting/debug/verbose"
+      },
+      {
+        "report_time": "40000",
+        "payload": [
+          {
+            "type": "source-success",
+            "body": {
+              "source_event_id": "3",
+              "attribution_destination": "android-app://test.destination3",
+              "source_site": "android-app://test.publisher1"
+            }
+          }
+        ],
+        "report_url": "https://reporter2.test/.well-known/attribution-reporting/debug/verbose"
+      },
+      {
+        "report_time": "40001",
+        "payload": [
+          {
+            "type": "trigger-no-matching-source",
+            "body": {
+              "attribution_destination": "android-app://test.destination3"
+            }
+          }
+        ],
+        "report_url": "https://reporter2.test/.well-known/attribution-reporting/debug/verbose"
+      },
+      {
+        "report_time": "14400000",
+        "payload": [
+          {
+            "type": "source-success",
+            "body": {
+              "source_event_id": "4",
+              "attribution_destination": "android-app://test.destination4",
+              "source_site": "android-app://test.publisher1"
+            }
+          }
+        ],
+        "report_url": "https://reporter1.test/.well-known/attribution-reporting/debug/verbose"
+      },
+      {
+        "report_time": "28800000",
+        "payload": [
+          {
+            "type": "source-destination-per-day-rate-limit",
+            "body": {
+              "source_event_id": "5",
+              "attribution_destination": "android-app://test.destination5",
+              "source_site": "android-app://test.publisher1",
+              "limit": "2"
+            }
+          }
+        ],
+        "report_url": "https://reporter1.test/.well-known/attribution-reporting/debug/verbose"
+      },
+      {
+        "report_time": "172800000",
+        "report_url": "https://reporter1.test/.well-known/attribution-reporting/report-event-attribution",
+        "payload": {
+          "attribution_destination": "android-app://test.destination1",
+          "scheduled_report_time": "172800",
+          "source_event_id": "1",
+          "trigger_data": "1",
+          "source_type": "navigation",
+          "randomized_trigger_rate": 0.0024263
+        }
+      },
+      {
+        "report_time": "187200000",
+        "report_url": "https://reporter1.test/.well-known/attribution-reporting/report-event-attribution",
+        "payload": {
+          "attribution_destination": "android-app://test.destination4",
+          "scheduled_report_time": "187200",
+          "source_event_id": "4",
+          "trigger_data": "4",
+          "source_type": "navigation",
+          "randomized_trigger_rate": 0.0024263
+        }
+      }
+    ]
+  }
+}

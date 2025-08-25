@@ -5,7 +5,7 @@
         "timestamp": "800000000001",
         "enrollment_id": "https://www.ad-tech1.test",
         "source_type": "NAVIGATION",
-        "publisher": "http://example.1s1.test",
+        "publisher": "http://example.1s1.com",
         "publisher_type": "APP",
         "registrant": "http://example.1s1.test",
         "source_event_id": "1",

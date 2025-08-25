@@ -51,9 +51,7 @@ Android Attribution Reporting API, including all [attribution paths][2].
 
 The Measurement Simulation Library takes an ad tech's historical dataset as a
 single offline batch and runs a simulation on the local machine. The Measurement
-Simulation Library divides data based on the `user_id` field, which represents
-different users and simulates the client side behavior for each user in
-parallel.
+Simulation Library ingests all JSON files from the provided input directory. Each file represents a user, and the file name is used as the user ID. The library then simulates the client-side behavior for each user in parallel.
 
 The Measurement Simulation Library generates event reports for each user and
 writes these reports in an output directory. Aggregatable reports from each user
@@ -66,7 +64,7 @@ daily batching strategy for each advertiser. However, ad techs can configure
 their batching strategy based on what works best for their use case. For
 example, some ad techs may want to batch weekly or monthly, or based on source
 registration time. To introduce a new batching strategy, see the code in
-`java/com/google/measurement/adtech/BatchAggregatableReports.java`.
+`java/com/google/measurement/pipeline/KeyByDestinationAndDayTransform.java`.
 
 **Testing features**: Measurement Simulation Library data is processed as
 plaintext. There is no enforced privacy budget when using the Measurement
@@ -88,17 +86,11 @@ Measurement Simulation Library installation instructions.
 ### Data structure and processing
 
 The Measurement Simulation Library uses [Apache Beam][5] to read the
-input data (source and trigger data along with metadata to perform aggregation),
-processes the data grouped by "user id" and calls an attribution reporting
-simulation algorithm for each user ID in parallel. Once the event and
-aggregatable reports are created for each user, the Beam library combines the
-aggregatable reports and groups them into daily batches, and these batches are
-sent to the local aggregation service.
+input data from a directory of JSON files. Each file's name is treated as a "user id", and its content should be a JSON object containing "sources" and "triggers" arrays. The data is processed, and an attribution reporting simulation algorithm is called for each user ID in parallel. Once the event and aggregatable reports are created for each user, the Beam library combines the aggregatable reports and groups them into daily batches, and these batches are sent to the local aggregation service.
 
 The Measurement Simulation Library supports JSON for input data and event report
 output. Aggregate reports support both JSON and Avro formats. All event reports
-for a user ID are written in a single JSON file, as
-`<output_directory>/<platform>/<user_id>/event_reports.json`.
+for a user ID are written in a single JSON file in the configured event reports output directory.
 
 ### Security and privacy considerations
 
@@ -117,241 +109,69 @@ following points:
 
 ### Input parameters
 
-**apiChoice input parameter**
+The sample input data shown below demonstrates the types of
+information that is consumed by the Measurement Simulation Library. The library expects a directory of JSON files, where each file name is a user ID, and the content is a JSON object with "sources" and "triggers" arrays.
 
-We recently introduced functionality that allows developers to specify which
-client Attribution Reporting API they would like to use. This resembles the
-behavior of the real API, where you can specify whether to use Android or Chrome
-Attribution for each event. This will be particularly important for ad techs
-looking to test app-to-web, web-to-app attribution, or use the Android
-Attribution API for web-to-web (in a mobile or app browser).
-
-For each record used in the Simulation Library, developers will populate the
-field `api_choice` with either `WEB` or `OS`, depending on which API they want
-to use to process and batch the input data accordingly.
-
-**Source and trigger data input parameters**
-
-The sample input source and trigger data shown below demonstrates the types of
-information that is consumed by the Measurement Simulation Library. Any
-additional data is left unchanged and not processed. The library expects ad
-techs to provide both source and trigger info and aggregation-related metadata
-in the same input files.
-
-Example source data:
-
-```
+Example input file `user1.json`:
+```json
 {
-  "user_id":"U1",
-  "source_event_id":1,
-  "source_type":"EVENT",
-  "publisher":"https://www.example1.com/s1",
-  "web_destination":"https://www.example2.com/d1",
-  "enrollment_id":"https://www.example3.com/r1",
-  "timestamp":1642218050000,
-  "expiry":2592000,
-  "priority":100,
-  "registrant":"https://www.example3.com/e1",
-  "dedup_keys":[],
-  "install_attribution_window":86400,
-  "post_install_exclusivity_window":172800,
-  "filter_data":{
-    "type":["1", "2", "3", "4"],
-    "ctid":["id"]
-  },
-  "aggregation_keys":[
+  "sources": [
     {
-      "myId":"0xFFFFFFFFFFFFFF"
-    }
-  ],
-  "api_choice": "OS"
-}
-{
-  "user_id":"U1",
-  "source_event_id":2,
-  "source_type":"EVENT",
-  "publisher":"https://www.example1.com/s2",
-  "web_destination":"https://www.example2.com/d2",
-  "enrollment_id":"https://www.example3.com/r1",
-  "timestamp":1642235602000,
-  "expiry":2592000,
-  "priority":100,
-  "registrant":"https://www.example3.com/e1",
-  "dedup_keys":[],
-  "install_attribution_window":86400,
-  "post_install_exclusivity_window":172800,
-  "filter_data":{
-    "type":["7", "8", "9", "10"],
-    "ctid":["id"]
-  },
-  "aggregation_keys":[
-    {
-      "campaignCounts":"0x159"
-    },
-    {
-      "geoValue":"0x5"
-    }
-  ],
-  "api_choice": "OS"
-}
-{
-  "user_id":"U2",
-  "source_event_id":3,
-  "source_type":"NAVIGATION",
-  "publisher":"https://www.example1.com/s3",
-  "web_destination":"https://www.example2.com/d3",
-  "enrollment_id":"https://www.example3.com/r1",
-  "timestamp":1642249235000,
-  "expiry":2592000,
-  "priority":100,
-  "registrant":"https://www.example3.com/e1",
-  "dedup_keys":[],
-  "install_attribution_window":86400,
-  "post_install_exclusivity_window":172800,
-  "filter_data":{
-    "type":["1", "2", "3", "4"],
-    "ctid":["id"]
-  },
-  "aggregation_keys":[
-    {
-      "myId3":"0xFFFFFFFFFFFFFFFF"
-    }
-  ],
-  "api_choice": "OS"
-}
-```
-
-Example trigger data:
-
-```
-{
-  "user_id":"U1",
-  "attribution_destination":"https://www.example2.com/d1",
-  "destination_type":"WEB",
-  "enrollment_id":"https://www.example3.com/r1",
-  "timestamp":1642271444000,
-  "event_trigger_data":[
-    {
-      "trigger_data":1000,
-      "priority":100,
-      "deduplication_key":1
-    }
-  ],
-  "registrant":"http://example1.com/4",
-  "aggregatable_trigger_data":[
-    {
-      "key_piece":"0x400",
-      "source_keys":["campaignCounts"],
-      "filters":{
-        "Key_1":["value_1", "value_2"],
-        "Key_2":["value_1", "value_2"]
-      }
-    }
-  ],
-  "aggregatable_values":{
-    "campaignCounts":32768,
-    "geoValue":1664
-  },
-  "filters":{
-     "key_1":["value_1", "value_2"],
-     "key_2":["value_1", "value_2"]
-  },
-  "api_choice": "OS"
-}
-{
-  "user_id":"U1",
-  "attribution_destination":"https://www.example2.com/d3",
-  "destination_type":"WEB",
-  "enrollment_id":"https://www.example3.com/r1",
-  "timestamp":1642273950000,
-  "event_trigger_data":[
-    {
-      "trigger_data":1000,
-      "priority":100,
-      "deduplication_key":1
-    }
-  ],
-  "registrant":"http://example1.com/4",
-  "aggregatable_trigger_data":[
-    {
-      "key_piece":"0x400",
-      "source_keys":[
-        "campaignCounts"
+      "registration_request": {
+        "source_type": "navigation",
+        "registrant": "com.publisher"
+      },
+      "responses": [
+        {
+          "url": "https://reporter.test",
+          "response": {
+            "Attribution-Reporting-Register-Source": {
+              "source_event_id": "1",
+              "destination": "android-app://com.advertiser",
+              "aggregation_keys": {
+                "campaignCounts": "0x159",
+                "geoValue": "0x5"
+              }
+            }
+          }
+        }
       ],
-      "not_filters":{
-        "Key_1x":["value_1", "value_2"],
-        "Key_2x":["value_1", "value_2"]
-      }
+      "timestamp": "800000000001"
     }
   ],
-  "aggregatable_values":{
-    "campaignCounts":32768,
-    "geoValue":1664
-  },
-  "filters":{
-     "key_1":["value_1", "value_2"],
-     "key_2":["value_1", "value_2"]
-  },
-  "api_choice": "OS"
-}
-{
-  "user_id":"U2",
-  "attribution_destination":"https://www.example2.com/d3",
-  "destination_type":"WEB",
-  "enrollment_id":"https://www.example3.com/r1",
-  "timestamp":1642288930000,
-  "event_trigger_data":[
+  "triggers": [
     {
-      "trigger_data":1000,
-      "priority":100,
-      "deduplication_key":1
-    }
-  ],
-  "registrant":"http://example1.com/4",
-  "aggregatable_trigger_data":[
-    {
-      "key_piece":"0x400",
-      "source_keys":[
-        "campaignCounts"
+      "registration_request": {
+        "registrant": "com.advertiser"
+      },
+      "responses": [
+        {
+          "url": "https://reporter.test",
+          "response": {
+            "Attribution-Reporting-Register-Trigger": {
+              "aggregatable_trigger_data": [
+                {
+                  "key_piece": "0x400",
+                  "source_keys": ["campaignCounts"]
+                },
+                {
+                  "key_piece": "0xA80",
+                  "source_keys": ["geoValue"]
+                }
+              ],
+              "aggregatable_values": {
+                "campaignCounts": 32768,
+                "geoValue": 1664
+              }
+            }
+          }
+        }
       ],
-      "filters":{
-        "Key_1":["value_1", "value_2"],
-        "Key_2":["value_1", "value_2"]
-      }
+      "timestamp": "800000600001"
     }
-  ],
-  "aggregatable_values":{
-    "campaignCounts":32768,
-    "geoValue":1664
-  },
-  "filters":{
-     "key_1":["value_1", "value_2"],
-     "key_2":["value_1", "value_2"]
-  },
-  "api_choice": "OS"
+  ]
 }
 ```
-
-_Web and App destinations_
-
-The example input data above used web destinations, signified by the
-`web_destination` field in the Source input, the `destination_type` of `WEB` in
-the Trigger input, and by the web URL, `https://www.example2.com/d1`. However,
-the Measurement Simulation Library can also process app destinations for ads
-that appear in Android apps. Simply modify the Source input to use a
-`destination` field instead of `web_destination` and supply an app package name
-instead of a URL, like `android-app://com.app.example`. In order for a Trigger
-to be attributable to a Source with an app destination, change the
-`destination_type` from `WEB` to `APP` and ensure the `attribution_destination`
-field matches the `destination` field of the Source.
-
-_Flexible Event-Level Report API_
-
-The Measurement Simulation Library can simulate the Flexible Event API by 
-including the fields on the 
-[Flexible event-level configurations](https://github.com/WICG/attribution-reporting-api/blob/main/flexible_event_config.md#flexible-event-level-configurations) page.
-We have added a sample source and trigger data in testdata 2023/01/15 directory 
-for your reference
 
 ### Client-side behavior
 
@@ -381,19 +201,6 @@ github repo:
 
 To decide which buckets to include in the domain file see the [definition for
 Aggregation keys (buckets)][8].
-
-Should you decide to create `domain.avro` files, The Measurement Simulation
-Library will fetch those files just before invocation of the LocalTestingTool
-using the following steps:
-
-1. Identify the batch key of the batch. The batch key is the key returned from
-  the batching strategy.
-1. Sanitize the batch key. The following characters are turned into a hyphen:
-  period(.), forward-slash (/), asterisk (*), colon (:), tilde (~).
-1. Locate the batch's domain file. All domain files will be under the `domain`
-  subdirectory. Under the `domain` subdirectory, batch specific subdirectories
-  should be named after the batch key. Under the batch key subdirectories should
-  be a `domain.avro` file.
 
 ### Client-side output
 

@@ -1,0 +1,90 @@
+{
+  "description": "One source with source type \"navigation\" with maximum report windows and event report quota, rejected for too many report states.",
+  "input": {
+    "sources": [
+      {
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "example.1s1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "debug_reporting": true,
+                "debug_key": "123",
+                "source_event_id": "1",
+                "destination": "android-app://example.2d1.test",
+                "priority": "100",
+                "max_event_level_reports": 20,
+                "event_report_windows": {
+                  "end_times": [
+                    5000,
+                    8000,
+                    11000,
+                    14000,
+                    17000
+                  ]
+                }
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ],
+        "timestamp": "800000000000"
+      }
+    ],
+    "triggers": [
+      {
+        "registration_request": {
+          "registrant": "example.2d1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "debug_reporting": true,
+                "debug_key": "123",
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "1",
+                    "priority": "101"
+                  }
+                ]
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ],
+        "timestamp": "800003500000"
+      }
+    ]
+  },
+  "output": {
+    "verbose_debug_reports": [
+      {
+        "report_time": "800000000000",
+        "payload": [
+          {
+            "type": "source-trigger-state-cardinality-limit",
+            "body": {
+              "source_event_id": "1",
+              "attribution_destination": "android-app://example.2d1.test",
+              "source_site": "android-app://example.1s1.test",
+              "source_debug_key": "123",
+              "limit": "4294967295"
+            }
+          }
+        ],
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose"
+      }
+    ],
+    "event_level_results": [],
+    "aggregatable_results": []
+  }
+}

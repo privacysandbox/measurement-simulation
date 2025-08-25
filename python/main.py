@@ -19,72 +19,37 @@ Note: users should not execute this script directly with python,
 but should instead execute with Bazel,
   i.e., `bazel run main -- --flags`
 """
-import datetime
+
 import argparse
-from simulation_runner_wrapper import SimulationRunnerWrapper
-from simulation_config import SimulationConfig
+
+from pipeline_config import PipelineConfig
+from pipeline_runner_wrapper import PipelineRunnerWrapper
 
 
 def main():
-  parser = argparse.ArgumentParser(description='Arguments to the Simulation.')
-  parser.add_argument("--source_start_date",
-                      type=datetime.date.fromisoformat,
-                      dest="source_start_date")
-  parser.add_argument("--source_end_date",
-                      type=datetime.date.fromisoformat,
-                      dest="source_end_date")
-  parser.add_argument("--trigger_start_date",
-                      type=datetime.date.fromisoformat,
-                      dest="trigger_start_date")
-  parser.add_argument("--trigger_end_date",
-                      type=datetime.date.fromisoformat,
-                      dest="trigger_end_date")
-  parser.add_argument("--extension_event_start_date",
-                      type=datetime.date.fromisoformat,
-                      dest="extension_event_start_date")
-  parser.add_argument("--extension_event_end_date",
-                      type=datetime.date.fromisoformat,
-                      dest="extension_event_end_date")
+  """Parses command line arguments and runs the pipeline."""
+
+  parser = argparse.ArgumentParser(description="Arguments to the Pipeline.")
   parser.add_argument("--input_directory",
                       dest="input_directory")
-  parser.add_argument("--output_directory",
-                      dest="output_directory")
-  parser.add_argument("--attribution_source_file_name",
-                      default="attribution_source.json",
-                      dest="attribution_source_file_name")
-  parser.add_argument("--trigger_file_name",
-                      default="trigger.json",
-                      dest="trigger_file_name")
-  parser.add_argument("--extension_event_file_name",
-                      default="extension.json",
-                      dest="extension_event_file_name")
+  parser.add_argument("--event_reports_output_directory",
+                      dest="event_reports_output_directory")
+  parser.add_argument("--aggregatable_reports_output_directory",
+                      dest="aggregatable_reports_output_directory")
+  parser.add_argument("--aggregation_results_directory",
+                      dest="aggregation_results_directory")
 
   args = vars(parser.parse_args())
-  simulation_config = SimulationConfig(input_directory=
-                                       args['input_directory'],
-                                       output_directory=
-                                       args['output_directory'],
-                                       source_start_date=
-                                       args['source_start_date'],
-                                       source_end_date=
-                                       args['source_end_date'],
-                                       trigger_start_date=
-                                       args['trigger_start_date'],
-                                       trigger_end_date=
-                                       args['trigger_end_date'],
-                                       extension_event_start_date=
-                                       args['extension_event_start_date'],
-                                       extension_event_end_date=
-                                       args['extension_event_end_date'],
-                                       attribution_source_file_name=
-                                       args['attribution_source_file_name'],
-                                       trigger_file_name=
-                                       args['trigger_file_name'],
-                                       extension_event_file_name=
-                                       args['extension_event_file_name'],
-                                       )
-  runner = SimulationRunnerWrapper()
-  runner.run(simulation_config=simulation_config)
+
+  pipeline_config = PipelineConfig(
+      input_directory=args["input_directory"],
+      event_reports_output_directory=args["event_reports_output_directory"],
+      aggregatable_reports_output_directory=
+      args["aggregatable_reports_output_directory"],
+      aggregation_results_directory=args["aggregation_results_directory"])
+
+  runner = PipelineRunnerWrapper(pipeline_config)
+  runner.run()
 
 
 if __name__ == "__main__":

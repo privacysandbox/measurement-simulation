@@ -1,0 +1,120 @@
+{
+  "description": "Aggregate reports should be sent since the trigger time + measurement_minimum_report_lifespan_seconds >= current time",
+  "phflags_override": {
+    "Measurement__enable_min_report_lifespan_for_uninstall": "true",
+    "Measurement__min_report_lifespan_for_uninstall_seconds": 100000000000
+  },
+  "input": {
+    "sources": [
+      {
+        "timestamp": "800000000001",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "source.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-source",
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "destination": "android-app://destination.test",
+                "source_event_id": "123",
+                "aggregation_keys": {
+                  "a": "0x159"
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "triggers": [
+      {
+        "timestamp": "800000000101",
+        "registration_request": {
+          "registrant": "destination.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "1"
+                  }
+                ],
+                "aggregatable_trigger_data": [
+                  {
+                    "source_keys": [
+                      "a"
+                    ],
+                    "key_piece": "0x400"
+                  }
+                ],
+                "aggregatable_values": {
+                  "a": 123
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "installs": [
+      {
+        "uri": "android-app://source.test",
+        "timestamp": "800000000000"
+      },
+      {
+        "uri": "android-app://destination.test",
+        "timestamp": "800000000001"
+      }
+    ],
+    "uninstalls": [
+      {
+        "uri": "android-app://destination.test",
+        "timestamp": "800000500001"
+      }
+    ]
+  },
+  "output": {
+    "event_level_results": [
+      {
+        "payload": {
+          "attribution_destination": "android-app://destination.test",
+          "scheduled_report_time": "800172800",
+          "randomized_trigger_rate": 0.0024263,
+          "source_event_id": "123",
+          "source_type": "navigation",
+          "trigger_data": "1"
+        },
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-event-attribution",
+        "report_time": "800172800001"
+      }
+    ],
+    "aggregatable_results": [
+      {
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://destination.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "800003600",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x559",
+              "value": 123
+            }
+          ]
+        },
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "report_time": "800003600101"
+      }
+    ]
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "description": "Given a trigger with aggregatable data, and configured to exclude source registration time, and has a context id, and no sources, create a null aggregatable report that has no source registration time",
+  "phflags_override": {
+    "measurement_null_aggregate_report_enabled": "true",
+    "measurement_source_registration_time_optional_for_agg_reports_enabled": "true",
+    "measurement_enable_trigger_context_id": "true",
+    // Though set to 1, the path for null agg reports including source registration time should
+    // never be reached. This will detect bugs if agg reports including source registration time are
+    // created.
+    "measurement_null_agg_report_rate_incl_source_registration_time": "1.0"
+  },
+  "input": {
+    "triggers": [
+      {
+        "registration_request": {
+          "registrant": "example.2d1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "2",
+                    "priority": "101"
+                  }
+                ],
+                "aggregatable_trigger_data": [
+                  {
+                    "key_piece": "0x400",
+                    "source_keys": [
+                      "campaignCounts"
+                    ],
+                    "filters": {
+                      "product": [
+                        "1234"
+                      ],
+                      "ctid": [
+                        "id"
+                      ]
+                    },
+                    "not_filters": {
+                      "product": [
+                        "100"
+                      ]
+                    }
+                  },
+                  {
+                    "key_piece": "0xA80",
+                    "source_keys": [
+                      "geoValue",
+                      "nonMatch"
+                    ]
+                  }
+                ],
+                "aggregatable_values": {
+                  "campaignCounts": 32768,
+                  "geoValue": 1664
+                },
+                "aggregatable_source_registration_time": "EXCLUDE",
+                "trigger_context_id": "test_context_id"
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ],
+        "timestamp": "800000600001"
+      }
+    ]
+  },
+  "output": {
+    "aggregatable_results": [
+      {
+        "report_time": "800000600001",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800000600",
+            "source_registration_time": "0",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x0",
+              "value": 0
+            }
+          ],
+          "trigger_context_id": "test_context_id"
+        }
+      }
+    ]
+  }
+}

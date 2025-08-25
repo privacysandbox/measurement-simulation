@@ -1,3 +1,19 @@
+/**
+ * Copyright 2025 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 const triggerTestCases = [
     {
         name: "(String) Debug Key | Valid",
@@ -14,9 +30,9 @@ const triggerTestCases = [
         flags: {},
         json: "{\"debug_key\":1000}",
         result: {
-            valid: false,
-            errors: ["must be a string: `debug_key`"],
-            warnings: []
+            valid: true,
+            errors: [],
+            warnings: ["must be a string: `debug_key`"]
         }
     },
     {
@@ -24,9 +40,9 @@ const triggerTestCases = [
         flags: {},
         json: "{\"debug_key\":\"-1000\"}",
         result: {
-            valid: false,
-            errors: ["must be an uint64 (must match /^[0-9]+$/): `debug_key`"],
-            warnings: []
+            valid: true,
+            errors: [],
+            warnings: ["must be an uint64 (must match /^[0-9]+$/): `debug_key`"]
         }
     },
     {
@@ -34,9 +50,9 @@ const triggerTestCases = [
         flags: {},
         json: "{\"debug_key\":\"true\"}",
         result: {
-            valid: false,
-            errors: ["must be an uint64 (must match /^[0-9]+$/): `debug_key`"],
-            warnings: []
+            valid: true,
+            errors: [],
+            warnings: ["must be an uint64 (must match /^[0-9]+$/): `debug_key`"]
         }
     },
     {
@@ -114,8 +130,7 @@ const triggerTestCases = [
     {
         name: "(Disabled) Attribution Scopes | Valid",
         flags: {
-            "feature-attribution-scopes": false,
-            "header_type": "trigger"
+            "feature-attribution-scopes": false
         },
         json: "{\"destination\":\"android-app://com.myapps\", \"attribution_scopes\":{}}",
         result: {
@@ -126,10 +141,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-Array) Attribution Scopes | Invalid",
-        flags: {
-            "feature-attribution-scopes": true,
-            "header_type": "trigger"
-        },
+        flags: {},
         json: "{\"destination\":\"android-app://com.myapps\", \"attribution_scopes\":{}}",
         result: {
             valid: false,
@@ -139,10 +151,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-String Array) Attribution Scopes | Invalid",
-        flags: {
-            "feature-attribution-scopes": true,
-            "header_type": "trigger"
-        },
+        flags: {},
         json: "{\"destination\":\"android-app://com.myapps\", \"attribution_scopes\":[\"a\", 1, \"b\"]}",
         result: {
             valid: false,
@@ -153,29 +162,24 @@ const triggerTestCases = [
     {
         name: "(Exceeded Max Number of Scopes Per Source) Attribution Scopes | Invalid",
         flags: {
-            "feature-attribution-scopes": true,
-            "max_attribution_scopes_per_source": 2,
-            "header_type": "trigger"
+            "max_32_bit_integer": 2
         },
         json: "{\"destination\":\"android-app://com.myapps\", \"attribution_scopes\":[\"a\", \"b\", \"c\"]}",
         result: {
             valid: false,
-            errors: ["exceeded max number of scopes per source: `attribution_scopes`"],
+            errors: ["exceeds max array size: `attribution_scopes`"],
             warnings: []
         }
     },
     {
         name: "(Exceeded Max String Length Per Scope) Attribution Scopes | Invalid",
         flags: {
-            "feature-attribution-scopes": true,
-            "max_attribution_scopes_per_source": 2,
-            "max_attribution_scope_string_length": 5,
-            "header_type": "trigger"
+            "max_32_bit_integer": 5
         },
-        json: "{\"destination\":\"android-app://com.myapps\", \"attribution_scopes\":[\"123456\"]}",
+        json: "{\"destination\":\"android-app://com.myapps\", \"attribution_scopes\":[\"12345\",\"1234\",\"123456\"]}",
         result: {
             valid: false,
-            errors: ["exceeded max scope string length: `attribution_scopes`"],
+            errors: ["element at index: 2 exceeds max string length: `attribution_scopes`"],
             warnings: []
         }
     },
@@ -193,9 +197,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-Object) X Network Key Mapping | Invalid",
-        flags: {
-            "feature-xna": true
-        },
+        flags: {},
         json: "{\"x_network_key_mapping\":[1]}",
         result: {
             valid: false,
@@ -205,9 +207,7 @@ const triggerTestCases = [
     },
     {
         name: "(Null Value) X Network Key Mapping | Invalid",
-        flags: {
-            "feature-xna": true
-        },
+        flags: {},
         json: "{\"x_network_key_mapping\":{\"key1\":\"0x1\", \"key2\":null}}",
         result: {
             valid: false,
@@ -217,9 +217,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-String Value) X Network Key Mapping | Invalid",
-        flags: {
-            "feature-xna": true
-        },
+        flags: {},
         json: "{\"x_network_key_mapping\":{\"key1\":\"0x1\", \"key2\":2}}",
         result: {
             valid: false,
@@ -229,9 +227,7 @@ const triggerTestCases = [
     },
     {
         name: "(Does Not Start With 0x) X Network Key Mapping | Invalid",
-        flags: {
-            "feature-xna": true
-        },
+        flags: {},
         json: "{\"x_network_key_mapping\":{\"key1\":\"0x1\", \"key2\":\"1x1\"}}",
         result: {
             valid: false,
@@ -241,9 +237,7 @@ const triggerTestCases = [
     },
     {
         name: "X Network Key Mapping | Valid",
-        flags: {
-            "feature-xna": true
-        },
+        flags: {},
         json: "{\"x_network_key_mapping\":{\"key1\":\"0x1\", \"key2\":\"0x2\"}}",
         result: {
             valid: true,
@@ -265,9 +259,7 @@ const triggerTestCases = [
     },
     {
         name: "(String) Aggregation Coordinator Origin | Valid",
-        flags: {
-            "feature-aggregation-coordinator-origin": true
-        },
+        flags: {},
         json: "{\"aggregation_coordinator_origin\":\"https://valid.cloud.coordination.test\"}",
         result: {
             valid: true,
@@ -277,9 +269,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-String) Aggregation Coordinator Origin | Invalid",
-        flags: {
-            "feature-aggregation-coordinator-origin": true
-        },
+        flags: {},
         json: "{\"aggregation_coordinator_origin\":false}",
         result: {
             valid: false,
@@ -289,9 +279,7 @@ const triggerTestCases = [
     },
     {
         name: "(Invalid URL - Missing Scheme) Aggregation Coordinator Origin | Invalid",
-        flags: {
-            "feature-aggregation-coordinator-origin": true
-        },
+        flags: {},
         json: "{\"aggregation_coordinator_origin\":\"web-destination.test\"}",
         result: {
             valid: false,
@@ -301,9 +289,7 @@ const triggerTestCases = [
     },
     {
         name: "(Empty String) Aggregation Coordinator Origin | Invalid",
-        flags: {
-            "feature-aggregation-coordinator-origin": true
-        },
+        flags: {},
         json: "{\"aggregation_coordinator_origin\":\"\"}",
         result: {
             valid: false,
@@ -325,9 +311,7 @@ const triggerTestCases = [
     },
     {
         name: "(String - Case-Insensitive) Aggregatable Source Registration Time | Valid",
-        flags: {
-            "feature-source-registration-time-optional-for-agg-reports": true
-        },
+        flags: {},
         json: "{\"aggregatable_source_registration_time\":\"iNCLUDe\"}",
         result: {
             valid: true,
@@ -337,9 +321,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-String) Aggregatable Source Registration Time | Invalid",
-        flags: {
-            "feature-source-registration-time-optional-for-agg-reports": true
-        },
+        flags: {},
         json: "{\"aggregatable_source_registration_time\":true}",
         result: {
             valid: false,
@@ -349,9 +331,7 @@ const triggerTestCases = [
     },
     {
         name: "(Not INCLUDE or EXCLUDE) Aggregatable Source Registration Time | Invalid",
-        flags: {
-            "feature-source-registration-time-optional-for-agg-reports": true
-        },
+        flags: {},
         json: "{\"aggregatable_source_registration_time\":\"INVALID\"}",
         result: {
             valid: false,
@@ -373,9 +353,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-String) Trigger Context ID | Invalid",
-        flags: {
-            "feature-trigger-context-id": true
-        },
+        flags: {},
         json: "{\"trigger_context_id\":true}",
         result: {
             valid: false,
@@ -385,9 +363,7 @@ const triggerTestCases = [
     },
     {
         name: "(Aggregatable Source Registration Time Not Present) Trigger Context ID | Valid",
-        flags: {
-            "feature-trigger-context-id": true
-        },
+        flags: {},
         json: "{\"trigger_context_id\":\"1\"}",
         result: {
             valid: true,
@@ -397,10 +373,7 @@ const triggerTestCases = [
     },
     {
         name: "(Aggregatable Source Registration Time - INCLUDE) Trigger Context ID | Invalid",
-        flags: {
-            "feature-trigger-context-id": true,
-            "feature-source-registration-time-optional-for-agg-reports": true
-        },
+        flags: {},
         json: "{\"trigger_context_id\":\"1\", \"aggregatable_source_registration_time\":\"inCLUDE\"}",
         result: {
             valid: false,
@@ -410,10 +383,7 @@ const triggerTestCases = [
     },
     {
         name: "(Aggregatable Source Registration Time - EXCLUDE) Trigger Context ID | Valid",
-        flags: {
-            "feature-trigger-context-id": true,
-            "feature-source-registration-time-optional-for-agg-reports": true
-        },
+        flags: {},
         json: "{\"trigger_context_id\":\"1\", \"aggregatable_source_registration_time\":\"EXCLUDE\"}",
         result: {
             valid: true,
@@ -424,8 +394,6 @@ const triggerTestCases = [
     {
         name: "(Exceeds Max String Length) Trigger Context ID | Invalid",
         flags: {
-            "feature-trigger-context-id": true,
-            "feature-source-registration-time-optional-for-agg-reports": true,
             "max_trigger_context_id_string_length": 5
         },
         json: "{\"trigger_context_id\":\"123456\", \"aggregatable_source_registration_time\":\"EXCLUDE\"}",
@@ -712,8 +680,6 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false
         },
         json: "{\"event_trigger_data\":[{\"filters\":[{\"ABCDEFGHIJKLMNOPQRSTUVWXYZ\":[\"A\"]}]}]}",
         result: {
@@ -726,9 +692,7 @@ const triggerTestCases = [
         name: "(Filter String Byte Size Limit Exceeded `not_filters`) Event Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false
+            "max_attribution_filters": 2
         },
         json: "{\"event_trigger_data\":[{\"not_filters\":[{\"ABCDEFGHIJKLMNOPQRSTUVWXYZ\":[\"A\"]}]}]}",
         result: {
@@ -742,8 +706,6 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
             "feature-lookback-window-filter": false
         },
         json: "{\"event_trigger_data\":[{\"filters\":[{\"_lookback_window\":\"A\"}]}]}",
@@ -758,8 +720,6 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
             "feature-lookback-window-filter": false
         },
         json: "{\"event_trigger_data\":[{\"not_filters\":[{\"_lookback_window\":\"A\"}]}]}",
@@ -773,10 +733,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Non-Numeric String `filters`) Event Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"event_trigger_data\":[{\"filters\":[{\"_lookback_window\":\"A\"}]}]}",
         result: {
@@ -789,10 +746,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Non-Numeric String `not_filters`) Event Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"event_trigger_data\":[{\"not_filters\":[{\"_lookback_window\":\"A\"}]}]}",
         result: {
@@ -805,10 +759,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Negative String `filters`) Event Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"event_trigger_data\":[{\"filters\":[{\"_lookback_window\":\"-2\"}]}]}",
         result: {
@@ -821,10 +772,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Negative String `not_filters`) Event Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"event_trigger_data\":[{\"not_filters\":[{\"_lookback_window\":\"-2\"}]}]}",
         result: {
@@ -837,10 +785,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Negative Number `filters`) Event Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"event_trigger_data\":[{\"filters\":[{\"_lookback_window\":-2}]}]}",
         result: {
@@ -853,10 +798,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Negative Number `not_filters`) Event Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"event_trigger_data\":[{\"not_filters\":[{\"_lookback_window\":-2}]}]}",
         result: {
@@ -869,10 +811,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Valid `filters`) Event Trigger Data | Valid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"event_trigger_data\":[{\"filters\":[{\"_lookback_window\":\"0\"}]}]}",
         result: {
@@ -885,10 +824,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Valid `not_filters`) Event Trigger Data | Valid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"event_trigger_data\":[{\"not_filters\":[{\"_lookback_window\":\"0\"}]}]}",
         result: {
@@ -901,10 +837,7 @@ const triggerTestCases = [
         name: "(Filter Key Starts with Underscore `filters`) Event Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"event_trigger_data\":[{\"filters\":[{\"_filter_1\":[\"0\"]}]}]}",
         result: {
@@ -917,10 +850,7 @@ const triggerTestCases = [
         name: "(Filter Key Starts with Underscore `not_filters`) Event Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"event_trigger_data\":[{\"not_filters\":[{\"_filter_1\":[\"0\"]}]}]}",
         result: {
@@ -933,10 +863,7 @@ const triggerTestCases = [
         name: "(Non-Array Filter Value `filters`) Event Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"event_trigger_data\":[{\"filters\":[{\"filter_1\":{\"name\": \"A\"}}]}]}",
         result: {
@@ -949,10 +876,7 @@ const triggerTestCases = [
         name: "(Non-Array Filter Value `not_filters`) Event Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"event_trigger_data\":[{\"not_filters\":[{\"filter_1\":{\"name\": \"A\"}}]}]}",
         result: {
@@ -966,10 +890,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"event_trigger_data\":[{\"filters\":[{\"filter_1\":[\"A\", \"B\", \"C\"]}]}]}",
         result: {
@@ -983,10 +904,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"event_trigger_data\":[{\"not_filters\":[{\"filter_1\":[\"A\", \"B\", \"C\"]}]}]}",
         result: {
@@ -1000,10 +918,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"event_trigger_data\":[{\"filters\":[{\"filter_1\":[\"A\", 2]}]}]}",
         result: {
@@ -1017,10 +932,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"event_trigger_data\":[{\"not_filters\":[{\"filter_1\":[\"A\", 2]}]}]}",
         result: {
@@ -1034,10 +946,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"event_trigger_data\":[{\"filters\":[{\"filter_1\":[\"A\", \"ABCDEFGHIJKLMNOPQRSTUVWXYZ\"]}]}]}",
         result: {
@@ -1051,10 +960,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"event_trigger_data\":[{\"not_filters\":[{\"filter_1\":[\"A\", \"ABCDEFGHIJKLMNOPQRSTUVWXYZ\"]}]}]}",
         result: {
@@ -1068,10 +974,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"event_trigger_data\":[{\"filters\":[{\"filter_1\":[\"A\", \"123\"]}]}]}",
         result: {
@@ -1085,10 +988,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"event_trigger_data\":[{\"not_filters\":[{\"filter_1\":[\"A\", \"123\"]}]}]}",
         result: {
@@ -1102,10 +1002,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"event_trigger_data\":[{\"filters\":{\"filter_1\":[\"A\", \"123\"]}}]}",
         result: {
@@ -1119,16 +1016,33 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"event_trigger_data\":[{\"not_filters\":{\"filter_1\":[\"A\", \"123\"]}}]}",
         result: {
             valid: true,
             errors: [],
             warnings: []
+        }
+    },
+    {
+        name: "(Trigger Data Missing) Expected Value - Event Trigger Data",
+        flags: {
+            "max_bucket_threshold": (1n << 32n) - 1n,
+            "max_filter_maps_per_filter_set": 20,
+            "max_attribution_filters": 50,
+            "max_values_per_attribution_filter": 50,
+            "max_bytes_per_attribution_filter_string": 25
+            
+        },
+        json: "{\"event_trigger_data\":[{\"priority\":\"-1\"}]}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: []
+        },
+        expected_value: {
+            "event_trigger_data": "[{\"trigger_data\":0,\"priority\":-1}]"
         }
     },
     {
@@ -1157,7 +1071,7 @@ const triggerTestCases = [
         json: "{\"aggregatable_trigger_data\":[{\"source_keys\":1}]}",
         result: {
             valid: false,
-            errors: ["'key_piece' must be present in each element/object of the array: `aggregatable_trigger_data`"],
+            errors: ["key piece must not be null or empty string: `aggregatable_trigger_data`"],
             warnings: []
         }
     },
@@ -1167,7 +1081,7 @@ const triggerTestCases = [
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":null}]}",
         result: {
             valid: false,
-            errors: ["key piece value must not be null or empty string: `aggregatable_trigger_data`"],
+            errors: ["key piece must not be null or empty string: `aggregatable_trigger_data`"],
             warnings: []
         }
     },
@@ -1177,7 +1091,7 @@ const triggerTestCases = [
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"\"}]}",
         result: {
             valid: false,
-            errors: ["key piece value must not be null or empty string: `aggregatable_trigger_data`"],
+            errors: ["key piece must not be null or empty string: `aggregatable_trigger_data`"],
             warnings: []
         }
     },
@@ -1187,7 +1101,7 @@ const triggerTestCases = [
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"\"}]}",
         result: {
             valid: false,
-            errors: ["key piece value must not be null or empty string: `aggregatable_trigger_data`"],
+            errors: ["key piece must not be null or empty string: `aggregatable_trigger_data`"],
             warnings: []
         }
     },
@@ -1200,7 +1114,7 @@ const triggerTestCases = [
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"1x6E2\"}]}",
         result: {
             valid: false,
-            errors: ["key piece value must start with '0x' or '0X': `aggregatable_trigger_data`"],
+            errors: ["key piece must start with '0x' or '0X': `aggregatable_trigger_data`"],
             warnings: []
         }
     },
@@ -1213,7 +1127,7 @@ const triggerTestCases = [
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0X\"}]}",
         result: {
             valid: false,
-            errors: ["key piece value string size must be in the byte range (3 bytes - 34 bytes): `aggregatable_trigger_data`"],
+            errors: ["key piece string size must be in the byte range (3 bytes - 34 bytes): `aggregatable_trigger_data`"],
             warnings: []
         }
     },
@@ -1226,7 +1140,7 @@ const triggerTestCases = [
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0Xa1B2C3d4E5f6\"}]}",
         result: {
             valid: false,
-            errors: ["key piece value string size must be in the byte range (3 bytes - 34 bytes): `aggregatable_trigger_data`"],
+            errors: ["key piece string size must be in the byte range (3 bytes - 34 bytes): `aggregatable_trigger_data`"],
             warnings: []
         }
     },
@@ -1239,7 +1153,7 @@ const triggerTestCases = [
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x22g3c\"}]}",
         result: {
             valid: false,
-            errors: ["key piece values must be hexadecimal: `aggregatable_trigger_data`"],
+            errors: ["key piece must be hexadecimal: `aggregatable_trigger_data`"],
             warnings: []
         }
     },
@@ -1261,7 +1175,6 @@ const triggerTestCases = [
         flags: {
             "min_bytes_per_aggregate_value": 3,
             "max_bytes_per_aggregate_value": 10,
-            "feature-enable-update-trigger-header-limit": false,
             "max_aggregate_keys_per_trigger_registration": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"source_keys\":[\"1\",\"2\",\"3\"]}]}",
@@ -1291,7 +1204,6 @@ const triggerTestCases = [
         flags: {
             "min_bytes_per_aggregate_value": 3,
             "max_bytes_per_aggregate_value": 10,
-            "feature-enable-update-trigger-header-limit": false,
             "max_aggregate_keys_per_trigger_registration": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"source_keys\":[\"1\",2]}]}",
@@ -1306,7 +1218,6 @@ const triggerTestCases = [
         flags: {
             "min_bytes_per_aggregate_value": 3,
             "max_bytes_per_aggregate_value": 10,
-            "feature-enable-update-trigger-header-limit": false,
             "max_aggregate_keys_per_trigger_registration": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"source_keys\":[\"\"]}]}",
@@ -1321,7 +1232,6 @@ const triggerTestCases = [
         flags: {
             "min_bytes_per_aggregate_value": 3,
             "max_bytes_per_aggregate_value": 10,
-            "feature-enable-update-trigger-header-limit": false,
             "max_aggregate_keys_per_trigger_registration": 2,
             "max_bytes_per_attribution_aggregate_key_id": 3
         },
@@ -1448,9 +1358,7 @@ const triggerTestCases = [
             "min_bytes_per_aggregate_value": 3,
             "max_bytes_per_aggregate_value": 10,
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"filters\":[{\"ABCDEFGHIJKLMNOPQRSTUVWXYZ\":[\"A\"]}]}]}",
         result: {
@@ -1465,9 +1373,7 @@ const triggerTestCases = [
             "min_bytes_per_aggregate_value": 3,
             "max_bytes_per_aggregate_value": 10,
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"not_filters\":{\"ABCDEFGHIJKLMNOPQRSTUVWXYZ\":[\"A\"]}}]}",
         result: {
@@ -1481,8 +1387,6 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
             "feature-lookback-window-filter": false
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"filters\":[{\"_lookback_window\":\"A\"}]}]}",
@@ -1497,8 +1401,6 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
             "feature-lookback-window-filter": false
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"not_filters\":[{\"_lookback_window\":\"A\"}]}]}",
@@ -1512,10 +1414,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Non-Numeric String `filters`) Aggregatable Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"filters\":[{\"_lookback_window\":\"A\"}]}]}",
         result: {
@@ -1528,10 +1427,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Non-Numeric String `not_filters`) Aggregatable Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"not_filters\":[{\"_lookback_window\":\"A\"}]}]}",
         result: {
@@ -1544,10 +1440,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Negative String `filters`) Aggregatable Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"filters\":[{\"_lookback_window\":\"-2\"}]}]}",
         result: {
@@ -1560,10 +1453,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Negative String `not_filters`) Aggregatable Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"not_filters\":[{\"_lookback_window\":\"-2\"}]}]}",
         result: {
@@ -1576,10 +1466,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Negative Number `filters`) Aggregatable Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"filters\":[{\"_lookback_window\":-2}]}]}",
         result: {
@@ -1592,10 +1479,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Negative Number `not_filters`) Aggregatable Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"not_filters\":[{\"_lookback_window\":-2}]}]}",
         result: {
@@ -1608,10 +1492,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Valid `filters`) Aggregatable Trigger Data | Valid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"filters\":[{\"_lookback_window\":\"0\"}]}]}",
         result: {
@@ -1624,10 +1505,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Valid `not_filters`) Aggregatable Trigger Data | Valid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"not_filters\":[{\"_lookback_window\":\"0\"}]}]}",
         result: {
@@ -1640,10 +1518,7 @@ const triggerTestCases = [
         name: "(Filter Key Starts with Underscore `filters`) Aggregatable Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"filters\":[{\"_filter_1\":[\"0\"]}]}]}",
         result: {
@@ -1656,10 +1531,7 @@ const triggerTestCases = [
         name: "(Filter Key Starts with Underscore `not_filters`) Aggregatable Trigger Data | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"not_filters\":[{\"_filter_1\":[\"0\"]}]}]}",
         result: {
@@ -1674,9 +1546,7 @@ const triggerTestCases = [
             "min_bytes_per_aggregate_value": 3,
             "max_bytes_per_aggregate_value": 10,
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"filters\":[{\"filter_1\":{\"name\": \"A\"}}]}]}",
         result: {
@@ -1691,9 +1561,7 @@ const triggerTestCases = [
             "min_bytes_per_aggregate_value": 3,
             "max_bytes_per_aggregate_value": 10,
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"not_filters\":[{\"filter_1\":{\"name\": \"A\"}}]}]}",
         result: {
@@ -1709,9 +1577,7 @@ const triggerTestCases = [
             "max_bytes_per_aggregate_value": 10,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"filters\":[{\"filter_1\":[\"A\", \"B\", \"C\"]}]}]}",
         result: {
@@ -1727,9 +1593,7 @@ const triggerTestCases = [
             "max_bytes_per_aggregate_value": 10,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"not_filters\":[{\"filter_1\":[\"A\", \"B\", \"C\"]}]}]}",
         result: {
@@ -1745,9 +1609,7 @@ const triggerTestCases = [
             "max_bytes_per_aggregate_value": 10,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"filters\":[{\"filter_1\":[\"A\", 2]}]}]}",
         result: {
@@ -1763,9 +1625,7 @@ const triggerTestCases = [
             "max_bytes_per_aggregate_value": 10,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"not_filters\":[{\"filter_1\":[\"A\", 2]}]}]}",
         result: {
@@ -1781,9 +1641,7 @@ const triggerTestCases = [
             "max_bytes_per_aggregate_value": 10,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"filters\":[{\"filter_1\":[\"A\", \"ABCDEFGHIJKLMNOPQRSTUVWXYZ\"]}]}]}",
         result: {
@@ -1799,9 +1657,7 @@ const triggerTestCases = [
             "max_bytes_per_aggregate_value": 10,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"not_filters\":[{\"filter_1\":[\"A\", \"ABCDEFGHIJKLMNOPQRSTUVWXYZ\"]}]}]}",
         result: {
@@ -1817,9 +1673,7 @@ const triggerTestCases = [
             "max_bytes_per_aggregate_value": 10,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"filters\":[{\"filter_1\":[\"A\", \"123\"]}]}]}",
         result: {
@@ -1835,9 +1689,7 @@ const triggerTestCases = [
             "max_bytes_per_aggregate_value": 10,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"not_filters\":[{\"filter_1\":[\"A\", \"123\"]}]}]}",
         result: {
@@ -1853,9 +1705,7 @@ const triggerTestCases = [
             "max_bytes_per_aggregate_value": 10,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"filters\":{\"filter_1\":[\"A\", \"123\"]}}]}",
         result: {
@@ -1871,9 +1721,7 @@ const triggerTestCases = [
             "max_bytes_per_aggregate_value": 10,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_trigger_data\":[{\"key_piece\":\"0x1\", \"not_filters\":{\"filter_1\":[\"A\", \"123\"]}}]}",
         result: {
@@ -1931,7 +1779,6 @@ const triggerTestCases = [
     {
         name: "(Non-Object) Aggregatable Values | Invalid",
         flags: {
-            "feature-enable-update-trigger-header-limit": false,
             "max_aggregate_keys_per_trigger_registration": 2
         },
         json: "{\"aggregatable_values\":[]}",
@@ -1944,7 +1791,6 @@ const triggerTestCases = [
     {
         name: "(Empty String Element) Aggregatable Values | Invalid",
         flags: {
-            "feature-enable-update-trigger-header-limit": false,
             "max_aggregate_keys_per_trigger_registration": 2
         },
         json: "{\"aggregatable_values\":{\"\":1}}",
@@ -1957,7 +1803,6 @@ const triggerTestCases = [
     {
         name: "(Key Byte Size Exceeded) Aggregatable Values | Invalid",
         flags: {
-            "feature-enable-update-trigger-header-limit": false,
             "max_aggregate_keys_per_trigger_registration": 2,
             "max_bytes_per_attribution_aggregate_key_id": 3
         },
@@ -1971,7 +1816,6 @@ const triggerTestCases = [
     {
         name: "(Non-Numeric) Aggregatable Values | Invalid",
         flags: {
-            "feature-enable-update-trigger-header-limit": false,
             "max_aggregate_keys_per_trigger_registration": 2,
             "max_bytes_per_attribution_aggregate_key_id": 3
         },
@@ -1985,7 +1829,6 @@ const triggerTestCases = [
     {
         name: "(Non-Integer) Aggregatable Values | Invalid",
         flags: {
-            "feature-enable-update-trigger-header-limit": false,
             "max_aggregate_keys_per_trigger_registration": 2,
             "max_bytes_per_attribution_aggregate_key_id": 3
         },
@@ -1999,7 +1842,6 @@ const triggerTestCases = [
     {
         name: "(Integer 64 Bit) Aggregatable Values | Invalid",
         flags: {
-            "feature-enable-update-trigger-header-limit": false,
             "max_aggregate_keys_per_trigger_registration": 2,
             "max_bytes_per_attribution_aggregate_key_id": 3
         },
@@ -2013,7 +1855,6 @@ const triggerTestCases = [
     {
         name: "(Zero) Aggregatable Values | Invalid",
         flags: {
-            "feature-enable-update-trigger-header-limit": false,
             "max_aggregate_keys_per_trigger_registration": 2,
             "max_bytes_per_attribution_aggregate_key_id": 3
         },
@@ -2027,7 +1868,6 @@ const triggerTestCases = [
     {
         name: "(Exceeds Max Sum of Aggregate Values Per Source) Aggregatable Values | Invalid",
         flags: {
-            "feature-enable-update-trigger-header-limit": false,
             "max_aggregate_keys_per_trigger_registration": 2,
             "max_bytes_per_attribution_aggregate_key_id": 3,
             "max_sum_of_aggregate_values_per_source": 10
@@ -2088,9 +1928,7 @@ const triggerTestCases = [
         name: "(Filter String Byte Size Limit Exceeded) Filters | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false
+            "max_attribution_filters": 2
         },
         json: "{\"filters\":[{\"ABCDEFGHIJKLMNOPQRSTUVWXYZ\":[\"A\"]}]}",
         result: {
@@ -2104,8 +1942,6 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
             "feature-lookback-window-filter": false
         },
         json: "{\"filters\":[{\"_lookback_window\":\"A\"}]}",
@@ -2119,10 +1955,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Non-Numeric String) Filters | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"filters\":[{\"_lookback_window\":\"A\"}]}",
         result: {
@@ -2135,10 +1968,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Negative String) Filters | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"filters\":[{\"_lookback_window\":\"-2\"}]}",
         result: {
@@ -2151,10 +1981,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Negative Number) Filters | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"filters\":[{\"_lookback_window\":-2}]}",
         result: {
@@ -2167,10 +1994,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Valid) Filters | Valid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"filters\":[{\"_lookback_window\":\"0\"}]}",
         result: {
@@ -2183,10 +2007,7 @@ const triggerTestCases = [
         name: "(Filter Key Starts with Underscore) Filters | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"filters\":[{\"_filter_1\":[\"0\"]}]}",
         result: {
@@ -2199,10 +2020,7 @@ const triggerTestCases = [
         name: "(Non-Array Filter Value) Filters | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"filters\":[{\"filter_1\":{\"name\": \"A\"}}]}",
         result: {
@@ -2216,10 +2034,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"filters\":[{\"filter_1\":[\"A\", \"B\", \"C\"]}]}",
         result: {
@@ -2233,10 +2048,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"filters\":[{\"filter_1\":[\"A\", 2]}]}",
         result: {
@@ -2250,10 +2062,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"filters\":[{\"filter_1\":[\"A\", \"ABCDEFGHIJKLMNOPQRSTUVWXYZ\"]}]}",
         result: {
@@ -2267,10 +2076,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"filters\":[{\"filter_1\":[\"A\", \"123\"]}]}",
         result: {
@@ -2284,10 +2090,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"filters\":{\"filter_1\":[\"A\", \"123\"]}}",
         result: {
@@ -2345,9 +2148,7 @@ const triggerTestCases = [
         name: "(Filter String Byte Size Limit Exceeded) Not Filters | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false
+            "max_attribution_filters": 2
         },
         json: "{\"not_filters\":[{\"ABCDEFGHIJKLMNOPQRSTUVWXYZ\":[\"A\"]}]}",
         result: {
@@ -2361,8 +2162,6 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
             "feature-lookback-window-filter": false
         },
         json: "{\"not_filters\":[{\"_lookback_window\":\"A\"}]}",
@@ -2376,10 +2175,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Non-Numeric String) Not Filters | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"not_filters\":[{\"_lookback_window\":\"A\"}]}",
         result: {
@@ -2392,10 +2188,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Negative String) Not Filters | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"not_filters\":[{\"_lookback_window\":\"-2\"}]}",
         result: {
@@ -2408,10 +2201,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Negative Number) Not Filters | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"not_filters\":[{\"_lookback_window\":-2}]}",
         result: {
@@ -2424,10 +2214,7 @@ const triggerTestCases = [
         name: "('_lookback_window' Valid) Not Filters | Valid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"not_filters\":[{\"_lookback_window\":\"0\"}]}",
         result: {
@@ -2440,10 +2227,7 @@ const triggerTestCases = [
         name: "(Filter Key Starts with Underscore) Not Filters | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"not_filters\":[{\"_filter_1\":[\"0\"]}]}",
         result: {
@@ -2456,10 +2240,7 @@ const triggerTestCases = [
         name: "(Non-Array Filter Value) Not Filters | Invalid",
         flags: {
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"not_filters\":[{\"filter_1\":{\"name\": \"A\"}}]}",
         result: {
@@ -2473,10 +2254,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"not_filters\":[{\"filter_1\":[\"A\", \"B\", \"C\"]}]}",
         result: {
@@ -2490,10 +2268,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"not_filters\":[{\"filter_1\":[\"A\", 2]}]}",
         result: {
@@ -2507,10 +2282,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"not_filters\":[{\"filter_1\":[\"A\", \"ABCDEFGHIJKLMNOPQRSTUVWXYZ\"]}]}",
         result: {
@@ -2524,10 +2296,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"not_filters\":[{\"filter_1\":[\"A\", \"123\"]}]}",
         result: {
@@ -2541,10 +2310,7 @@ const triggerTestCases = [
         flags: {
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"not_filters\":{\"filter_1\":[\"A\", \"123\"]}}",
         result: {
@@ -2608,18 +2374,6 @@ const triggerTestCases = [
         result: {
             valid: false,
             errors: ["'deduplication_key' must be an uint64 (must match /^[0-9]+$/): `aggregatable_deduplication_keys`"],
-            warnings: []
-        }
-    },
-    {
-        name: "(Positive `deduplication_key`) Aggregatable Deduplication Keys | Valid",
-        flags: {
-            "max_aggregate_deduplication_keys_per_registration": 2
-        },
-        json: "{\"aggregatable_deduplication_keys\":[{\"deduplication_key\":\"1\"}]}",
-        result: {
-            valid: true,
-            errors: [],
             warnings: []
         }
     },
@@ -2742,9 +2496,7 @@ const triggerTestCases = [
         flags: {
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"filters\":[{\"ABCDEFGHIJKLMNOPQRSTUVWXYZ\":[\"A\"]}]}]}",
         result: {
@@ -2758,9 +2510,7 @@ const triggerTestCases = [
         flags: {
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"not_filters\":[{\"ABCDEFGHIJKLMNOPQRSTUVWXYZ\":[\"A\"]}]}]}",
         result: {
@@ -2775,8 +2525,6 @@ const triggerTestCases = [
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
             "feature-lookback-window-filter": false
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"filters\":[{\"_lookback_window\":\"A\"}]}]}",
@@ -2792,8 +2540,6 @@ const triggerTestCases = [
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
             "feature-lookback-window-filter": false
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"not_filters\":[{\"_lookback_window\":\"A\"}]}]}",
@@ -2808,10 +2554,7 @@ const triggerTestCases = [
         flags: {
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"filters\":[{\"_lookback_window\":\"A\"}]}]}",
         result: {
@@ -2825,10 +2568,7 @@ const triggerTestCases = [
         flags: {
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"not_filters\":[{\"_lookback_window\":\"A\"}]}]}",
         result: {
@@ -2842,10 +2582,7 @@ const triggerTestCases = [
         flags: {
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"filters\":[{\"_lookback_window\":\"-2\"}]}]}",
         result: {
@@ -2859,10 +2596,7 @@ const triggerTestCases = [
         flags: {
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"not_filters\":[{\"_lookback_window\":\"-2\"}]}]}",
         result: {
@@ -2876,10 +2610,7 @@ const triggerTestCases = [
         flags: {
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"filters\":[{\"_lookback_window\":-2}]}]}",
         result: {
@@ -2893,10 +2624,7 @@ const triggerTestCases = [
         flags: {
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"not_filters\":[{\"_lookback_window\":-2}]}]}",
         result: {
@@ -2910,10 +2638,7 @@ const triggerTestCases = [
         flags: {
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"filters\":[{\"_lookback_window\":\"0\"}]}]}",
         result: {
@@ -2927,10 +2652,7 @@ const triggerTestCases = [
         flags: {
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"not_filters\":[{\"_lookback_window\":\"0\"}]}]}",
         result: {
@@ -2944,10 +2666,7 @@ const triggerTestCases = [
         flags: {
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"filters\":[{\"_filter_1\":[\"0\"]}]}]}",
         result: {
@@ -2961,10 +2680,7 @@ const triggerTestCases = [
         flags: {
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"not_filters\":[{\"_filter_1\":[\"0\"]}]}]}",
         result: {
@@ -2978,10 +2694,7 @@ const triggerTestCases = [
         flags: {
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"filters\":[{\"filter_1\":{\"name\": \"A\"}}]}]}",
         result: {
@@ -2995,10 +2708,7 @@ const triggerTestCases = [
         flags: {
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
-            "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_attribution_filters": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"not_filters\":[{\"filter_1\":{\"name\": \"A\"}}]}]}",
         result: {
@@ -3013,10 +2723,7 @@ const triggerTestCases = [
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"filters\":[{\"filter_1\":[\"A\", \"B\", \"C\"]}]}]}",
         result: {
@@ -3031,10 +2738,7 @@ const triggerTestCases = [
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"not_filters\":[{\"filter_1\":[\"A\", \"B\", \"C\"]}]}]}",
         result: {
@@ -3049,10 +2753,7 @@ const triggerTestCases = [
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"filters\":[{\"filter_1\":[\"A\", 2]}]}]}",
         result: {
@@ -3067,10 +2768,7 @@ const triggerTestCases = [
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"not_filters\":[{\"filter_1\":[\"A\", 2]}]}]}",
         result: {
@@ -3085,10 +2783,7 @@ const triggerTestCases = [
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"filters\":[{\"filter_1\":[\"A\", \"ABCDEFGHIJKLMNOPQRSTUVWXYZ\"]}]}]}",
         result: {
@@ -3103,10 +2798,7 @@ const triggerTestCases = [
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"not_filters\":[{\"filter_1\":[\"A\", \"ABCDEFGHIJKLMNOPQRSTUVWXYZ\"]}]}]}",
         result: {
@@ -3121,10 +2813,7 @@ const triggerTestCases = [
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"filters\":[{\"filter_1\":[\"A\", \"123\"]}]}]}",
         result: {
@@ -3139,10 +2828,7 @@ const triggerTestCases = [
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"not_filters\":[{\"filter_1\":[\"A\", \"123\"]}]}]}",
         result: {
@@ -3157,10 +2843,7 @@ const triggerTestCases = [
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"filters\":{\"filter_1\":[\"A\", \"123\"]}}]}",
         result: {
@@ -3175,10 +2858,7 @@ const triggerTestCases = [
             "max_aggregate_deduplication_keys_per_registration": 2,
             "max_filter_maps_per_filter_set": 2,
             "max_attribution_filters": 2,
-            "max_bytes_per_attribution_filter_string": 25,
-            "max_values_per_attribution_filter": 2,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+            "max_values_per_attribution_filter": 2
         },
         json: "{\"aggregatable_deduplication_keys\":[{\"not_filters\":{\"filter_1\":[\"A\", \"123\"]}}]}",
         result: {
@@ -3189,9 +2869,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-Array) Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":{}}",
         result: {
             valid: false,
@@ -3201,9 +2879,7 @@ const triggerTestCases = [
     },
     {
         name: "(Array of Non-Objects) Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{},{},[],{}]}",
         result: {
             valid: false,
@@ -3213,9 +2889,7 @@ const triggerTestCases = [
     },
     {
         name: "(Missing Required Key 'source_network') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"trigger_network\":\"A\"}]}",
         result: {
             valid: false,
@@ -3225,9 +2899,7 @@ const triggerTestCases = [
     },
     {
         name: "(Null Value for Required Key 'source_network') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":null}]}",
         result: {
             valid: false,
@@ -3237,9 +2909,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-String Required Key 'source_network' Present) Attribution Config | Valid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":false}]}",
         result: {
             valid: true,
@@ -3249,9 +2919,7 @@ const triggerTestCases = [
     },
     {
         name: "(String Required Key 'source_network' Present) Attribution Config | Valid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\"}]}",
         result: {
             valid: true,
@@ -3261,9 +2929,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-Object 'source_priority_range') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_priority_range\":[]}]}",
         result: {
             valid: false,
@@ -3273,9 +2939,7 @@ const triggerTestCases = [
     },
     {
         name: "(Object Missing 'start' and 'end' Keys 'source_priority_range') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_priority_range\":{}}]}",
         result: {
             valid: false,
@@ -3285,9 +2949,7 @@ const triggerTestCases = [
     },
     {
         name: "(Null 'start' and 'end' Keys 'source_priority_range') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_priority_range\":{\"start\":null, \"end\":null}}]}",
         result: {
             valid: false,
@@ -3297,9 +2959,7 @@ const triggerTestCases = [
     },
     {
         name: "(Object Missing 'start' Key 'source_priority_range') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_priority_range\":{\"end\":1}}]}",
         result: {
             valid: false,
@@ -3309,9 +2969,7 @@ const triggerTestCases = [
     },
     {
         name: "(Object Missing 'end' Key 'source_priority_range') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_priority_range\":{\"start\":1}}]}",
         result: {
             valid: false,
@@ -3321,9 +2979,7 @@ const triggerTestCases = [
     },
     {
         name: "((Can't be Casted to a Number) Objects Key 'start') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_priority_range\":{\"start\":false, \"end\":\"2\"}}]}",
         result: {
             valid: false,
@@ -3333,9 +2989,7 @@ const triggerTestCases = [
     },
     {
         name: "((Can't be Casted to a Number) Objects Key 'end') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_priority_range\":{\"start\":1, \"end\":\"true\"}}]}",
         result: {
             valid: false,
@@ -3345,9 +2999,7 @@ const triggerTestCases = [
     },
     {
         name: "((Numeric) Both Objects Keys ('start' & 'end') Present 'source_priority_range') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_priority_range\":{\"start\":1, \"end\":2}}]}",
         result: {
             valid: true,
@@ -3357,9 +3009,7 @@ const triggerTestCases = [
     },
     {
         name: "((Numeric-String) Both Objects Keys ('start' & 'end') Present 'source_priority_range') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_priority_range\":{\"start\":\"1\", \"end\":\"2\"}}]}",
         result: {
             valid: true,
@@ -3369,9 +3019,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-(Array/Object) 'source_filters') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_filters\":1}]}",
         result: {
             valid: false,
@@ -3381,9 +3029,7 @@ const triggerTestCases = [
     },
     {
         name: "((Object) 'source_filters') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_filters\":{}}]}",
         result: {
             valid: true,
@@ -3393,9 +3039,7 @@ const triggerTestCases = [
     },
     {
         name: "((Array) 'source_filters') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_filters\":[]}]}",
         result: {
             valid: true,
@@ -3405,9 +3049,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-Array of Objects 'source_filters') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_filters\":[{},[],{}]}]}",
         result: {
             valid: false,
@@ -3418,7 +3060,6 @@ const triggerTestCases = [
     {
         name: "(Lookback Filter Flag Disabled | Non-Array Filter Value 'source_filters') Attribution Config | Invalid",
         flags: {
-            "feature-xna": true,
             "feature-lookback-window-filter": false
         },
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_filters\":[{\"filter_1\":1}]}]}",
@@ -3431,7 +3072,6 @@ const triggerTestCases = [
     {
         name: "(Lookback Filter Flag Disabled | Null Filter Value Array Elements 'source_filters') Attribution Config | Invalid",
         flags: {
-            "feature-xna": true,
             "feature-lookback-window-filter": false
         },
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_filters\":[{\"filter_1\":[null]}]}]}",
@@ -3444,7 +3084,6 @@ const triggerTestCases = [
     {
         name: "(Lookback Filter Flag Disabled | Non-String Filter Value Array Elements 'source_filters') Attribution Config | Valid",
         flags: {
-            "feature-xna": true,
             "feature-lookback-window-filter": false
         },
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_filters\":[{\"filter_1\":[true]}]}]}",
@@ -3457,7 +3096,6 @@ const triggerTestCases = [
     {
         name: "(Lookback Filter Flag Disabled | String Filter Value Array Elements 'source_filters') Attribution Config | Valid",
         flags: {
-            "feature-xna": true,
             "feature-lookback-window-filter": false
         },
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_filters\":[{\"filter_1\":[\"true\"]}]}]}",
@@ -3469,10 +3107,7 @@ const triggerTestCases = [
     },
     {
         name: "(Null Lookback Window 'source_filters') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true,
-            "feature-lookback-window-filter": true
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_filters\":[{\"_lookback_window\":null}]}]}",
         result: {
             valid: false,
@@ -3482,10 +3117,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-Numeric String Lookback Window 'source_filters') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true,
-            "feature-lookback-window-filter": true
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_filters\":[{\"_lookback_window\":\"A\"}]}]}",
         result: {
             valid: false,
@@ -3495,10 +3127,7 @@ const triggerTestCases = [
     },
     {
         name: "(Numeric String Lookback Window 'source_filters') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true,
-            "feature-lookback-window-filter": true
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_filters\":[{\"_lookback_window\":\"-1\"}]}]}",
         result: {
             valid: true,
@@ -3508,10 +3137,7 @@ const triggerTestCases = [
     },
     {
         name: "(Numeric Lookback Window 'source_filters') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true,
-            "feature-lookback-window-filter": true
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_filters\":[{\"_lookback_window\":-1}]}]}",
         result: {
             valid: true,
@@ -3521,9 +3147,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-(Array/Object) 'source_not_filters') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_not_filters\":1}]}",
         result: {
             valid: false,
@@ -3533,9 +3157,7 @@ const triggerTestCases = [
     },
     {
         name: "((Object) 'source_not_filters') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_not_filters\":{}}]}",
         result: {
             valid: true,
@@ -3545,9 +3167,7 @@ const triggerTestCases = [
     },
     {
         name: "((Array) 'source_not_filters') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_not_filters\":[]}]}",
         result: {
             valid: true,
@@ -3557,9 +3177,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-Array of Objects 'source_not_filters') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_not_filters\":[{},[],{}]}]}",
         result: {
             valid: false,
@@ -3570,7 +3188,6 @@ const triggerTestCases = [
     {
         name: "(Lookback Filter Flag Disabled | Non-Array Filter Value 'source_not_filters') Attribution Config | Invalid",
         flags: {
-            "feature-xna": true,
             "feature-lookback-window-filter": false
         },
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_not_filters\":[{\"filter_1\":1}]}]}",
@@ -3583,7 +3200,6 @@ const triggerTestCases = [
     {
         name: "(Lookback Filter Flag Disabled | Null Filter Value Array Elements 'source_not_filters') Attribution Config | Invalid",
         flags: {
-            "feature-xna": true,
             "feature-lookback-window-filter": false
         },
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_not_filters\":[{\"filter_1\":[null]}]}]}",
@@ -3596,7 +3212,6 @@ const triggerTestCases = [
     {
         name: "(Lookback Filter Flag Disabled | Non-String Filter Value Array Elements 'source_not_filters') Attribution Config | Valid",
         flags: {
-            "feature-xna": true,
             "feature-lookback-window-filter": false
         },
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_not_filters\":[{\"filter_1\":[true]}]}]}",
@@ -3609,7 +3224,6 @@ const triggerTestCases = [
     {
         name: "(Lookback Filter Flag Disabled | String Filter Value Array Elements 'source_not_filters') Attribution Config | Valid",
         flags: {
-            "feature-xna": true,
             "feature-lookback-window-filter": false
         },
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_not_filters\":[{\"filter_1\":[\"true\"]}]}]}",
@@ -3621,10 +3235,7 @@ const triggerTestCases = [
     },
     {
         name: "(Null Lookback Window 'source_not_filters') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true,
-            "feature-lookback-window-filter": true
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_not_filters\":[{\"_lookback_window\":null}]}]}",
         result: {
             valid: false,
@@ -3634,10 +3245,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-Numeric String Lookback Window 'source_not_filters') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true,
-            "feature-lookback-window-filter": true
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_not_filters\":[{\"_lookback_window\":\"A\"}]}]}",
         result: {
             valid: false,
@@ -3647,10 +3255,7 @@ const triggerTestCases = [
     },
     {
         name: "(Numeric String Lookback Window 'source_not_filters') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true,
-            "feature-lookback-window-filter": true
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_not_filters\":[{\"_lookback_window\":\"-1\"}]}]}",
         result: {
             valid: true,
@@ -3660,10 +3265,7 @@ const triggerTestCases = [
     },
     {
         name: "(Numeric Lookback Window 'source_not_filters') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true,
-            "feature-lookback-window-filter": true
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_not_filters\":[{\"_lookback_window\":-1}]}]}",
         result: {
             valid: true,
@@ -3673,9 +3275,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-(Array/Object) 'filter_data') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"filter_data\":1}]}",
         result: {
             valid: false,
@@ -3685,9 +3285,7 @@ const triggerTestCases = [
     },
     {
         name: "((Object) 'filter_data') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"filter_data\":{}}]}",
         result: {
             valid: true,
@@ -3697,9 +3295,7 @@ const triggerTestCases = [
     },
     {
         name: "((Array) 'filter_data') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"filter_data\":[]}]}",
         result: {
             valid: true,
@@ -3709,9 +3305,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-Array of Objects 'filter_data') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"filter_data\":[{},[],{}]}]}",
         result: {
             valid: false,
@@ -3722,7 +3316,6 @@ const triggerTestCases = [
     {
         name: "(Lookback Filter Flag Disabled | Non-Array Filter Value 'filter_data') Attribution Config | Invalid",
         flags: {
-            "feature-xna": true,
             "feature-lookback-window-filter": false
         },
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"filter_data\":[{\"filter_1\":1}]}]}",
@@ -3735,7 +3328,6 @@ const triggerTestCases = [
     {
         name: "(Lookback Filter Flag Disabled | Null Filter Value Array Elements 'filter_data') Attribution Config | Invalid",
         flags: {
-            "feature-xna": true,
             "feature-lookback-window-filter": false
         },
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"filter_data\":[{\"filter_1\":[null]}]}]}",
@@ -3748,7 +3340,6 @@ const triggerTestCases = [
     {
         name: "(Lookback Filter Flag Disabled | Non-String Filter Value Array Elements 'filter_data') Attribution Config | Valid",
         flags: {
-            "feature-xna": true,
             "feature-lookback-window-filter": false
         },
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"filter_data\":[{\"filter_1\":[true]}]}]}",
@@ -3761,7 +3352,6 @@ const triggerTestCases = [
     {
         name: "(Lookback Filter Flag Disabled | String Filter Value Array Elements 'filter_data') Attribution Config | Valid",
         flags: {
-            "feature-xna": true,
             "feature-lookback-window-filter": false
         },
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"filter_data\":[{\"filter_1\":[\"true\"]}]}]}",
@@ -3774,7 +3364,6 @@ const triggerTestCases = [
     {
         name: "(Lookback Filter Flag Disabled | Lookback Window Key Present 'filter_data') Attribution Config | Valid",
         flags: {
-            "feature-xna": true,
             "feature-lookback-window-filter": false
         },
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"filter_data\":[{\"_lookback_window\":[\"true\"]}]}]}",
@@ -3786,10 +3375,7 @@ const triggerTestCases = [
     },
     {
         name: "(Null Lookback Window 'filter_data') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true,
-            "feature-lookback-window-filter": true
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"filter_data\":[{\"_lookback_window\":null}]}]}",
         result: {
             valid: false,
@@ -3799,10 +3385,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-Numeric String Lookback Window 'filter_data') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true,
-            "feature-lookback-window-filter": true
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"filter_data\":[{\"_lookback_window\":\"A\"}]}]}",
         result: {
             valid: false,
@@ -3812,10 +3395,7 @@ const triggerTestCases = [
     },
     {
         name: "(Numeric String Lookback Window 'filter_data') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true,
-            "feature-lookback-window-filter": true
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"filter_data\":[{\"_lookback_window\":\"-1\"}]}]}",
         result: {
             valid: true,
@@ -3825,10 +3405,7 @@ const triggerTestCases = [
     },
     {
         name: "(Numeric Lookback Window 'filter_data') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true,
-            "feature-lookback-window-filter": true
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"filter_data\":[{\"_lookback_window\":-1}]}]}",
         result: {
             valid: true,
@@ -3838,9 +3415,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-Numeric 'source_expiry_override') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_expiry_override\":\"true\"}]}",
         result: {
             valid: false,
@@ -3850,9 +3425,7 @@ const triggerTestCases = [
     },
     {
         name: "(Numeric-String 'source_expiry_override') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_expiry_override\":\"1\"}]}",
         result: {
             valid: true,
@@ -3862,9 +3435,7 @@ const triggerTestCases = [
     },
     {
         name: "(Numeric 'source_expiry_override') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_expiry_override\":1}]}",
         result: {
             valid: true,
@@ -3874,9 +3445,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-Numeric 'priority') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"priority\":\"true\"}]}",
         result: {
             valid: false,
@@ -3886,9 +3455,7 @@ const triggerTestCases = [
     },
     {
         name: "(Numeric-String 'priority') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"priority\":\"1\"}]}",
         result: {
             valid: true,
@@ -3898,9 +3465,7 @@ const triggerTestCases = [
     },
     {
         name: "(Numeric 'priority') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"priority\":1}]}",
         result: {
             valid: true,
@@ -3910,9 +3475,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-Numeric 'expiry') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"expiry\":\"true\"}]}",
         result: {
             valid: false,
@@ -3922,9 +3485,7 @@ const triggerTestCases = [
     },
     {
         name: "(Numeric-String 'expiry') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"expiry\":\"1\"}]}",
         result: {
             valid: true,
@@ -3934,9 +3495,7 @@ const triggerTestCases = [
     },
     {
         name: "(Numeric 'expiry') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"expiry\":1}]}",
         result: {
             valid: true,
@@ -3946,9 +3505,7 @@ const triggerTestCases = [
     },
     {
         name: "(Non-Numeric 'post_install_exclusivity_window') Attribution Config | Invalid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"post_install_exclusivity_window\":\"true\"}]}",
         result: {
             valid: false,
@@ -3958,9 +3515,7 @@ const triggerTestCases = [
     },
     {
         name: "(Numeric-String 'post_install_exclusivity_window') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"post_install_exclusivity_window\":\"1\"}]}",
         result: {
             valid: true,
@@ -3970,9 +3525,7 @@ const triggerTestCases = [
     },
     {
         name: "(Numeric 'post_install_exclusivity_window') Attribution Config | Valid",
-        flags: {
-            "feature-xna": true  
-        },
+        flags: {},
         json: "{\"attribution_config\":[{\"source_network\":\"A\", \"post_install_exclusivity_window\":1}]}",
         result: {
             valid: true,
@@ -3981,16 +3534,838 @@ const triggerTestCases = [
         }
     },
     {
-        name: "(Null) Top-Level Key Values | Valid",
-        flags: {
-            "feature-attribution-scopes": true,
-            "feature-xna": true,
-            "feature-aggregation-coordinator-origin": true,
-            "feature-source-registration-time-optional-for-agg-reports": true,
-            "feature-trigger-context-id": true,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
+        name: "(Lower Limit 'source_expiry_override') Expected Value - Attribution Config",
+        flags: {},
+        json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_expiry_override\":\"-1\"}]}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: []
         },
+        expected_value: {
+            "attribution_config": "[{\"source_network\":\"A\",\"source_expiry_override\":86400}]"
+        }
+    },
+    {
+        name: "(Upper Limit 'source_expiry_override') Expected Value - Attribution Config",
+        flags: {},
+        json: "{\"attribution_config\":[{\"source_network\":\"A\", \"source_expiry_override\":\"2592001\"}]}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: []
+        },
+        expected_value: {
+            "attribution_config": "[{\"source_network\":\"A\",\"source_expiry_override\":2592000}]"
+        }
+    },
+    {
+        name: "(Lower Limit 'expiry') Expected Value - Attribution Config",
+        flags: {},
+        json: "{\"attribution_config\":[{\"source_network\":\"A\", \"expiry\":\"-1\"}]}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: []
+        },
+        expected_value: {
+            "attribution_config": "[{\"source_network\":\"A\",\"expiry\":86400}]"
+        }
+    },
+    {
+        name: "(Upper Limit 'expiry') Expected Value - Attribution Config",
+        flags: {},
+        json: "{\"attribution_config\":[{\"source_network\":\"A\", \"expiry\":\"2592001\"}]}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: []
+        },
+        expected_value: {
+            "attribution_config": "[{\"source_network\":\"A\",\"expiry\":2592000}]"
+        }
+    },
+    {
+        name: "(Non-Array) Named Budgets | Invalid",
+        flags: {},
+        json: "{\"named_budgets\":{}}",
+        result: {
+            valid: false,
+            errors: ["must be an array: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Enable Flag Off) Named Budgets | Valid",
+        flags: {
+            "feature-aggregatable-named-budgets": false
+        },
+        json: "{\"named_budgets\":[{\"name\":\"budget1\"}]}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: []
+        }
+    },
+    {
+        name: "(Non-Object Array) Named Budgets | Invalid",
+        flags: {},
+        json: "{\"named_budgets\":[1, 2]}",
+        result: {
+            valid: false,
+            errors: ["must be an array of object(s): `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Non-String `name`) Named Budgets | Invalid",
+        flags: {},
+        json: "{\"named_budgets\":[{\"name\":1}]}",
+        result: {
+            valid: false,
+            errors: ["'name' must be a string: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Non-Array/Non-Object `filters`) Named Budgets | Invalid",
+        flags: {},
+        json: "{\"named_budgets\":[{\"filters\":10}]}",
+        result: {
+            valid: false,
+            errors: ["'filters' must be an object or an array: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Non-Array/Non-Object `not_filters`) Named Budgets | Invalid",
+        flags: {},
+        json: "{\"named_budgets\":[{\"not_filters\":10}]}",
+        result: {
+            valid: false,
+            errors: ["'not_filters' must be an object or an array: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Not an Array of Objects `filters`) Named Budgets | Invalid",
+        flags: {},
+        json: "{\"named_budgets\":[{\"filters\":[{}, [], {}]}]}",
+        result: {
+            valid: false,
+            errors: ["'filters' must be an array of object(s): `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Not an Array of Objects `not_filters`) Named Budgets | Invalid",
+        flags: {},
+        json: "{\"named_budgets\":[{\"not_filters\":[{}, [], {}]}]}",
+        result: {
+            valid: false,
+            errors: ["'not_filters' must be an array of object(s): `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Exceeded Max Filter Maps Per Filter Set `filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2
+        },
+        json: "{\"named_budgets\":[{\"filters\":[{}, {}, {}]}]}",
+        result: {
+            valid: false,
+            errors: ["'filters' array length exceeds the max filter maps per filter set limit: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Exceeded Max Filter Maps Per Filter Set `not_filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2
+        },
+        json: "{\"named_budgets\":[{\"not_filters\":[{}, {}, {}]}]}",
+        result: {
+            valid: false,
+            errors: ["'not_filters' array length exceeds the max filter maps per filter set limit: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Number of Filters Limit Exceeded `filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2
+        },
+        json: "{\"named_budgets\":[{\"filters\":[{\"filter_1\":[\"A\"], \"filter_2\":[\"B\"], \"filter_3\":[\"C\"]}]}]}",
+        result: {
+            valid: false,
+            errors: ["'filters' exceeded max attribution filters: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Number of Filters Limit Exceeded `not_filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2
+        },
+        json: "{\"named_budgets\":[{\"not_filters\":[{\"filter_1\":[\"A\"], \"filter_2\":[\"B\"], \"filter_3\":[\"C\"]}]}]}",
+        result: {
+            valid: false,
+            errors: ["'not_filters' exceeded max attribution filters: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Filter String Byte Size Limit Exceeded `filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2
+        },
+        json: "{\"named_budgets\":[{\"filters\":[{\"ABCDEFGHIJKLMNOPQRSTUVWXYZ\":[\"A\"]}]}]}",
+        result: {
+            valid: false,
+            errors: ["'ABCDEFGHIJKLMNOPQRSTUVWXYZ' exceeded max bytes per attribution filter string: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Filter String Byte Size Limit Exceeded `not_filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2
+        },
+        json: "{\"named_budgets\":[{\"not_filters\":[{\"ABCDEFGHIJKLMNOPQRSTUVWXYZ\":[\"A\"]}]}]}",
+        result: {
+            valid: false,
+            errors: ["'ABCDEFGHIJKLMNOPQRSTUVWXYZ' exceeded max bytes per attribution filter string: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "('_lookback_window' Flag Disabled `filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2,
+            "feature-lookback-window-filter": false
+        },
+        json: "{\"named_budgets\":[{\"filters\":[{\"_lookback_window\":\"A\"}]}]}",
+        result: {
+            valid: false,
+            errors: ["'_lookback_window' filter can not start with underscore: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "('_lookback_window' Flag Disabled `not_filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2,
+            "feature-lookback-window-filter": false
+        },
+        json: "{\"named_budgets\":[{\"not_filters\":[{\"_lookback_window\":\"A\"}]}]}",
+        result: {
+            valid: false,
+            errors: ["'_lookback_window' filter can not start with underscore: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "('_lookback_window' Non-Numeric String `filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2
+        },
+        json: "{\"named_budgets\":[{\"filters\":[{\"_lookback_window\":\"A\"}]}]}",
+        result: {
+            valid: false,
+            errors: ["'_lookback_window' must be an int64 (must match /^-?[0-9]+$/): `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "('_lookback_window' Non-Numeric String `not_filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2
+        },
+        json: "{\"named_budgets\":[{\"not_filters\":[{\"_lookback_window\":\"A\"}]}]}",
+        result: {
+            valid: false,
+            errors: ["'_lookback_window' must be an int64 (must match /^-?[0-9]+$/): `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "('_lookback_window' Negative String `filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2
+        },
+        json: "{\"named_budgets\":[{\"filters\":[{\"_lookback_window\":\"-2\"}]}]}",
+        result: {
+            valid: false,
+            errors: ["lookback_window must be a positive number: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "('_lookback_window' Negative String `not_filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2
+        },
+        json: "{\"named_budgets\":[{\"not_filters\":[{\"_lookback_window\":\"-2\"}]}]}",
+        result: {
+            valid: false,
+            errors: ["lookback_window must be a positive number: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "('_lookback_window' Negative Number `filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2
+        },
+        json: "{\"named_budgets\":[{\"filters\":[{\"_lookback_window\":-2}]}]}",
+        result: {
+            valid: false,
+            errors: ["lookback_window must be a positive number: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "('_lookback_window' Negative Number `not_filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2
+        },
+        json: "{\"named_budgets\":[{\"not_filters\":[{\"_lookback_window\":-2}]}]}",
+        result: {
+            valid: false,
+            errors: ["lookback_window must be a positive number: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "('_lookback_window' Valid `filters`) Named Budgets | Valid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2
+        },
+        json: "{\"named_budgets\":[{\"filters\":[{\"_lookback_window\":\"0\"}]}]}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: []
+        }
+    },
+    {
+        name: "('_lookback_window' Valid `not_filters`) Named Budgets | Valid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2
+        },
+        json: "{\"named_budgets\":[{\"not_filters\":[{\"_lookback_window\":\"0\"}]}]}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: []
+        }
+    },
+    {
+        name: "(Filter Key Starts with Underscore `filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2
+        },
+        json: "{\"named_budgets\":[{\"filters\":[{\"_filter_1\":[\"0\"]}]}]}",
+        result: {
+            valid: false,
+            errors: ["'_filter_1' filter can not start with underscore: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Filter Key Starts with Underscore `not_filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2
+        },
+        json: "{\"named_budgets\":[{\"not_filters\":[{\"_filter_1\":[\"0\"]}]}]}",
+        result: {
+            valid: false,
+            errors: ["'_filter_1' filter can not start with underscore: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Non-Array Filter Value `filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2
+        },
+        json: "{\"named_budgets\":[{\"filters\":[{\"filter_1\":{\"name\": \"A\"}}]}]}",
+        result: {
+            valid: false,
+            errors: ["'filter_1' filter value must be an array: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Non-Array Filter Value `not_filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2
+        },
+        json: "{\"named_budgets\":[{\"not_filters\":[{\"filter_1\":{\"name\": \"A\"}}]}]}",
+        result: {
+            valid: false,
+            errors: ["'filter_1' filter value must be an array: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Number of Values Per Filter Limit Exceeded `filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2,
+            "max_values_per_attribution_filter": 2
+        },
+        json: "{\"named_budgets\":[{\"filters\":[{\"filter_1\":[\"A\", \"B\", \"C\"]}]}]}",
+        result: {
+            valid: false,
+            errors: ["'filter_1' exceeded max values per attribution filter: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Number of Values Per Filter Limit Exceeded `not_filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2,
+            "max_values_per_attribution_filter": 2
+        },
+        json: "{\"named_budgets\":[{\"not_filters\":[{\"filter_1\":[\"A\", \"B\", \"C\"]}]}]}",
+        result: {
+            valid: false,
+            errors: ["'filter_1' exceeded max values per attribution filter: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Non-String Filter Value `filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2,
+            "max_values_per_attribution_filter": 2
+        },
+        json: "{\"named_budgets\":[{\"filters\":[{\"filter_1\":[\"A\", 2]}]}]}",
+        result: {
+            valid: false,
+            errors: ["'filter_1' filter values must be strings: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Non-String Filter Value `not_filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2,
+            "max_values_per_attribution_filter": 2
+        },
+        json: "{\"named_budgets\":[{\"not_filters\":[{\"filter_1\":[\"A\", 2]}]}]}",
+        result: {
+            valid: false,
+            errors: ["'filter_1' filter values must be strings: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Filter Value String Byte Size Limit Exceeded `filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2,
+            "max_values_per_attribution_filter": 2
+        },
+        json: "{\"named_budgets\":[{\"filters\":[{\"filter_1\":[\"A\", \"ABCDEFGHIJKLMNOPQRSTUVWXYZ\"]}]}]}",
+        result: {
+            valid: false,
+            errors: ["'ABCDEFGHIJKLMNOPQRSTUVWXYZ' exceeded max bytes per attribution filter value string: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Filter Value String Byte Size Limit Exceeded `not_filters`) Named Budgets | Invalid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2,
+            "max_values_per_attribution_filter": 2
+        },
+        json: "{\"named_budgets\":[{\"not_filters\":[{\"filter_1\":[\"A\", \"ABCDEFGHIJKLMNOPQRSTUVWXYZ\"]}]}]}",
+        result: {
+            valid: false,
+            errors: ["'ABCDEFGHIJKLMNOPQRSTUVWXYZ' exceeded max bytes per attribution filter value string: `named_budgets`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Array `filters`) Named Budgets | Valid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2,
+            "max_values_per_attribution_filter": 2
+        },
+        json: "{\"named_budgets\":[{\"filters\":[{\"filter_1\":[\"A\", \"123\"]}]}]}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: []
+        }
+    },
+    {
+        name: "(Array `not_filters`) Named Budgets| Valid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2,
+            "max_values_per_attribution_filter": 2
+        },
+        json: "{\"named_budgets\":[{\"not_filters\":[{\"filter_1\":[\"A\", \"123\"]}]}]}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: []
+        }
+    },
+    {
+        name: "(Object `filters`) Named Budgets | Valid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2,
+            "max_values_per_attribution_filter": 2
+        },
+        json: "{\"named_budgets\":[{\"filters\":{\"filter_1\":[\"A\", \"123\"]}}]}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: []
+        }
+    },
+    {
+        name: "(Object `not_filters`) Named Budgets | Valid",
+        flags: {
+            "max_filter_maps_per_filter_set": 2,
+            "max_attribution_filters": 2,
+            "max_values_per_attribution_filter": 2
+        },
+        json: "{\"named_budgets\":[{\"not_filters\":{\"filter_1\":[\"A\", \"123\"]}}]}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: []
+        }
+    },
+    {
+        name: "(Missing Key Piece) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{}}",
+        result: {
+            valid: false,
+            errors: ["key piece must not be null or empty string: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Null Key Piece) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": null}}",
+        result: {
+            valid: false,
+            errors: ["key piece must not be null or empty string: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Empty Key Piece) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"\"}}",
+        result: {
+            valid: false,
+            errors: ["key piece must not be null or empty string: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Non-String Key Piece) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": 123}}",
+        result: {
+            valid: false,
+            errors: ["key piece must start with '0x' or '0X': `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Invalid Key Piece) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"1x3\"}}",
+        result: {
+            valid: false,
+            errors: ["key piece must start with '0x' or '0X': `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Non-String Origin) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":123}}",
+        result: {
+            valid: false,
+            errors: ["`aggregation_coordinator_origin` must be a string: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Empty Origin) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"\"}}",
+        result: {
+            valid: false,
+            errors: ["`aggregation_coordinator_origin` must be non-empty: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Invalid Origin) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"abc\"}}",
+        result: {
+            valid: false,
+            errors: ["'aggregation_coordinator_origin' invalid URL format: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Non-Array Debug Data) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":{}}}",
+        result: {
+            valid: false,
+            errors: ["`debug_data` must be an array: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Empty Debug Data) Aggregatable Debug Report | Valid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[]}}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: []
+        }
+    },
+    {
+        name: "(Non-Object Debug Data Element) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": \"0x3\", \"value\": 65536, \"types\": [\"source-noised\"]},[]]}}",
+        result: {
+            valid: false,
+            errors: ["`debug_data` element at index: 1 must be an object: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Empty Debug Data Element) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": \"0x3\", \"value\": 65536, \"types\": [\"source-noised\"]},{}]}}",
+        result: {
+            valid: false,
+            errors: ["`debug_data` element at index: 1 requires keys (`key_piece`, `types`, `value`) to be present and non-null: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Missing Debug Data Key Piece Element) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"value\": 65536, \"types\": [\"source-noised\"]}]}}",
+        result: {
+            valid: false,
+            errors: ["`debug_data` element at index: 0 requires keys (`key_piece`, `types`, `value`) to be present and non-null: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Null Debug Data Key Piece Element) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": null, \"value\": 65536, \"types\": [\"source-noised\"]}]}}",
+        result: {
+            valid: false,
+            errors: ["`debug_data` element at index: 0 requires keys (`key_piece`, `types`, `value`) to be present and non-null: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Missing Debug Data Types Element) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": \"0x3\", \"value\": 65536}]}}",
+        result: {
+            valid: false,
+            errors: ["`debug_data` element at index: 0 requires keys (`key_piece`, `types`, `value`) to be present and non-null: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Null Debug Data Types Element) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": \"0x3\", \"value\": 65536, \"types\": null}]}}",
+        result: {
+            valid: false,
+            errors: ["`debug_data` element at index: 0 requires keys (`key_piece`, `types`, `value`) to be present and non-null: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Missing Debug Data Value Element) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": \"0x3\", \"types\": [\"source-noised\"]}]}}",
+        result: {
+            valid: false,
+            errors: ["`debug_data` element at index: 0 requires keys (`key_piece`, `types`, `value`) to be present and non-null: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Null Debug Data Value Element) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": \"0x3\", \"value\": null, \"types\": [\"source-noised\"]}]}}",
+        result: {
+            valid: false,
+            errors: ["`debug_data` element at index: 0 requires keys (`key_piece`, `types`, `value`) to be present and non-null: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Non-String Debug Data Key Piece Element) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": 1, \"value\": 65536, \"types\": [\"source-noised\"]}]}}",
+        result: {
+            valid: false,
+            errors: ["'debug_data' element at index: 0 key piece must start with '0x' or '0X': `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Empty Debug Data Key Piece Element) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": \"\", \"value\": 65536, \"types\": [\"source-noised\"]}]}}",
+        result: {
+            valid: false,
+            errors: ["'debug_data' element at index: 0 key piece must not be null or empty string: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Invalid Debug Data Key Piece Element) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": \"1x3\", \"value\": 65536, \"types\": [\"source-noised\"]}]}}",
+        result: {
+            valid: false,
+            errors: ["'debug_data' element at index: 0 key piece must start with '0x' or '0X': `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Debug Data Value Exceeds Lower Limit) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": \"0x3\", \"value\": 0, \"types\": [\"source-noised\"]}]}}",
+        result: {
+            valid: false,
+            errors: ["debug_data element at index: 0 `value` must be in range 1-65536: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Debug Data Value Exceeds Upper Limit) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": \"0x3\", \"value\": 65537, \"types\": [\"source-noised\"]}]}}",
+        result: {
+            valid: false,
+            errors: ["debug_data element at index: 0 `value` must be in range 1-65536: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Non-Array Debug Data Types) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": \"0x3\", \"value\": 300, \"types\": {}}]}}",
+        result: {
+            valid: false,
+            errors: ["debug_data element at index: 0 `types` must be an array: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Empty Debug Data Types) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": \"0x3\", \"value\": 300, \"types\": []}]}}",
+        result: {
+            valid: false,
+            errors: ["debug_data element at index: 0 `types` must non-empty: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Debug Data Types - Duplicates In Within The Same Objects) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": \"0x3\", \"value\": 300, \"types\": [\"source-noised\", \"source-noised\"]}]}}",
+        result: {
+            valid: false,
+            errors: ["debug_data element at index: 0 duplicate report types are not allow within the same debug data object or across multiple debug data objects: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Debug Data Types - Duplicates In Across Different Objects) Aggregatable Debug Report | Invalid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": \"0x3\", \"value\": 300, \"types\": [\"source-noised\"]}, {\"key_piece\": \"0x3\", \"value\": 300, \"types\": [\"source-noised\"]}]}}",
+        result: {
+            valid: false,
+            errors: ["debug_data element at index: 1 duplicate report types are not allow within the same debug data object or across multiple debug data objects: `aggregatable_debug_reporting`"],
+            warnings: []
+        }
+    },
+    {
+        name: "(Debug Data Types - Case Insensitive) Aggregatable Debug Report | Valid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": \"0x3\", \"value\": 300, \"types\": [\"source-NOISED\"]}, {\"key_piece\": \"0x3\", \"value\": 300, \"types\": [\"trigger-Event-Low-priority\"]}]}}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: []
+        },
+        expected_value: {
+            "aggregatable_debug_reporting":"{\"key_piece\":\"0x3\",\"aggregation_coordinator_origin\":\"https://cloud.coordination.test/\",\"debug_data\":[{\"key_piece\":\"0x3\",\"value\":300,\"types\":[\"source-noised\"]},{\"key_piece\":\"0x3\",\"value\":300,\"types\":[\"trigger-event-low-priority\"]}]}"
+        }
+    },
+    {
+        name: "(Debug Data Types - Ignore Unknown Report Type) Aggregatable Debug Report | Valid",
+        flags: {},
+        json: "{\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": \"0x3\", \"value\": 300, \"types\": [\"source-NOISED\"]}, {\"key_piece\": \"0x3\", \"value\": 300, \"types\": [\"trigger-Event-Low-priority\", \"fake-report-type\"]}]}}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: []
+        },
+        expected_value: {
+            "aggregatable_debug_reporting":"{\"key_piece\":\"0x3\",\"aggregation_coordinator_origin\":\"https://cloud.coordination.test/\",\"debug_data\":[{\"key_piece\":\"0x3\",\"value\":300,\"types\":[\"source-noised\"]},{\"key_piece\":\"0x3\",\"value\":300,\"types\":[\"trigger-event-low-priority\"]}]}"
+        }
+    },
+    {
+        name: "(Null) Top-Level Key Values | Valid",
+        flags: {},
         json: "{"
                 + "\"debug_key\":null,"
                 + "\"debug_join_key\":null,"
@@ -4007,7 +4382,9 @@ const triggerTestCases = [
                 + "\"aggregation_coordinator_origin\":null,"
                 + "\"aggregatable_source_registration_time\":null,"
                 + "\"trigger_context_id\":null,"
-                + "\"attribution_config\":null"
+                + "\"attribution_config\":null,"
+                + "\"named_budgets\":null,"
+                + "\"aggregatable_debug_reporting\": null"
             + "}",
         result: {
             valid: true,
@@ -4017,15 +4394,7 @@ const triggerTestCases = [
     },
     {
         name: "(Null) 2nd-Level Key Values | Valid",
-        flags: {
-            "feature-attribution-scopes": true,
-            "feature-xna": true,
-            "feature-aggregation-coordinator-origin": true,
-            "feature-source-registration-time-optional-for-agg-reports": true,
-            "feature-trigger-context-id": true,
-            "feature-enable-update-trigger-header-limit": false,
-            "feature-lookback-window-filter": true
-        },
+        flags: {},
         json: "{"
                 + "\"debug_key\":null,"
                 + "\"debug_join_key\":null,"
@@ -4069,7 +4438,17 @@ const triggerTestCases = [
                     + "\"priority\":null,"
                     + "\"expiry\":null,"
                     + "\"post_install_exclusivity_window\":null"
-                + "}]"
+                + "}],"
+                + "\"named_budgets\":[{"
+                    + "\"name\":null,"
+                    + "\"filters\":null,"
+                    + "\"not_filters\":null"
+                + "}],"
+                + "\"aggregatable_debug_reporting\":{"
+                    + "\"key_piece\":\"0x1\","
+                    + "\"aggregation_coordinator_origin\":null,"
+                    + "\"debug_data\":null"
+                + "}"
             + "}",
         result: {
             valid: true,
@@ -4080,11 +4459,156 @@ const triggerTestCases = [
     {
         name: "Case Insensitive - Process Error | Invalid",
         flags: {},
-        json: "{\"DEBUG_KEY\":1000}",
+        json: "{\"X_NETWORK_KEY_Mapping\":[1]}",
         result: {
             valid: false,
-            errors: ["must be a string: `debug_key`"],
+            errors: ["must be an object: `x_network_key_mapping`"],
             warnings: []
+        }
+    },
+    {
+        name: "Expected Value - Default",
+        flags: {},
+        json: "{}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: []
+        },
+        expected_value: {
+            "attribution_config": null,
+            "event_trigger_data": "[]",
+            "filters": null,
+            "not_filters": null,
+            "aggregatable_trigger_data": null,
+            "aggregatable_values": null,
+            "aggregatable_deduplication_keys": null,
+            "debug_key": null,
+            "debug_reporting": false,
+            "x_network_key_mapping": null,
+            "debug_join_key": null,
+            "debug_ad_id": null,
+            "aggregation_coordinator_origin": null,
+            "aggregatable_source_registration_time": "EXCLUDE",
+            "trigger_context_id": null,
+            "attribution_scopes": null,
+            "named_budgets": null,
+            "aggregatable_debug_reporting":null
+        }
+    },
+    {
+        name: "Expected Value - Populated Fields",
+        flags: {},
+        json: "{"
+                + "\"attribution_config\": [{"
+                    + "\"source_network\":1,"
+                    + "\"source_priority_range\":{\"start\":\"1\", \"end\":\"2\"},"
+                    + "\"source_filters\":[{\"_lookback_window\":\"-1\"}, {\"_lookback_window\":\"-3\", \"filter_1\":[\"A\", 2]}],"
+                    + "\"source_not_filters\":{\"filter_1\":[\"A\", 2, true], \"_lookback_window\":-1},"
+                    + "\"source_expiry_override\":\"86401\","
+                    + "\"priority\":\"2\","
+                    + "\"expiry\":\"86402\","
+                    + "\"filter_data\":[{\"_lookback_window\":-2, \"filter_1\":[1, 2]}],"
+                    + "\"post_install_exclusivity_window\":\"1\","
+                    + "\"extra_key\":\"1\""
+                + "}],"
+                + "\"event_trigger_data\": [{"
+                    + "\"trigger_data\":\"1\","
+                    + "\"priority\":\"-1\","
+                    + "\"value\":1,"
+                    + "\"deduplication_key\":\"1\","
+                    + "\"filters\":[{\"_lookback_window\":\"0\", \"filter_1\":[\"A\", \"B\"]}, {\"filter_2\":[\"C\", \"D\"]}],"
+                    + "\"not_filters\":{\"_lookback_window\":1, \"filter_3\":[\"E\", \"F\"]},"
+                    + "\"extra_key\":\"1\""
+                + "}],"
+                + "\"filters\":[{\"_lookback_window\":\"2\", \"filter_4\":[\"G\"]}, {\"filter_5\":[\"H\", \"I\"]}],"
+                + "\"not_filters\": {\"_lookback_window\":3, \"filter_6\":[\"J\", \"K\"]},"
+                + "\"aggregatable_trigger_data\": [{"
+                    + "\"key_piece\":\"0x1\","
+                    + "\"source_keys\":[\"1\",\"2\"],"
+                    + "\"filters\":[{\"_lookback_window\":4, \"filter_7\":[\"L\"]}, {\"filter_8\":[\"M\", \"N\"]}],"
+                    + "\"not_filters\":{\"_lookback_window\":\"5\", \"filter_9\":[\"O\", \"P\"]},"
+                    + "\"extra_key\":1"
+                + "}],"
+                + "\"aggregatable_values\":{\"abc\":10},"
+                + "\"aggregatable_deduplication_keys\": [{"
+                    + "\"deduplication_key\":\"3\","
+                    + "\"filters\":[{\"_lookback_window\":6, \"filter_10\":[\"Q\"]}, {\"filter_11\":[\"R\", \"S\"]}],"
+                    + "\"not_filters\":{\"_lookback_window\":\"7\", \"filter_12\":[\"T\", \"U\"]},"
+                    + "\"extra_key\":1"
+                + "}],"
+                + "\"named_budgets\": [{"
+                    + "\"name\":\"budget1\","
+                    + "\"filters\":[{\"_lookback_window\":8, \"filter_13\":[\"V\"]}, {\"filter_14\":[\"W\", \"X\"]}],"
+                    + "\"not_filters\":{\"_lookback_window\":\"9\", \"filter_15\":[\"Y\", \"Z\"]},"
+                    + "\"extra_key\":1"
+                + "}],"
+                + "\"debug_key\": \"1000\","
+                + "\"debug_reporting\": \"true\","
+                + "\"debug_join_key\": 100,"
+                + "\"debug_ad_id\": 200,"
+                + "\"x_network_key_mapping\": {\"key1\":\"0x1\", \"key2\":\"0x2\"},"
+                + "\"aggregation_coordinator_origin\": \"https://valid.cloud.coordination.test\","
+                + "\"aggregatable_source_registration_time\": \"exclude\","
+                + "\"trigger_context_id\":\"1\","
+                + "\"attribution_scopes\": [\"a\", \"b\", \"c\"],"
+                + "\"aggregatable_debug_reporting\":{\"key_piece\": \"0x3\", \"aggregation_coordinator_origin\":\"https://cloud.coordination.test\", \"debug_data\":[{\"key_piece\": \"0x3\", \"value\": 300, \"types\": [\"source-NOISED\"]}, {\"key_piece\": \"0x3\", \"value\": 300, \"types\": [\"trigger-Event-Low-priority\"]}]}"
+            + "}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: []
+        },
+        expected_value: {
+            "attribution_config": "[{"
+                + "\"source_network\":\"1\","
+                + "\"source_priority_range\":{\"start\":1,\"end\":2},"
+                + "\"source_filters\":[{\"_lookback_window\":-1},{\"_lookback_window\":-3,\"filter_1\":[\"A\",\"2\"]}],"
+                + "\"source_not_filters\":[{\"filter_1\":[\"A\",\"2\",\"true\"],\"_lookback_window\":-1}],"
+                + "\"source_expiry_override\":86401,"
+                + "\"priority\":2,"
+                + "\"expiry\":86402,"
+                + "\"filter_data\":[{\"_lookback_window\":-2,\"filter_1\":[\"1\",\"2\"]}],"
+                + "\"post_install_exclusivity_window\":1"
+            + "}]",
+            "event_trigger_data": "[{"
+                + "\"trigger_data\":1,"
+                + "\"priority\":-1,"
+                + "\"value\":1,"
+                + "\"deduplication_key\":1,"
+                + "\"filters\":[{\"_lookback_window\":\"0\",\"filter_1\":[\"A\",\"B\"]},{\"filter_2\":[\"C\",\"D\"]}],"
+                + "\"not_filters\":[{\"_lookback_window\":1,\"filter_3\":[\"E\",\"F\"]}]"
+            + "}]",
+            "filters": "[{\"_lookback_window\":\"2\",\"filter_4\":[\"G\"]},{\"filter_5\":[\"H\",\"I\"]}]",
+            "not_filters": "[{\"_lookback_window\":3,\"filter_6\":[\"J\",\"K\"]}]",
+            "aggregatable_trigger_data": "[{"
+                + "\"key_piece\":\"0x1\","
+                + "\"source_keys\":[\"1\",\"2\"],"
+                + "\"filters\":[{\"_lookback_window\":4,\"filter_7\":[\"L\"]},{\"filter_8\":[\"M\",\"N\"]}],"
+                + "\"not_filters\":[{\"_lookback_window\":\"5\",\"filter_9\":[\"O\",\"P\"]}],"
+                + "\"extra_key\":1"
+            + "}]",
+            "aggregatable_values": "{\"abc\":10}",
+            "aggregatable_deduplication_keys": "[{"
+                + "\"deduplication_key\":3,"
+                + "\"filters\":[{\"_lookback_window\":6,\"filter_10\":[\"Q\"]},{\"filter_11\":[\"R\",\"S\"]}],"
+                + "\"not_filters\":[{\"_lookback_window\":\"7\",\"filter_12\":[\"T\",\"U\"]}]"
+            + "}]",
+            "named_budgets": "[{"
+                + "\"name\":\"budget1\","
+                + "\"filters\":[{\"_lookback_window\":8,\"filter_13\":[\"V\"]},{\"filter_14\":[\"W\",\"X\"]}],"
+                + "\"not_filters\":[{\"_lookback_window\":\"9\",\"filter_15\":[\"Y\",\"Z\"]}]"
+            + "}]",
+            "debug_key": 1000,
+            "debug_reporting": true,
+            "x_network_key_mapping": "{\"key1\":\"0x1\",\"key2\":\"0x2\"}",
+            "debug_join_key": "100",
+            "debug_ad_id": "200",
+            "aggregation_coordinator_origin": "https://valid.cloud.coordination.test",
+            "aggregatable_source_registration_time": "EXCLUDE",
+            "trigger_context_id": "1",
+            "attribution_scopes": "[\"a\",\"b\",\"c\"]",
+            "aggregatable_debug_reporting": "{\"key_piece\":\"0x3\",\"aggregation_coordinator_origin\":\"https://cloud.coordination.test/\",\"debug_data\":[{\"key_piece\":\"0x3\",\"value\":300,\"types\":[\"source-noised\"]},{\"key_piece\":\"0x3\",\"value\":300,\"types\":[\"trigger-event-low-priority\"]}]}"
         }
     }
 ]

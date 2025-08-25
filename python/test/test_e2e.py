@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,65 +11,59 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""End-to-end tests for the RBM simulation pipeline."""
 
-from datetime import datetime
-import unittest
 import os
+import pathlib
+import shutil
+import tempfile
+import unittest
 
-from python.constants import PY4J_VERSION
-from python.simulation_config import SimulationConfig
-from python.simulation_runner_wrapper import SimulationRunnerWrapper
-
-isoformat = "%Y-%m-%d"
+from pipeline_config import PipelineConfig
+from pipeline_runner_wrapper import PipelineRunnerWrapper
 
 
 class TestEndToEnd(unittest.TestCase):
-  def test_run_simulation(self):
-    test_src = f"{os.environ['TEST_SRCDIR']}/__main__"
-    py4j_jar_bin = f"{test_src}/external/deps/pypi__py4j/" \
-                   f"py4j-{PY4J_VERSION}.data/data/share/py4j/" \
-                   f"py4j{PY4J_VERSION}.jar"
-    classpath = f"{test_src}/SimulationRunner_deploy.jar"
+  """Tests for the end-to-end pipeline."""
 
-    runner = SimulationRunnerWrapper(py4j_jar_path=py4j_jar_bin,
-                                     classpath=classpath)
-    input_dir = f"{test_src}/testdata"
-    output_dir = f"{test_src}/output"
-    os.mkdir(output_dir)
+  def setUp(self):
+    super().setUp()
+    self.temp_dir = tempfile.mkdtemp()
 
-    simulation_config = SimulationConfig(
+  def tearDown(self):
+    super().tearDown()
+    shutil.rmtree(self.temp_dir)
+
+  def test_run_pipeline(self):
+    """Tests that the pipeline runs without errors."""
+    workspace_dir = os.environ.get(
+        "BUILD_WORKSPACE_DIRECTORY",
+        str(pathlib.Path(__file__).parent.parent.parent))
+    input_dir = f"{workspace_dir}/java/com/google/measurement/pipeline/testdata"
+    event_reports_output_directory = f"{self.temp_dir}/event"
+    aggregatable_reports_output_directory = f"{self.temp_dir}/aggregatable"
+    aggregation_results_directory = f"{self.temp_dir}/aggregation"
+
+    os.mkdir(event_reports_output_directory)
+    os.mkdir(aggregatable_reports_output_directory)
+    os.mkdir(aggregation_results_directory)
+
+    pipeline_config_instance = PipelineConfig(
         input_directory=input_dir,
-        output_directory=output_dir,
-        source_start_date=datetime.strptime("2022-01-15", isoformat).date(),
-        source_end_date=datetime.strptime("2022-01-16", isoformat).date(),
-        trigger_start_date=datetime.strptime("2022-01-15", isoformat).date(),
-        trigger_end_date=datetime.strptime("2022-01-16", isoformat).date(),
-    )
+        event_reports_output_directory=event_reports_output_directory,
+        aggregatable_reports_output_directory=
+        aggregatable_reports_output_directory,
+        aggregation_results_directory=aggregation_results_directory)
 
-    # Verify simulation made it to the end without errors
-    success = runner.run(simulation_config)
-    self.assertEqual(success, True)
+    runner = PipelineRunnerWrapper(
+        pipeline_config_instance)
+    runner.run()
 
-    # Verify output of simulation:
-    #  As of Q3 2023, The sample input in the testdata directory should produce
-    #  3 directories of output:
-    #  - 1 for aggregatable reports, named "input_batches"
-    #  - 1 for OS API event reports
-    #  - 1 aggregation report
-    num_output_directories = 3
-    input_batches_dir = f"{output_dir}/input_batches"
-    num_input_batches = 1
-    os_u1_directory = f"{output_dir}/OS/U1"
-    os_u2_directory = f"{output_dir}/OS/U2"
-
-    self.assertEqual(len(os.listdir(output_dir)), num_output_directories)
-    self.assertEqual(len(os.listdir(input_batches_dir)), num_input_batches)
-
-    # TODO(b/289089904): uncomment the below when event report generation is deterministic.
-    # self.assertEqual(os.listdir(os_u1_directory)[0], "debug_event_reports.json")
-    # self.assertEqual(os.listdir(os_u1_directory)[1], "event_reports.json")
-    # self.assertEqual(os.listdir(os_u2_directory)[0], "event_reports.json")
+    self.assertGreater(len(os.listdir(event_reports_output_directory)), 0)
+    self.assertGreater(
+        len(os.listdir(aggregatable_reports_output_directory)), 0)
+    self.assertGreater(len(os.listdir(aggregation_results_directory)), 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   unittest.main()

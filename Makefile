@@ -32,3 +32,4 @@ header-validation/dist/main.js: header-validation/package.json header-validation
 
 clean:
 	@ rm -rf $(OUT_DIR)
+

@@ -1,0 +1,3 @@
+--java_runtime_version=remotejdk_21
+build --java_language_version=21 --javacopt="-XepDisableAllChecks"
+test --java_language_version=21

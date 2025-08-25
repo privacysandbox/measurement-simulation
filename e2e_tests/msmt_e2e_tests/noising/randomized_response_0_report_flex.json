@@ -1,0 +1,61 @@
+{
+  "description": "source with randomized response sends debug reports and 0 reports",
+  "phflags_override": {
+    "measurement_flexible_event_reporting_api_enabled": "true"
+  },
+  "input": {
+    "registrations": [
+      {
+        "timestamp": "0",
+        "registration_request": {
+          "registrant": "com.source",
+          "source_type": "navigation"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-source",
+            "debug_permission": true,
+            "randomized_response": [],
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "destination": "android-app://com.destination",
+                "source_event_id": "123",
+                "trigger_data": [
+                  0,
+                  1,
+                  2,
+                  3
+                ],
+                "debug_reporting": true
+              }
+            }
+          }
+        ]
+      },
+      {
+        "timestamp": "172800001",
+        "registration_request": {
+          "registrant": "com.destination"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "3"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "event_level_results": [],
+    "aggregatable_results": []
+  }
+}

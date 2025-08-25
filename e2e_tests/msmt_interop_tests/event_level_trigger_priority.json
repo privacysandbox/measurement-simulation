@@ -5,7 +5,7 @@
         "timestamp": "1643235573000",
         "enrollment_id": "https://reporter.test/",
         "source_type": "NAVIGATION",
-        "publisher": "https://source.test",
+        "publisher": "https://source.com",
         "publisher_type": "WEB",
         "registrant": "https://source.test",
         "source_event_id": "123",

@@ -1,0 +1,1012 @@
+{
+  "description": "The sources with the oldest destination get deleted if number of distinct destinations per enrollment per publisher exceed the limit. Corresponding aggregate reports and attributions are not deleted.",
+  "phflags_override": {
+    "measurement_debug_key_ad_id_matching_enrollment_blocklist": "",
+    "measurement_enable_source_destination_limit_priority": "true",
+    "measurement_default_destination_limit_algorithm": 1,
+    "measurement_max_distinct_destinations_in_active_source": 3,
+    "measurement_enable_fifo_destinations_delete_aggregate_reports": "false",
+    "measurement_flex_api_max_information_gain_dual_destination_event": "9",
+    "measurement_flex_api_max_information_gain_dual_destination_navigation": "14"
+  },
+  "input": {
+    "sources": [
+      // S1: Has one common web destination with S4
+      {
+        "timestamp": "800000000001",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "example.publisher1.test",
+          "platform_ad_id": "12345678-1234-1234-1234-123456789012"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "source_event_id": "1",
+                "priority": "101",
+                "destination": "android-app://example.destinationS1.test",
+                "web_destination": "https://example.webDestinationS1AndS4.test",
+                "aggregation_keys": {
+                  "a": "0x1"
+                },
+                "debug_reporting": true,
+                "debug_key": "111"
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ]
+      },
+      // S2
+      {
+        "timestamp": "800000000003",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "example.publisher1.test",
+          "platform_ad_id": "12345678-1234-1234-1234-123456789012"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "source_event_id": "2",
+                "priority": "101",
+                "destination": "android-app://example.destinationS2.test",
+                "web_destination": [
+                  "https://example.webDestinationS21.test",
+                  "https://example.webDestinationS22.test"
+                ],
+                "aggregation_keys": {
+                  "a": "0x2"
+                },
+                "debug_reporting": true,
+                "debug_key": "222"
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ]
+      },
+      // S3: Similar source to S2 but from a different publisher - to ensure that the limit doesn't apply to it
+      {
+        "timestamp": "800000000005",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "example.publisher2.test",
+          "platform_ad_id": "12345678-1234-1234-1234-123456789012"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "source_event_id": "3",
+                "priority": "101",
+                "destination": "android-app://example.destinationS3.test",
+                "web_destination": [
+                  "https://example.webDestinationS21.test",
+                  "https://example.webDestinationS22.test"
+                ],
+                "aggregation_keys": {
+                  "a": "0x3"
+                },
+                "debug_reporting": true,
+                "debug_key": "333"
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ]
+      },
+      // S4: Has one common web destination to S1; Leads to deletion of S2 to accommodate it
+      {
+        "timestamp": "800000000006",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "example.publisher1.test",
+          "platform_ad_id": "12345678-1234-1234-1234-123456789012"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "source_event_id": "4",
+                "priority": "101",
+                "destination": "android-app://example.destinationS4.test",
+                "web_destination": [
+                  "https://example.webDestinationS1AndS4.test",
+                  "https://example.webDestinationS4.test"
+                ],
+                "aggregation_keys": {
+                  "a": "0x4"
+                },
+                "debug_reporting": true,
+                "debug_key": "444"
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ]
+      },
+      // S5: A that increases app destination count so that S6 can delete the oldest app destination
+      {
+        "timestamp": "800000000011",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "example.publisher1.test",
+          "platform_ad_id": "12345678-1234-1234-1234-123456789012"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "source_event_id": "5",
+                "priority": "101",
+                "destination": "android-app://example.destinationS5.test",
+                "aggregation_keys": {
+                  "a": "0x5"
+                },
+                "debug_reporting": true,
+                "debug_key": "555"
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ]
+      },
+      // S6: Causes deletion of S1 that has the oldest app destination
+      {
+        "timestamp": "800000000012",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "example.publisher1.test",
+          "platform_ad_id": "12345678-1234-1234-1234-123456789012"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "source_event_id": "6",
+                "priority": "101",
+                "destination": "android-app://example.destinationS6.test",
+                "aggregation_keys": {
+                  "a": "0x6"
+                },
+                "debug_reporting": true,
+                "debug_key": "666"
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ]
+      }
+    ],
+    "web_triggers": [
+      // T1: Attributes to S1
+      {
+        "timestamp": "800000000002",
+        "registration_request": {
+          "trigger_params": [
+            {
+              "attribution_src_url": "https://www.ad-tech1.test"
+            }
+          ],
+          "registrant": "example.1d1.test",
+          "destination_origin": "https://example.webDestinationS1AndS4.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "debug_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "1",
+                    "priority": "101"
+                  }
+                ],
+                "aggregatable_trigger_data": [
+                  {
+                    "source_keys": [
+                      "a"
+                    ],
+                    "key_piece": "0x11"
+                  }
+                ],
+                "aggregatable_values": {
+                  "a": 111
+                },
+                "debug_reporting": true,
+                "debug_key": "111",
+                "debug_ad_id": "9e2c3718906d618c5745ecc69971f083e9b249029c123486d949c453e55cb882"
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ]
+      },
+      // T2: Attributes to S2
+      {
+        "timestamp": "800000000004",
+        "registration_request": {
+          "trigger_params": [
+            {
+              "attribution_src_url": "https://www.ad-tech1.test"
+            }
+          ],
+          "registrant": "example.1d1.test",
+          "destination_origin": "https://example.webDestinationS21.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "debug_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "2",
+                    "priority": "101"
+                  }
+                ],
+                "aggregatable_trigger_data": [
+                  {
+                    "source_keys": [
+                      "a"
+                    ],
+                    "key_piece": "0x22"
+                  }
+                ],
+                "aggregatable_values": {
+                  "a": 222
+                },
+                "debug_reporting": true,
+                "debug_key": "222",
+                "debug_ad_id": "9e2c3718906d618c5745ecc69971f083e9b249029c123486d949c453e55cb882"
+              },
+              "Location": null,
+              "Attribution-Reporting-Redirect": null
+            }
+          }
+        ]
+      }
+    ],
+    "triggers": [
+      // T3: Attributes to S1
+      {
+        "timestamp": "800000000007",
+        "registration_request": {
+          "registrant": "example.destinationS1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "3",
+                    "priority": "101"
+                  }
+                ],
+                "aggregatable_trigger_data": [
+                  {
+                    "source_keys": [
+                      "a"
+                    ],
+                    "key_piece": "0x33"
+                  }
+                ],
+                "aggregatable_values": {
+                  "a": 333
+                },
+                "debug_reporting": true,
+                "debug_key": "333"
+              }
+            }
+          }
+        ]
+      },
+      // T4: Attributes to S4
+      {
+        "timestamp": "800000000008",
+        "registration_request": {
+          "registrant": "example.destinationS4.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "4",
+                    "priority": "101"
+                  }
+                ],
+                "aggregatable_trigger_data": [
+                  {
+                    "source_keys": [
+                      "a"
+                    ],
+                    "key_piece": "0x44"
+                  }
+                ],
+                "aggregatable_values": {
+                  "a": 444
+                },
+                "debug_reporting": true,
+                "debug_key": "444"
+              }
+            }
+          }
+        ]
+      },
+      // T5: Fails to attribute as S2 was deleted
+      {
+        "timestamp": "800000000009",
+        "registration_request": {
+          "registrant": "example.destinationS2.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "5",
+                    "priority": "101"
+                  }
+                ],
+                "aggregatable_trigger_data": [
+                  {
+                    "source_keys": [
+                      "a"
+                    ],
+                    "key_piece": "0x55"
+                  }
+                ],
+                "aggregatable_values": {
+                  "a": 555
+                },
+                "debug_reporting": true,
+                "debug_key": "555"
+              }
+            }
+          }
+        ]
+      },
+      // T6: Attributes to S3
+      {
+        "timestamp": "800000000010",
+        "registration_request": {
+          "registrant": "example.destinationS3.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "6",
+                    "priority": "101"
+                  }
+                ],
+                "aggregatable_trigger_data": [
+                  {
+                    "source_keys": [
+                      "a"
+                    ],
+                    "key_piece": "0x66"
+                  }
+                ],
+                "aggregatable_values": {
+                  "a": 666
+                },
+                "debug_reporting": true,
+                "debug_key": "666"
+              }
+            }
+          }
+        ]
+      },
+      // T7: Fails to attribute as S1 was deleted
+      {
+        "timestamp": "800000000013",
+        "registration_request": {
+          "registrant": "example.destinationS1.test"
+        },
+        "responses": [
+          {
+            "url": "https://www.ad-tech1.test",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "7",
+                    "priority": "101"
+                  }
+                ],
+                "aggregatable_trigger_data": [
+                  {
+                    "source_keys": [
+                      "a"
+                    ],
+                    "key_piece": "0x77"
+                  }
+                ],
+                "aggregatable_values": {
+                  "a": 777
+                },
+                "debug_reporting": true,
+                "debug_key": "777"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "aggregatable_results": [
+      {
+        "report_time": "800003600007",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.destinationS1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003600",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x33",
+              "value": 333
+            }
+          ],
+          "source_debug_key": "111",
+          "trigger_debug_key": "333"
+        }
+      },
+      {
+        "report_time": "800003600004",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "https://webdestinations21.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003600",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x22",
+              "value": 222
+            }
+          ],
+          "source_debug_key": "222",
+          "trigger_debug_key": "222"
+        }
+      },
+      {
+        "report_time": "800003600008",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "attribution_destination": "android-app://example.destinationS4.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.destinationS4.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003600",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x44",
+              "value": 444
+            }
+          ],
+          "source_debug_key": "444",
+          "trigger_debug_key": "444"
+        }
+      },
+      {
+        "report_time": "800003600002",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "attribution_destination": "https://webdestinations1ands4.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "https://webdestinations1ands4.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003600",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x11",
+              "value": 111
+            }
+          ],
+          "source_debug_key": "111",
+          "trigger_debug_key": "111"
+        }
+      },
+      {
+        "report_time": "800003600010",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "attribution_destination": "android-app://example.destinationS3.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.destinationS3.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003600",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x67",
+              "value": 666
+            }
+          ],
+          "source_debug_key": "333",
+          "trigger_debug_key": "666"
+        }
+      }
+    ],
+    "debug_aggregatable_results": [
+      {
+        "report_time": "800000000007",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
+        "payload": {
+          "attribution_destination": "android-app://example.destinationS1.test",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.destinationS1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003600",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x33",
+              "value": 333
+            }
+          ],
+          "source_debug_key": "111",
+          "trigger_debug_key": "333"
+        }
+      },
+      {
+        "report_time": "800000000004",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "https://webdestinations21.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003600",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x22",
+              "value": 222
+            }
+          ],
+          "source_debug_key": "222",
+          "trigger_debug_key": "222"
+        }
+      },
+      {
+        "report_time": "800000000008",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.destinationS4.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003600",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x44",
+              "value": 444
+            }
+          ],
+          "source_debug_key": "444",
+          "trigger_debug_key": "444"
+        }
+      },
+      {
+        "report_time": "800000000002",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "https://webdestinations1ands4.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003600",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x11",
+              "value": 111
+            }
+          ],
+          "source_debug_key": "111",
+          "trigger_debug_key": "111"
+        }
+      },
+      {
+        "report_time": "800000000010",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.destinationS3.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003600",
+            "source_registration_time": "799977600",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x67",
+              "value": 666
+            }
+          ],
+          "source_debug_key": "333",
+          "trigger_debug_key": "666"
+        }
+      }
+    ],
+    "event_level_results": [
+      {
+        "report_time": "800172800001",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
+        "payload": {
+          "attribution_destination": "https://webdestinations1ands4.test",
+          "scheduled_report_time": "800172800",
+          "source_event_id": "1",
+          "trigger_data": "1",
+          "source_type": "navigation",
+          "source_debug_key": "111",
+          "trigger_debug_key": "111",
+          "randomized_trigger_rate": 0.0170218
+        }
+      },
+      {
+        "report_time": "800172800001",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
+        "payload": {
+          "attribution_destination": "android-app://example.destinationS1.test",
+          "scheduled_report_time": "800172800",
+          "source_event_id": "1",
+          "trigger_data": "3",
+          "source_type": "navigation",
+          "source_debug_key": "111",
+          "trigger_debug_key": "333",
+          "randomized_trigger_rate": 0.0170218
+        }
+      },
+      {
+        "report_time": "800172800003",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
+        "payload": {
+          "attribution_destination": [
+            "https://webdestinations21.test",
+            "https://webdestinations22.test"
+          ],
+          "scheduled_report_time": "800172800",
+          "source_event_id": "2",
+          "trigger_data": "2",
+          "source_type": "navigation",
+          "source_debug_key": "222",
+          "trigger_debug_key": "222",
+          "randomized_trigger_rate": 0.0170218
+        }
+      },
+      {
+        "report_time": "800172800005",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
+        "payload": {
+          "attribution_destination": "android-app://example.destinationS3.test",
+          "scheduled_report_time": "800172800",
+          "source_event_id": "3",
+          "trigger_data": "6",
+          "source_type": "navigation",
+          "source_debug_key": "333",
+          "trigger_debug_key": "666",
+          "randomized_trigger_rate": 0.0170218
+        }
+      },
+      {
+        "report_time": "800172800006",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
+        "payload": {
+          "attribution_destination": "android-app://example.destinationS4.test",
+          "scheduled_report_time": "800172800",
+          "source_event_id": "4",
+          "trigger_data": "4",
+          "source_type": "navigation",
+          "source_debug_key": "444",
+          "trigger_debug_key": "444",
+          "randomized_trigger_rate": 0.0170218
+        }
+      }
+    ],
+    "debug_event_level_results": [
+      {
+        "report_time": "800000000002",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
+        "payload": {
+          "attribution_destination": "https://webdestinations1ands4.test",
+          "scheduled_report_time": "800172800",
+          "source_event_id": "1",
+          "trigger_data": "1",
+          "source_type": "navigation",
+          "source_debug_key": "111",
+          "trigger_debug_key": "111",
+          "randomized_trigger_rate": 0.0170218
+        }
+      },
+      {
+        "report_time": "800000000004",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
+        "payload": {
+          "attribution_destination": [
+            "https://webdestinations21.test",
+            "https://webdestinations22.test"
+          ],
+          "scheduled_report_time": "800172800",
+          "source_event_id": "2",
+          "trigger_data": "2",
+          "source_type": "navigation",
+          "source_debug_key": "222",
+          "trigger_debug_key": "222",
+          "randomized_trigger_rate": 0.0170218
+        }
+      },
+      {
+        "report_time": "800000000007",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
+        "payload": {
+          "attribution_destination": "android-app://example.destinationS1.test",
+          "scheduled_report_time": "800172800",
+          "source_event_id": "1",
+          "trigger_data": "3",
+          "source_type": "navigation",
+          "source_debug_key": "111",
+          "trigger_debug_key": "333",
+          "randomized_trigger_rate": 0.0170218
+        }
+      },
+      {
+        "report_time": "800000000008",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
+        "payload": {
+          "attribution_destination": "android-app://example.destinationS4.test",
+          "scheduled_report_time": "800172800",
+          "source_event_id": "4",
+          "trigger_data": "4",
+          "source_type": "navigation",
+          "source_debug_key": "444",
+          "trigger_debug_key": "444",
+          "randomized_trigger_rate": 0.0170218
+        }
+      },
+      {
+        "report_time": "800000000010",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
+        "payload": {
+          "attribution_destination": "android-app://example.destinationS3.test",
+          "scheduled_report_time": "800172800",
+          "source_event_id": "3",
+          "trigger_data": "6",
+          "source_type": "navigation",
+          "source_debug_key": "333",
+          "trigger_debug_key": "666",
+          "randomized_trigger_rate": 0.0170218
+        }
+      }
+    ],
+    "verbose_debug_reports": [
+      {
+        "report_time": "800000000001",
+        "payload": [
+          {
+            "type": "source-success",
+            "body": {
+              "source_event_id": "1",
+              "attribution_destination": [
+                "android-app://example.destinationS1.test",
+                "https://webdestinations1ands4.test"
+              ],
+              "source_site": "android-app://example.publisher1.test",
+              "source_debug_key": "111"
+            }
+          }
+        ],
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose"
+      },
+      {
+        "report_time": "800000000003",
+        "payload": [
+          {
+            "type": "source-success",
+            "body": {
+              "source_event_id": "2",
+              "attribution_destination": [
+                "android-app://example.destinationS2.test",
+                "https://webdestinations21.test",
+                "https://webdestinations22.test"
+              ],
+              "source_site": "android-app://example.publisher1.test",
+              "source_debug_key": "222"
+            }
+          }
+        ],
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose"
+      },
+      {
+        "report_time": "800000000005",
+        "payload": [
+          {
+            "type": "source-success",
+            "body": {
+              "source_event_id": "3",
+              "attribution_destination": [
+                "android-app://example.destinationS3.test",
+                "https://webdestinations21.test",
+                "https://webdestinations22.test"
+              ],
+              "source_site": "android-app://example.publisher2.test",
+              "source_debug_key": "333"
+            }
+          }
+        ],
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose"
+      },
+      {
+        "report_time": "800000000006",
+        "payload": [
+          {
+            "type": "source-success",
+            "body": {
+              "source_event_id": "4",
+              "attribution_destination": [
+                "android-app://example.destinationS4.test",
+                "https://webdestinations1ands4.test",
+                "https://webdestinations4.test"
+              ],
+              "source_site": "android-app://example.publisher1.test",
+              "source_debug_key": "444",
+              "source_destination_limit": "3"
+            }
+          }
+        ],
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose"
+      },
+      {
+        "report_time": "800000000009",
+        "payload": [
+          {
+            "type": "trigger-no-matching-source",
+            "body": {
+              "attribution_destination": "android-app://example.destinationS2.test",
+              "trigger_debug_key": "555"
+            }
+          }
+        ],
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose"
+      },
+      {
+        "report_time": "800000000011",
+        "payload": [
+          {
+            "type": "source-success",
+            "body": {
+              "source_event_id": "5",
+              "attribution_destination": "android-app://example.destinationS5.test",
+              "source_site": "android-app://example.publisher1.test",
+              "source_debug_key": "555"
+            }
+          }
+        ],
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose"
+      },
+      {
+        "report_time": "800000000012",
+        "payload": [
+          {
+            "type": "source-success",
+            "body": {
+              "source_event_id": "6",
+              "attribution_destination": "android-app://example.destinationS6.test",
+              "source_site": "android-app://example.publisher1.test",
+              "source_debug_key": "666",
+              "source_destination_limit": "3"
+            }
+          }
+        ],
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose"
+      },
+      {
+        "report_time": "800000000013",
+        "payload": [
+          {
+            "type": "trigger-no-matching-source",
+            "body": {
+              "attribution_destination": "android-app://example.destinationS1.test",
+              "trigger_debug_key": "777"
+            }
+          }
+        ],
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose"
+      }
+    ]
+  }
+}

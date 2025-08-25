@@ -1,0 +1,80 @@
+{
+  "description": "source with randomized response sends debug reports and fake report",
+  "phflags_override": {
+    "measurement_flexible_event_reporting_api_enabled": "true",
+    "measurement_enable_v1_source_trigger_data": "true"
+  },
+  "input": {
+    "registrations": [
+      {
+        "timestamp": "0",
+        "registration_request": {
+          "registrant": "com.source",
+          "source_type": "navigation"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-source",
+            "randomized_response": [
+              {
+                "trigger_data": 1,
+                "report_window_index": 2
+              }
+            ],
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "destination": "android-app://com.destination",
+                "source_event_id": "123",
+                "trigger_data": [
+                  0,
+                  1,
+                  2,
+                  3
+                ],
+                "debug_reporting": true
+              }
+            }
+          }
+        ]
+      },
+      {
+        "timestamp": "172800001",
+        "registration_request": {
+          "registrant": "com.destination"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "debug_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "event_trigger_data": [
+                  {
+                    "trigger_data": "7"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "event_level_results": [
+      {
+        "payload": {
+          "attribution_destination": "android-app://com.destination",
+          "randomized_trigger_rate": 0.0003782,
+          "scheduled_report_time": "2592000",
+          "source_event_id": "123",
+          "source_type": "navigation",
+          "trigger_data": "1"
+        },
+        "report_time": "2592000000",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-event-attribution"
+      }
+    ],
+    "aggregatable_results": []
+  }
+}

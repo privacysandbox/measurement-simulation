@@ -1,3 +1,19 @@
+/**
+ * Copyright 2025 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 const redirectTestCases = [
     {
         name: "(Non-String) Location | Invalid",
@@ -123,9 +139,7 @@ const redirectTestCases = [
     },
     {
         name: "Case Insensitive - Process Error | Invalid",
-        flags: {
-            "max_registration_redirects": 20
-        },
+        flags: {},
         json: "{"
                 + "\"Location\":\"https://web-destination.test\","
                 + "\"Attribution-Reporting-Redirect\":[\"invalid-url\"],"
@@ -135,6 +149,54 @@ const redirectTestCases = [
             valid: false,
             errors: ["invalid URL format: `attribution-reporting-redirect`"],
             warnings: []
+        }
+    },
+    {
+        name: "Expected Value - Default",
+        flags: {},
+        json: "{}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: []
+        },
+        expected_value: {
+            "location": null,
+            "attribution-reporting-redirect": null,
+            "attribution-reporting-redirect-config": null
+        }
+    },
+    {
+        name: "Expected Value - Redirect Headers",
+        flags: {
+            "max_registration_redirects": 2
+        },
+        json: "{"
+                + "\"Location\":\"https://web-destination-1.test\","
+                + "\"Attribution-Reporting-Redirect\":[\"https://web-destination-2.test\", \"https://web-destination-3.test\", 0],"
+                + "\"Attribution-Reporting-Redirect-Config\":\"redirect-302-to-well-known\""
+            + "}",
+        result: {
+            valid: true,
+            errors: [],
+            warnings: ["max allowed reporting redirects: 2, all other reporting redirects will be ignored: `attribution-reporting-redirect`"]
+        },
+        expected_value: {
+            "location": [{
+                uri: "https://web-destination-1.test/.well-known/attribution-reporting/register-redirect?302_url=https%3A%2F%2Fweb-destination-1.test",
+                redirect_behavior: "LOCATION_TO_WELL_KNOWN"
+            }],
+            "attribution-reporting-redirect": [
+                {
+                    uri: "https://web-destination-2.test",
+                    redirect_behavior: "AS_IS"
+                },
+                {
+                    uri: "https://web-destination-3.test",
+                    redirect_behavior: "AS_IS"
+                }
+            ],
+            "attribution-reporting-redirect-config": "redirect-302-to-well-known"
         }
     }
 ]

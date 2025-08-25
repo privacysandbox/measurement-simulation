@@ -12,271 +12,265 @@ buildifier(
 
 java_library(
     name = "ClientDevice",
-    srcs = [
-        "java/com/google/measurement/AdServicesConfig.java",
-        "java/com/google/measurement/AdtechUrl.java",
-        "java/com/google/measurement/ApiChoice.java",
-        "java/com/google/measurement/AttributedTrigger.java",
-        "java/com/google/measurement/Attribution.java",
-        "java/com/google/measurement/AttributionConfig.java",
-        "java/com/google/measurement/AttributionJobHandler.java",
-        "java/com/google/measurement/Constants.java",
-        "java/com/google/measurement/DatastoreManager.java",
-        "java/com/google/measurement/DebugKeyAccessor.java",
-        "java/com/google/measurement/DebugReport.java",
-        "java/com/google/measurement/DebugReportApi.java",
-        "java/com/google/measurement/EventReport.java",
-        "java/com/google/measurement/EventReportWindowCalcDelegate.java",
-        "java/com/google/measurement/EventSurfaceType.java",
-        "java/com/google/measurement/EventTrigger.java",
-        "java/com/google/measurement/ExtensionEvent.java",
-        "java/com/google/measurement/FetcherUtil.java",
-        "java/com/google/measurement/FilterMap.java",
-        "java/com/google/measurement/Flags.java",
-        "java/com/google/measurement/IMeasurementDAO.java",
-        "java/com/google/measurement/MeasurementDAO.java",
-        "java/com/google/measurement/Pair.java",
-        "java/com/google/measurement/PrivacyParams.java",
-        "java/com/google/measurement/ReportSpec.java",
-        "java/com/google/measurement/ReportSpecUtil.java",
-        "java/com/google/measurement/Source.java",
-        "java/com/google/measurement/SourceProcessor.java",
-        "java/com/google/measurement/SystemHealthParams.java",
-        "java/com/google/measurement/Trigger.java",
-        "java/com/google/measurement/TriggerProcessor.java",
-        "java/com/google/measurement/TriggerSpec.java",
-        "java/com/google/measurement/UserSimulation.java",
-        "java/com/google/measurement/XNetworkData.java",
-        "java/com/google/measurement/aggregation/AggregatableAttributionSource.java",
-        "java/com/google/measurement/aggregation/AggregatableAttributionTrigger.java",
-        "java/com/google/measurement/aggregation/AggregateAttributionData.java",
-        "java/com/google/measurement/aggregation/AggregateCborConverter.java",
-        "java/com/google/measurement/aggregation/AggregateDeduplicationKey.java",
-        "java/com/google/measurement/aggregation/AggregateHistogramContribution.java",
-        "java/com/google/measurement/aggregation/AggregatePayload.java",
-        "java/com/google/measurement/aggregation/AggregatePayloadGenerator.java",
-        "java/com/google/measurement/aggregation/AggregateReport.java",
-        "java/com/google/measurement/aggregation/AggregateTriggerData.java",
-        "java/com/google/measurement/noising/Combinatorics.java",
-        "java/com/google/measurement/noising/ImpressionNoiseParams.java",
-        "java/com/google/measurement/noising/ImpressionNoiseUtil.java",
-        "java/com/google/measurement/noising/SourceNoiseHandler.java",
-        "java/com/google/measurement/util/BaseUriExtractor.java",
-        "java/com/google/measurement/util/Debug.java",
-        "java/com/google/measurement/util/Filter.java",
-        "java/com/google/measurement/util/MathUtils.java",
-        "java/com/google/measurement/util/ReportUtil.java",
-        "java/com/google/measurement/util/Validation.java",
-        "java/com/google/measurement/util/Web.java",
-    ],
+    srcs = glob(
+        ["java/com/google/measurement/client/**"],
+        exclude = ["java/com/google/measurement/client/MockRunner.java"],
+    ),
     deps = [
-        ":Util",
+        ":auto",
+        ":org_json",
         "@maven//:co_nstant_in_cbor",
+        "@maven//:com_google_auto_value_auto_value",
+        "@maven//:com_google_auto_value_auto_value_annotations",
+        "@maven//:com_google_errorprone_error_prone_annotations",
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_guava_guava_annotations",
-        "@maven//:com_googlecode_json_simple_json_simple",
-        "@maven//:org_apache_avro_avro",
-        "@maven//:org_apache_beam_beam_sdks_java_core",
+        "@maven//:org_xerial_sqlite_jdbc",
+    ],
+)
+
+java_plugin(
+    name = "auto_plugin",
+    processor_class = "com.google.auto.value.processor.AutoOneOfProcessor",
+    deps = ["@com_google_auto_value_auto_value//jar"],
+)
+
+java_library(
+    name = "auto",
+    exported_plugins = [":auto_plugin"],
+    exports = ["@com_google_auto_value_auto_value//jar"],
+)
+
+java_library(
+    name = "org_json",
+    srcs = glob(["java/org/json/**"]),
+)
+
+java_binary(
+    name = "MockRunner",
+    srcs = glob([
+        "java/com/google/measurement/MockRunnerMain.java",
+    ]),
+    main_class = "com.google.measurement.MockRunnerMain",
+    visibility = ["//python:__pkg__"],
+    deps = [
+        ":MockRunner_lib",
     ],
 )
 
 java_library(
-    name = "AggregationArgs",
-    srcs = [
-        "java/com/google/measurement/aggregation/AggregationArgs.java",
-    ],
-    data = [":config"],
-    deps = [":Util"],
-)
-
-java_test(
-    name = "SourceProcessorTest",
-    srcs = ["javatests/com/google/measurement/SourceProcessorTest.java"],
-    data = [":config"],
+    name = "MockRunner_lib",
+    srcs = glob([
+        "java/com/google/measurement/client/MockRunner.java",
+        "javatests/com/google/measurement/client/actions/**/*",
+    ]),
     deps = [
         ":ClientDevice",
-        ":Util",
-        "@maven//:com_google_code_gson_gson",
-        "@maven//:com_googlecode_json_simple_json_simple",
-    ],
-)
-
-java_library(
-    name = "SourceFixture",
-    srcs = [
-        "javatests/com/google/measurement/SourceFixture.java",
-        "javatests/com/google/measurement/WebUtil.java",
-    ],
-    deps = [
-        ":ClientDevice",
-        ":Util",
-        "@maven//:com_googlecode_json_simple_json_simple",
-    ],
-)
-
-java_library(
-    name = "EventReportFixture",
-    srcs = [
-        "javatests/com/google/measurement/EventReportFixture.java",
-        "javatests/com/google/measurement/WebUtil.java",
-    ],
-    deps = [
-        ":ClientDevice",
-        ":Util",
-        "@maven//:com_googlecode_json_simple_json_simple",
-    ],
-)
-
-java_library(
-    name = "TriggerFixture",
-    srcs = ["javatests/com/google/measurement/TriggerFixture.java"],
-    deps = [
-        ":ClientDevice",
-        "@maven//:com_googlecode_json_simple_json_simple",
-    ],
-)
-
-java_library(
-    name = "AggregateReportFixture",
-    srcs = [
-        "javatests/com/google/measurement/WebUtil.java",
-        "javatests/com/google/measurement/aggregation/AggregateReportFixture.java",
-    ],
-    deps = [
-        ":ClientDevice",
-        ":Util",
-        "@maven//:com_googlecode_json_simple_json_simple",
+        ":E2EMock",
+        ":org_json",
     ],
 )
 
 java_test(
-    name = "SourceTest",
-    srcs = ["javatests/com/google/measurement/SourceTest.java"],
-    data = [":config"],
+    name = "AsyncSourceFetcherTest",
+    srcs = glob([
+        "javatests/com/google/measurement/client/registration/*",
+        "javatests/com/google/measurement/client/AdServicesExtendedMockitoTestCase.java",
+        "javatests/com/google/measurement/client/ExpectErrorLogUtilCall.java",
+        "javatests/com/google/measurement/client/FakeFlagsFactory.java",
+        "javatests/com/google/measurement/client/SetErrorLogUtilDefaultParams.java",
+        "javatests/com/google/measurement/client/SourceFixture.java",
+        "javatests/com/google/measurement/client/TriggerFixture.java",
+        "javatests/com/google/measurement/client/TriggerSpecsUtil.java",
+        "javatests/com/google/measurement/client/WebUtil.java",
+        "javatests/com/google/measurement/client/data/DbTestUtil.java",
+    ]),
     deps = [
         ":ClientDevice",
-        ":SourceFixture",
-        ":Util",
-        "@maven//:com_googlecode_json_simple_json_simple",
-        "@maven//:org_mockito_mockito_core",
-    ],
-)
-
-java_test(
-    name = "TriggerProcessorTest",
-    srcs = ["javatests/com/google/measurement/TriggerProcessorTest.java"],
-    data = [":config"],
-    deps = [
-        ":ClientDevice",
+        ":org_json",
         "@maven//:com_google_guava_guava",
-        "@maven//:com_googlecode_json_simple_json_simple",
-    ],
-)
-
-java_test(
-    name = "TriggerTest",
-    srcs = [
-        "javatests/com/google/measurement/TriggerTest.java",
-        "javatests/com/google/measurement/WebUtil.java",
-    ],
-    data = [":config"],
-    deps = [
-        ":ClientDevice",
-        ":TriggerFixture",
-        ":Util",
-        "@maven//:com_googlecode_json_simple_json_simple",
-    ],
-)
-
-java_test(
-    name = "EventReportTest",
-    srcs = ["javatests/com/google/measurement/EventReportTest.java"],
-    data = [":config"],
-    deps = [
-        ":ClientDevice",
-        ":SourceFixture",
-        ":TriggerFixture",
-        ":Util",
-        "@maven//:com_googlecode_json_simple_json_simple",
+        "@maven//:com_google_truth_truth",
         "@maven//:org_mockito_mockito_core",
+        "@maven//:org_mockito_mockito_inline",
     ],
 )
 
 java_test(
-    name = "FilterMapTest",
-    srcs = ["javatests/com/google/measurement/FilterMapTest.java"],
-    data = [":config"],
+    name = "AsyncTriggerFetcherTest",
+    srcs = glob([
+        "javatests/com/google/measurement/client/registration/*",
+        "javatests/com/google/measurement/client/AdServicesExtendedMockitoTestCase.java",
+        "javatests/com/google/measurement/client/ExpectErrorLogUtilCall.java",
+        "javatests/com/google/measurement/client/FakeFlagsFactory.java",
+        "javatests/com/google/measurement/client/SetErrorLogUtilDefaultParams.java",
+        "javatests/com/google/measurement/client/SourceFixture.java",
+        "javatests/com/google/measurement/client/TriggerFixture.java",
+        "javatests/com/google/measurement/client/TriggerSpecsUtil.java",
+        "javatests/com/google/measurement/client/WebUtil.java",
+        "javatests/com/google/measurement/client/WebUtil.java",
+        "javatests/com/google/measurement/client/data/DbTestUtil.java",
+    ]),
     deps = [
         ":ClientDevice",
-        "@maven//:com_googlecode_json_simple_json_simple",
+        ":org_json",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_truth_truth",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_mockito_mockito_inline",
     ],
 )
 
 java_test(
-    name = "MeasurementDAOTest",
-    srcs = ["javatests/com/google/measurement/MeasurementDAOTest.java"],
-    data = [":config"],
+    name = "AsyncRegistrationQueueRunnerTest",
+    srcs = glob([
+        "javatests/com/google/measurement/client/registration/*",
+        "javatests/com/google/measurement/client/AdServicesExtendedMockitoTestCase.java",
+        "javatests/com/google/measurement/client/ExpectErrorLogUtilCall.java",
+        "javatests/com/google/measurement/client/FakeFlagsFactory.java",
+        "javatests/com/google/measurement/client/SetErrorLogUtilDefaultParams.java",
+        "javatests/com/google/measurement/client/SourceFixture.java",
+        "javatests/com/google/measurement/client/TriggerFixture.java",
+        "javatests/com/google/measurement/client/TriggerSpecsUtil.java",
+        "javatests/com/google/measurement/client/WebUtil.java",
+        "javatests/com/google/measurement/client/data/DbTestUtil.java",
+    ]),
     deps = [
-        ":AggregateReportFixture",
         ":ClientDevice",
-        ":SourceFixture",
-        ":TriggerFixture",
-        ":Util",
-        "@maven//:com_googlecode_json_simple_json_simple",
+        ":org_json",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_truth_truth",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_mockito_mockito_inline",
+    ],
+)
+
+java_test(
+    name = "MeasurementDaoTest",
+    srcs = glob([
+        "javatests/com/google/measurement/client/data/*",
+        "javatests/com/google/measurement/client/SourceFixture.java",
+        "javatests/com/google/measurement/client/TriggerFixture.java",
+        "javatests/com/google/measurement/client/WebUtil.java",
+        "javatests/com/google/measurement/client/FakeFlagsFactory.java",
+        "javatests/com/google/measurement/client/registration/AsyncRegistrationFixture.java",
+        "javatests/com/google/measurement/client/reporting/EventReportFixture.java",
+        "javatests/com/google/measurement/client/aggregation/AggregateReportFixture.java",
+    ]),
+    deps = [
+        ":ClientDevice",
+        ":org_json",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_truth_truth",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_mockito_mockito_inline",
     ],
 )
 
 java_test(
     name = "AttributionJobHandlerTest",
-    srcs = ["javatests/com/google/measurement/AttributionJobHandlerTest.java"],
-    data = [":config"],
+    srcs = glob([
+        "javatests/com/google/measurement/client/attribution/AttributionJobHandlerTest.java",
+        "javatests/com/google/measurement/client/FakeFlagsFactory.java",
+        "javatests/com/google/measurement/client/WebUtil.java",
+        "javatests/com/google/measurement/client/SourceFixture.java",
+        "javatests/com/google/measurement/client/TriggerFixture.java",
+    ]),
     deps = [
         ":ClientDevice",
-        ":SourceFixture",
-        ":TriggerFixture",
-        ":Util",
-        "@maven//:com_googlecode_json_simple_json_simple",
+        ":org_json",
         "@maven//:org_mockito_mockito_core",
+    ],
+)
+
+java_library(
+    name = "E2EMock",
+    srcs = glob([
+        "javatests/com/google/measurement/client/E2EAbstractMockTest.java",
+        "javatests/com/google/measurement/client/E2EAbstractTest.java",
+        "javatests/com/google/measurement/client/E2EMockTest.java",
+        "javatests/com/google/measurement/client/InteropTestReader.java",
+        "javatests/com/google/measurement/client/MockContentResolver.java",
+        "javatests/com/google/measurement/client/TestObjectProvider.java",
+        "javatests/com/google/measurement/client/WebUtil.java",
+        "javatests/com/google/measurement/client/aggregation/AggregateCryptoFixture.java",
+        "javatests/com/google/measurement/client/data/DbTestUtil.java",
+        "javatests/com/google/measurement/client/attribution/AttributionJobHandlerWrapper.java",
+        "javatests/com/google/measurement/client/reporting/AggregateReportingJobHandlerWrapper.java",
+        "javatests/com/google/measurement/client/reporting/DebugReportingJobHandlerWrapper.java",
+        "javatests/com/google/measurement/client/reporting/EventReportingJobHandlerWrapper.java",
+        "javatests/com/google/measurement/client/actions/**/*",
+    ]),
+    data = ["e2e_tests"],
+    deps = [
+        ":ClientDevice",
+        ":org_json",
+        "@maven//:co_nstant_in_cbor",
+        "@maven//:com_google_guava_guava",
+        "@maven//:junit_junit",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_mockito_mockito_inline",
+    ],
+)
+
+java_test(
+    name = "E2EMockTest",
+    size = "large",
+    test_class = "com.google.measurement.client.E2EMockTest",
+    runtime_deps = [":E2EMock"],
+)
+
+java_test(
+    name = "MockRunnerTest",
+    srcs = glob(["javatests/com/google/measurement/MockRunnerTest.java"]),
+    deps = [
+        ":ClientDevice",
+        ":E2EMock",
+        ":MockRunner_lib",
+        ":org_json",
+        "@maven//:com_google_truth_truth",
     ],
 )
 
 java_test(
     name = "CombinatoricsTest",
     srcs = [
-        "javatests/com/google/measurement/noising/CombinatoricsTest.java",
+        "javatests/com/google/measurement/client/noising/CombinatoricsTest.java",
     ],
-    data = [":config"],
     deps = [
         ":ClientDevice",
-        "@maven//:com_googlecode_json_simple_json_simple",
-        "@maven//:org_mockito_mockito_core",
+        "@maven//:com_google_guava_guava",
     ],
 )
 
 java_test(
     name = "ImpressionNoiseUtilTest",
     srcs = [
-        "javatests/com/google/measurement/noising/ImpressionNoiseUtilTest.java",
+        "javatests/com/google/measurement/client/FakeFlagsFactory.java",
+        "javatests/com/google/measurement/client/SourceFixture.java",
+        "javatests/com/google/measurement/client/TriggerSpecsUtil.java",
+        "javatests/com/google/measurement/client/WebUtil.java",
+        "javatests/com/google/measurement/client/noising/ImpressionNoiseUtilTest.java",
     ],
-    data = [":config"],
     deps = [
         ":ClientDevice",
+        ":org_json",
         "@maven//:com_googlecode_json_simple_json_simple",
         "@maven//:org_mockito_mockito_core",
+        "@maven//:org_mockito_mockito_inline",
     ],
 )
 
 java_test(
     name = "SourceNoiseHandlerTest",
     srcs = [
-        "javatests/com/google/measurement/noising/SourceNoiseHandlerTest.java",
+        "javatests/com/google/measurement/client/FakeFlagsFactory.java",
+        "javatests/com/google/measurement/client/SourceFixture.java",
+        "javatests/com/google/measurement/client/WebUtil.java",
+        "javatests/com/google/measurement/client/noising/SourceNoiseHandlerTest.java",
     ],
-    data = [":config"],
     deps = [
         ":ClientDevice",
-        ":SourceFixture",
-        ":Util",
-        "@maven//:com_googlecode_json_simple_json_simple",
+        ":org_json",
         "@maven//:org_mockito_mockito_core",
     ],
 )
@@ -284,15 +278,16 @@ java_test(
 java_test(
     name = "AggregateAttributionDataTest",
     srcs = [
-        "javatests/com/google/measurement/aggregation/AggregateAttributionDataTest.java",
+        "javatests/com/google/measurement/client/aggregation/AggregateAttributionDataTest.java",
     ],
     deps = [":ClientDevice"],
 )
 
+#
 java_test(
     name = "AggregatableAttributionSourceTest",
     srcs = [
-        "javatests/com/google/measurement/aggregation/AggregatableAttributionSourceTest.java",
+        "javatests/com/google/measurement/client/aggregation/AggregatableAttributionSourceTest.java",
     ],
     deps = [":ClientDevice"],
 )
@@ -300,60 +295,58 @@ java_test(
 java_test(
     name = "AggregatableAttributionTriggerTest",
     srcs = [
-        "javatests/com/google/measurement/aggregation/AggregatableAttributionTriggerTest.java",
-    ],
-    deps = [":ClientDevice"],
-)
-
-java_test(
-    name = "AggregateCborConverterTest",
-    srcs = [
-        "javatests/com/google/measurement/aggregation/AggregateCborConverterTest.java",
+        "javatests/com/google/measurement/client/aggregation/AggregatableAttributionTriggerTest.java",
     ],
     deps = [
         ":ClientDevice",
-        "@maven//:co_nstant_in_cbor",
-        "@maven//:com_googlecode_json_simple_json_simple",
+        ":org_json",
+        "@maven//:com_google_truth_truth",
+        "@maven//:org_mockito_mockito_core",
     ],
 )
 
 java_test(
     name = "AggregateDeduplicationKeyTest",
     srcs = [
-        "javatests/com/google/measurement/aggregation/AggregateDeduplicationKeyTest.java",
+        "javatests/com/google/measurement/client/aggregation/AggregateDeduplicationKeyTest.java",
     ],
     deps = [
         ":ClientDevice",
-        ":Util",
     ],
 )
 
 java_test(
     name = "AggregateHistogramContributionTest",
     srcs = [
-        "javatests/com/google/measurement/aggregation/AggregateHistogramContributionTest.java",
+        "javatests/com/google/measurement/client/aggregation/AggregateHistogramContributionTest.java",
     ],
-    deps = [":ClientDevice"],
+    deps = [
+        "org_json",
+        ":ClientDevice",
+    ],
 )
 
 java_test(
     name = "AggregatePayloadGeneratorTest",
     srcs = [
-        "javatests/com/google/measurement/aggregation/AggregatePayloadGeneratorTest.java",
+        "javatests/com/google/measurement/client/FakeFlagsFactory.java",
+        "javatests/com/google/measurement/client/SourceFixture.java",
+        "javatests/com/google/measurement/client/TriggerFixture.java",
+        "javatests/com/google/measurement/client/WebUtil.java",
+        "javatests/com/google/measurement/client/aggregation/AggregatePayloadGeneratorTest.java",
     ],
     deps = [
         ":ClientDevice",
-        ":SourceFixture",
-        ":TriggerFixture",
-        ":Util",
-        "@maven//:com_googlecode_json_simple_json_simple",
+        ":org_json",
+        "@maven//:com_google_truth_truth",
+        "@maven//:org_mockito_mockito_core",
     ],
 )
 
 java_test(
     name = "AggregatePayloadTest",
     srcs = [
-        "javatests/com/google/measurement/aggregation/AggregatePayloadTest.java",
+        "javatests/com/google/measurement/client/aggregation/AggregatePayloadTest.java",
     ],
     deps = [":ClientDevice"],
 )
@@ -361,131 +354,23 @@ java_test(
 java_test(
     name = "AggregateTriggerDataTest",
     srcs = [
-        "javatests/com/google/measurement/aggregation/AggregateTriggerDataTest.java",
+        "javatests/com/google/measurement/client/aggregation/AggregateTriggerDataTest.java",
     ],
     deps = [":ClientDevice"],
 )
 
 java_test(
     name = "FetcherUtilTest",
-    srcs = ["javatests/com/google/measurement/FetcherUtilTest.java"],
-    data = [":config"],
+    srcs = [
+        "javatests/com/google/measurement/client/FakeFlagsFactory.java",
+        "javatests/com/google/measurement/client/WebUtil.java",
+        "javatests/com/google/measurement/client/registration/FetcherUtilTest.java",
+    ],
     deps = [
         ":ClientDevice",
-        "@maven//:com_googlecode_json_simple_json_simple",
-    ],
-)
-
-java_library(
-    name = "Util",
-    srcs = [
-        "java/com/google/measurement/util/UnsignedLong.java",
-        "java/com/google/measurement/util/Util.java",
-    ],
-    deps = [
+        ":org_json",
         "@maven//:com_google_guava_guava",
-        "@maven//:com_googlecode_json_simple_json_simple",
-    ],
-)
-
-java_library(
-    name = "DataProcessor",
-    srcs = [
-        "java/com/google/measurement/DataProcessor.java",
-        "java/com/google/measurement/RunSimulationPerUser.java",
-        "java/com/google/measurement/SimulationConfig.java",
-    ],
-    deps = [
-        ":ClientDevice",
-        ":InputFileProcessor",
-        ":Util",
-        "@maven//:com_googlecode_json_simple_json_simple",
-        "@maven//:org_apache_beam_beam_sdks_java_core",
-    ],
-)
-
-java_library(
-    name = "InputFileProcessor",
-    srcs = [
-        "java/com/google/measurement/Constants.java",
-        "java/com/google/measurement/InputFileProcessor.java",
-    ],
-    deps = [
-        ":ClientDevice",
-        "@maven//:com_googlecode_json_simple_json_simple",
-        "@maven//:org_apache_beam_beam_runners_direct_java",
-        "@maven//:org_apache_beam_beam_sdks_java_core",
-    ],
-)
-
-java_test(
-    name = "DataProcessorTest",
-    srcs = ["javatests/com/google/measurement/DataProcessorTest.java"],
-    data = [
-        ":config",
-    ],
-    deps = [
-        ":ClientDevice",
-        ":DataProcessor",
-        "@maven//:com_googlecode_json_simple_json_simple",
-        "@maven//:org_apache_beam_beam_sdks_java_core",
-        "@maven//:org_hamcrest_hamcrest_core",
-        "@maven//:org_hamcrest_hamcrest_library",
-    ],
-)
-
-java_library(
-    name = "AggregateReport",
-    srcs = [
-        "java/com/google/measurement/adtech/BatchAggregatableReports.java",
-        "java/com/google/measurement/adtech/LocalAggregationRunner.java",
-        "java/com/google/measurement/adtech/ProcessBatch.java",
-    ],
-    data = [
-        ":domain",
-        ":reports",
-    ],
-    deps = [
-        ":AggregationArgs",
-        ":AggregationWorker",
-        ":Util",
-        "@maven//:com_google_guava_guava",
-        "@maven//:com_googlecode_json_simple_json_simple",
-        "@maven//:org_apache_avro_avro",
-        "@maven//:org_apache_beam_beam_sdks_java_core",
-    ],
-)
-
-java_test(
-    name = "BatchAggregatableReportsTest",
-    srcs = [
-        "javatests/com/google/measurement/adtech/BatchAggregatableReportsTest.java",
-    ],
-    deps = [
-        ":AggregateReport",
-        "@maven//:com_googlecode_json_simple_json_simple",
-        "@maven//:org_apache_beam_beam_runners_direct_java",
-        "@maven//:org_apache_beam_beam_sdks_java_core",
-        "@maven//:org_hamcrest_hamcrest_core",
-        "@maven//:org_hamcrest_hamcrest_library",
-    ],
-)
-
-java_test(
-    name = "LocalAggregationRunnerTest",
-    srcs = [
-        "javatests/com/google/measurement/adtech/LocalAggregationRunnerTest.java",
-    ],
-    data = ["testdata"],
-    deps = [
-        ":AggregateReport",
-        ":AggregationArgs",
-        ":AggregationWorker",
-        "@maven//:co_nstant_in_cbor",
-        "@maven//:com_googlecode_json_simple_json_simple",
-        "@maven//:org_apache_beam_beam_sdks_java_core",
-        "@maven//:org_hamcrest_hamcrest_core",
-        "@maven//:org_hamcrest_hamcrest_library",
+        "@maven//:com_google_truth_truth",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_mockito_mockito_inline",
     ],
@@ -493,174 +378,277 @@ java_test(
 
 java_test(
     name = "BaseUriExtractorTest",
-    srcs = ["javatests/com/google/measurement/util/BaseUriExtractorTest.java"],
+    srcs = ["javatests/com/google/measurement/client/util/BaseUriExtractorTest.java"],
     deps = [
         ":ClientDevice",
+        ":org_json",
     ],
 )
 
 java_test(
     name = "DebugReportTest",
     srcs = [
-        "javatests/com/google/measurement/DebugReportTest.java",
-        "javatests/com/google/measurement/WebUtil.java",
+        "javatests/com/google/measurement/client/WebUtil.java",
+        "javatests/com/google/measurement/client/reporting/DebugReportTest.java",
     ],
     deps = [
         ":ClientDevice",
-        "@maven//:com_googlecode_json_simple_json_simple",
-    ],
-)
-
-java_test(
-    name = "DebugTest",
-    srcs = ["javatests/com/google/measurement/util/DebugTest.java"],
-    deps = [
-        ":ClientDevice",
-        ":SourceFixture",
-        ":TriggerFixture",
-        ":Util",
-    ],
-)
-
-java_test(
-    name = "ExtensionEventTest",
-    srcs = ["javatests/com/google/measurement/ExtensionEventTest.java"],
-    deps = [
-        ":ClientDevice",
-        "@maven//:com_googlecode_json_simple_json_simple",
+        ":org_json",
     ],
 )
 
 java_test(
     name = "FilterTest",
-    srcs = ["javatests/com/google/measurement/util/FilterTest.java"],
+    srcs = ["javatests/com/google/measurement/client/util/FilterTest.java"],
     deps = [
         ":ClientDevice",
-        "@maven//:com_google_code_gson_gson",
-        "@maven//:com_googlecode_json_simple_json_simple",
+        ":org_json",
+        "@maven//:org_mockito_mockito_core",
     ],
 )
 
 java_test(
     name = "TriggerSpecTest",
-    srcs = ["javatests/com/google/measurement/TriggerSpecTest.java"],
+    srcs = [
+        "javatests/com/google/measurement/client/FakeFlagsFactory.java",
+        "javatests/com/google/measurement/client/SourceFixture.java",
+        "javatests/com/google/measurement/client/TriggerSpecTest.java",
+        "javatests/com/google/measurement/client/WebUtil.java",
+    ],
     deps = [
         ":ClientDevice",
-        ":Util",
-        "@maven//:com_googlecode_json_simple_json_simple",
-    ],
-)
-
-java_test(
-    name = "UtilTest",
-    srcs = ["javatests/com/google/measurement/util/UtilTest.java"],
-    deps = [
-        ":Util",
-        "@maven//:com_googlecode_json_simple_json_simple",
-    ],
-)
-
-java_test(
-    name = "WebTest",
-    srcs = ["javatests/com/google/measurement/util/WebTest.java"],
-    deps = [
-        ":ClientDevice",
+        ":org_json",
     ],
 )
 
 java_test(
     name = "UnsignedLongTest",
-    srcs = ["javatests/com/google/measurement/util/UnsignedLongTest.java"],
+    srcs = ["javatests/com/google/measurement/client/util/UnsignedLongTest.java"],
+    deps = [":ClientDevice"],
+)
+
+java_library(
+    name = "AggregatableReportConverterLib",
+    srcs = ["java/com/google/measurement/util/AggregatableReportConverter.java"],
+    resources = [":reports"],
     deps = [
         ":ClientDevice",
-        ":Util",
+        ":org_json",
+        "@maven//:org_apache_avro_avro",
     ],
 )
 
 java_test(
-    name = "UserSimulationTest",
-    srcs = ["javatests/com/google/measurement/UserSimulationTest.java"],
+    name = "AggregatableReportConverterTest",
+    srcs = ["javatests/com/google/measurement/util/AggregatableReportConverterTest.java"],
+    data = [":reports"],
     deps = [
+        ":AggregatableReportConverterLib",
         ":ClientDevice",
-        ":Util",
-        "@maven//:com_google_code_gson_gson",
-        "@maven//:com_googlecode_json_simple_json_simple",
-        "@maven//:org_mockito_mockito_core",
+        ":org_json",
+        "@maven//:co_nstant_in_cbor",
+        "@maven//:com_google_truth_truth",
+        "@maven//:org_apache_avro_avro",
+    ],
+)
+
+java_test(
+    name = "AggregatableReportConverterMainTest",
+    srcs = [
+        "java/com/google/measurement/util/AggregatableReportConverterMain.java",
+        "javatests/com/google/measurement/util/AggregatableReportConverterMainTest.java",
+    ],
+    deps = [
+        ":AggregatableReportConverterLib",
+        ":org_json",
+        "@maven//:co_nstant_in_cbor",
+        "@maven//:com_google_truth_truth",
+        "@maven//:org_apache_avro_avro",
     ],
 )
 
 java_binary(
-    name = "SimulationRunner",
-    srcs = [
-        "java/com/google/measurement/SimulationRunner.java",
-    ],
-    main_class = "com.google.measurement.SimulationRunner",
+    name = "AggregatableReportConverter",
+    srcs = ["java/com/google/measurement/util/AggregatableReportConverterMain.java"],
+    main_class = "com.google.measurement.util.AggregatableReportConverterMain",
     visibility = ["//python:__pkg__"],
     deps = [
-        ":AggregateReport",
-        ":ClientDevice",
-        ":DataProcessor",
-        ":Util",
-        "@maven//:com_googlecode_json_simple_json_simple",
+        ":AggregatableReportConverterLib",
+        ":org_json",
+        "@maven//:org_apache_avro_avro",
+    ],
+)
+
+java_binary(
+    name = "PipelineRunner",
+    srcs = [
+        "java/com/google/measurement/pipeline/PipelineRunner.java",
+    ],
+    data = [
+        ":AggregatableReportConverter_deploy.jar",
+        ":LocalTestingTool",
+        ":MockRunner_deploy.jar",
+        ":testdata",
+    ],
+    main_class = "com.google.measurement.pipeline.PipelineRunner",
+    visibility = ["//python:__pkg__"],
+    deps = [
+        ":AggregatableReportConverter",
+        ":MockRunner",
+        ":PipelineLib",
+        "@bazel_tools//tools/java/runfiles",
+        "@maven//:org_apache_beam_beam_runners_direct_java",
+        "@maven//:org_apache_beam_beam_sdks_java_core",
+    ],
+)
+
+java_library(
+    name = "PipelineLib",
+    srcs = glob(
+        [
+            "java/com/google/measurement/pipeline/**/*",
+        ],
+        exclude = ["java/com/google/measurement/pipeline/testdata/**/*"],
+    ),
+    deps = [
+        ":AggregatableReportConverterLib",
+        ":org_json",
+        "@bazel_tools//tools/java/runfiles",
+        "@maven//:org_apache_beam_beam_runners_direct_java",
         "@maven//:org_apache_beam_beam_sdks_java_core",
     ],
 )
 
 java_test(
-    name = "RunE2ETest",
-    srcs = ["javatests/com/google/measurement/RunE2ETest.java"],
-    data = [
-        "e2e_tests",
-        ":config",
+    name = "FileInputTransformTest",
+    srcs = [
+        "javatests/com/google/measurement/pipeline/FileInputTransformTest.java",
     ],
     deps = [
-        ":AggregateReport",
-        ":AggregationArgs",
-        ":ClientDevice",
-        ":DataProcessor",
-        ":SimulationRunner",
-        "@maven//:co_nstant_in_cbor",
-        "@maven//:com_googlecode_json_simple_json_simple",
-        "@maven//:org_apache_avro_avro",
+        ":PipelineLib",
+        "@maven//:org_apache_beam_beam_runners_direct_java",
         "@maven//:org_apache_beam_beam_sdks_java_core",
         "@maven//:org_hamcrest_hamcrest_core",
         "@maven//:org_hamcrest_hamcrest_library",
-        "@maven//:org_mockito_mockito_core",
     ],
 )
 
 java_test(
-    name = "ReportSpecUtilTest",
-    srcs = ["javatests/com/google/measurement/ReportSpecUtilTest.java"],
+    name = "FileOutputTransformTest",
+    srcs = [
+        "javatests/com/google/measurement/pipeline/FileOutputTransformTest.java",
+    ],
     deps = [
-        ":ClientDevice",
-        ":EventReportFixture",
-        ":SourceFixture",
-        ":Util",
-        "@maven//:com_googlecode_json_simple_json_simple",
-        "@maven//:org_mockito_mockito_core",
+        ":PipelineLib",
+        "@maven//:org_apache_beam_beam_runners_direct_java",
+        "@maven//:org_apache_beam_beam_sdks_java_core",
+        "@maven//:org_hamcrest_hamcrest_core",
+        "@maven//:org_hamcrest_hamcrest_library",
     ],
 )
 
 java_test(
-    name = "ReportSpecTest",
-    srcs = ["javatests/com/google/measurement/ReportSpecTest.java"],
+    name = "PipelineRunnerTest",
+    srcs = ["javatests/com/google/measurement/pipeline/PipelineRunnerTest.java"],
     deps = [
-        ":ClientDevice",
-        ":EventReportFixture",
-        ":SourceFixture",
-        ":Util",
-        "@maven//:com_googlecode_json_simple_json_simple",
-        "@maven//:org_mockito_mockito_core",
+        ":PipelineLib",
+        ":PipelineRunner",
+        "@bazel_tools//tools/java/runfiles",
+        "@maven//:com_google_truth_truth",
+        "@maven//:junit_junit",
+        "@maven//:org_apache_beam_beam_runners_direct_java",
+        "@maven//:org_apache_beam_beam_sdks_java_core",
+        "@maven//:org_hamcrest_hamcrest_core",
+        "@maven//:org_hamcrest_hamcrest_library",
     ],
 )
 
-# Built from v0.9.0 of aggregate-service.
+java_test(
+    name = "ExtractJsonFieldTransformTest",
+    srcs = ["javatests/com/google/measurement/pipeline/ExtractJsonFieldTransformTest.java"],
+    deps = [
+        ":PipelineLib",
+        "@maven//:org_apache_beam_beam_runners_direct_java",
+        "@maven//:org_apache_beam_beam_sdks_java_core",
+        "@maven//:org_hamcrest_hamcrest_core",
+        "@maven//:org_hamcrest_hamcrest_library",
+    ],
+)
+
+java_test(
+    name = "GroupToJsonArrayTransformTest",
+    srcs = ["javatests/com/google/measurement/pipeline/GroupToJsonArrayTransformTest.java"],
+    deps = [
+        ":PipelineLib",
+        ":org_json",
+        "@maven//:org_apache_beam_beam_runners_direct_java",
+        "@maven//:org_apache_beam_beam_sdks_java_core",
+        "@maven//:org_hamcrest_hamcrest_core",
+        "@maven//:org_hamcrest_hamcrest_library",
+    ],
+)
+
+java_test(
+    name = "KeyByDestinationAndDayTransformTest",
+    srcs = ["javatests/com/google/measurement/pipeline/KeyByDestinationAndDayTransformTest.java"],
+    deps = [
+        ":PipelineLib",
+        ":org_json",
+        "@maven//:org_apache_beam_beam_runners_direct_java",
+        "@maven//:org_apache_beam_beam_sdks_java_core",
+        "@maven//:org_hamcrest_hamcrest_core",
+        "@maven//:org_hamcrest_hamcrest_library",
+    ],
+)
+
+java_test(
+    name = "JarExecutorTransformTest",
+    srcs = ["javatests/com/google/measurement/pipeline/JarExecutorTransformTest.java"],
+    data = [":Echo_deploy.jar"],
+    deps = [
+        ":Echo_deploy.jar",
+        ":PipelineLib",
+        "@bazel_tools//tools/runfiles:java-runfiles",
+        "@maven//:org_apache_beam_beam_runners_direct_java",
+        "@maven//:org_apache_beam_beam_sdks_java_core",
+        "@maven//:org_hamcrest_hamcrest_core",
+        "@maven//:org_hamcrest_hamcrest_library",
+    ],
+)
+
+java_test(
+    name = "AggregationServiceTransformTest",
+    srcs = ["javatests/com/google/measurement/pipeline/AggregationServiceTransformTest.java"],
+    data = [":Echo_deploy.jar"],
+    deps = [
+        ":Echo_deploy.jar",
+        ":PipelineLib",
+        "@bazel_tools//tools/java/runfiles",
+        "@maven//:org_apache_beam_beam_runners_direct_java",
+        "@maven//:org_apache_beam_beam_sdks_java_core",
+        "@maven//:org_hamcrest_hamcrest_core",
+        "@maven//:org_hamcrest_hamcrest_library",
+    ],
+)
+
+java_binary(
+    name = "Echo",
+    srcs = ["javatests/com/google/measurement/pipeline/Echo.java"],
+    main_class = "com.google.measurement.pipeline.Echo",
+)
+
+# Built from v1.0.2 of aggregate-service.
 java_import(
     name = "AggregationWorker",
     jars = [
-        "lib/LocalTestingTool_0.9.0.jar",
+        "lib/LocalTestingTool_1.0.2.jar",
     ],
+)
+
+filegroup(
+    name = "LocalTestingTool",
+    srcs = ["lib/LocalTestingTool_1.0.2.jar"],
+    visibility = ["//python:__pkg__"],
 )
 
 filegroup(
@@ -671,7 +659,7 @@ filegroup(
 
 filegroup(
     name = "testdata",
-    srcs = glob(["testdata/**/*"]),
+    srcs = glob(["java/com/google/measurement/pipeline/testdata/**/*"]),
     visibility = ["//python:__pkg__"],
 )
 
@@ -683,6 +671,5 @@ filegroup(
 
 filegroup(
     name = "reports",
-    srcs = glob(["reports.avsc"]),
-    visibility = ["//python:__pkg__"],
+    srcs = glob(["java/com/google/measurement/util/reports.avsc"]),
 )
