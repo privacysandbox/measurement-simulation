@@ -1,3 +1,13 @@
+**This technology is scheduled for deprecation and removal from Chrome.**
+
+This repository will be archived and will no longer be updated.
+
+See our [Update on Plans for Privacy Sandbox Technologies](https://privacysandbox.com/news/update-on-plans-for-privacy-sandbox-technologies/).
+
+[Privacy Sandbox feature status](https://privacysandbox.google.com/overview/status) provides more information about the status of individual APIs and platform features.
+
+---
+
 # Attribution Reporting Simulation Library
 
 The Attribution Reporting Simulation Library allows you to examine the impact of the Attribution Reporting API by taking historical data and presenting it as if it were collected by the API in real-time. This allows you to compare historical conversion numbers with Attribution Reporting Simulation Library results to see how reporting accuracy would change. You can also use the Simulation Library to experiment with different aggregation key structures and batching strategies, and train optimization models on Simulation Library reports to compare projected performance with models based on current data.
